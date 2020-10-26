@@ -57,7 +57,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
     # Add core neighbour distance
     # TODO - Check possible ovrelap and standedness - Maybe
     if gff_line is not None:
-        core_gene_pair_distance[core_gene_neighbours] = int(gff_line[3]) - previous_core_gene_end_coor
+        core_gene_pair_distance[core_gene_neighbours] = [int(gff_line[3]) - previous_core_gene_end_coor]
 
     # Add counts and annotation for accessory and low frequency genes
     accessory_gene_content[core_gene_neighbours] = accessory_gene_count
