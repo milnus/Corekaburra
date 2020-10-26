@@ -1,7 +1,15 @@
+# General function
 from parse_gene_presence_absence import read_gene_presence_absence
 from gff_parser import segment_genome_content
 from merge_dicts import merge_dicts_counts, merge_dicts_lists
 import concurrent.futures
+from numpy import mean, std
+
+# For plots
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 #def get_arguments():
@@ -39,7 +47,7 @@ def main():
             # Split the outputs from
             core_pairs, distance, acc_count, low_freq = output.result()
 
-            # Merge results
+            # Merge results into single dictionaries
             core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
             core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
             core_neighbour_accessory_count = merge_dicts_counts(core_neighbour_accessory_count, acc_count)
@@ -50,37 +58,38 @@ def main():
     print(core_neighbour_accessory_count)
     print(core_neighbour_low_freq)
 
-
-
-
-    # TODO Get all results and mash together into one.
-
     ### FUNCTION ###
     # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
-    # TODO Record all contig breaks after core genes
-    # TODO Record all neighbouring genes with score 1
-    # TODO Record distance between all neighbouring core genes
-    # TODO Record number of Accessory genes between neighbouring core genes
     ################
 
     ### DETERMINE CONSENSUS ###
     # TODO Determine start cluster from possible consensus from complete genomes - else determine relative consensus from connections
+    # TODO Do a greedy walk through a graph where all nodes are a core cluster and the edge weight is the number of times two core clusters are observed to be neighbours
     # TODO for-loop - Determine following clusters from connections to first cluster
     # TODO Determine all alternative connections between core genes and their frequency.
     ###########################
 
     ### DO CALCULATIONS ###
     # TODO mean number length between core genes
+    for neighbours in core_neighbour_distance:
+        print(mean(core_neighbour_distance[neighbours]))
+        print(std(core_neighbour_distance[neighbours]))
+
     # TODO SD of length between core genes
+    # TODO plot -
+    # TODO kruwalski plot
     #######################
 
     ### WRITE OUTPUTS ###
+    # TODO write raw distance outputs in long format
     # TODO possibly construct pseudo core with core-core distances
+
     #####################
 
     ### WRITE PLOTS ###
 
     ###################
+
 
 if __name__ == "__main__":
     main()
