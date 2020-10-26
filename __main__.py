@@ -15,6 +15,8 @@ def main():
 
     # TODO for-loop over each gff - Try to multiprocess
     # TODO Parse gff and extract core and low frequency genes from gffs
+    gff="/path/to/gff"
+    core_pairs, distance, acc_count, low_freq = segment_genome_content(gff, core_gene_dict, low_freq_gene_dict)
 
     # TODO Get all results and mash together into one.
 

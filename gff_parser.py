@@ -1,4 +1,3 @@
-import sys
 from parse_gene_presence_absence import read_gene_presence_absence
 
 
@@ -34,6 +33,9 @@ def get_genome_size_from_gff(input_file):
 def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_id,
                             previous_core_gene_end_coor, accessory_gene_count, low_freq_genes_in_region,
                             core_gene_pair_distance, accessory_gene_content, low_freq_gene_content, core_gene_pairs):
+
+    """ Function to record information about a core gene pair or a core gene and a sequence break,
+    along with accessory information between the two features"""
 
     # Set core cluster names
     if gff_line is not None:
@@ -79,6 +81,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     """ Function that takes a gff generator, core and low frequency genes and identify each core-core gene region
     counts the number of accessory genes in the region, records the number of low frequency genes in the region,
     and records the distance from one core gene to the next"""
+
     # TODO - Integrate refound genes from somewhere!
     # TODO - Make it so that all accessory genes are recorded by their name in the core-core region. This would allow to
     # To observe movement in the pan-genome of individual accessory genes.
@@ -133,6 +136,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                     previous_core_gene_id = line[8]
 
                 else:
+                    # Record core gene pair information
                     (previous_core_gene_id,
                      previous_core_gene_end_coor,
                      accessory_gene_count,
@@ -160,8 +164,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
             # Note that gff has multiple contigs
             single_contig = False
 
-            # TODO - Check if core, if not add as accessory, check for low-frequency
-            print("Reached")
             # Record the core gene neighbouring a sequence break
             (previous_core_gene_id,
              previous_core_gene_end_coor,
@@ -179,7 +181,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                                                                                low_freq_gene_content,
                                                                                core_gene_pairs)
 
-    # TODO - (ID single_contig == False) Record connection and distance between the last and first core gene, and any possible Accessory genes
     # Check if genome is complete or a single contig. If then add information for last and first core gene, if not
     # then add the first and last core gene as being neighbours to sequence breaks.
     if single_contig:
@@ -200,7 +201,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
         low_freq_gene_content[core_gene_neighbours] = low_freq_genes_in_region + first_core_low_freq_genes
 
     else:
-        # TODO - Add first and last core genes as being sequence break.
+        # Add first and larst core gene as being neighbour to a sequence break
         (previous_core_gene_id,
          previous_core_gene_end_coor,
          accessory_gene_count,
@@ -237,21 +238,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 
 
 def segment_genome_content(input_file, core_genes, low_freq_genes):
+    """ Single function segmenting the gff into core gene regions to be used for simple multi processing"""
     gff_generator = parse_gff(input_file)
     return_data = segment_gff_content(gff_generator=gff_generator, gff_path=input_file, core_genes=core_genes, low_freq_genes=low_freq_genes)
 
     return return_data
-
-
-gene_pres_abs_path="/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
-core_gene_dict, low_freq_gene_dict = read_gene_presence_absence(gene_pres_abs_path, 0.99, 0.05)
-# print(len(core_gene_dict['GCA_900475985']))
-# print(core_gene_dict['GCA_900475985'])
-#
-gff = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff"
-core_pairs, distance, acc_count, low_freq = segment_genome_content(gff, core_gene_dict, low_freq_gene_dict)
-
-print(distance)
-print(acc_count)
-print(low_freq)
-print(core_pairs)
