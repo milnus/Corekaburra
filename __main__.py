@@ -4,6 +4,7 @@ from gff_parser import segment_genome_content
 from merge_dicts import merge_dicts_counts, merge_dicts_lists
 import concurrent.futures
 from numpy import mean, std
+import sys
 
 # For plots
 import numpy as np
@@ -45,7 +46,7 @@ def main():
 
         for output in concurrent.futures.as_completed(results):
             # Split the outputs from
-            core_pairs, distance, acc_count, low_freq = output.result()
+            core_pairs, distance, acc_count, low_freq, master_info_dict = output.result()
 
             # Merge results into single dictionaries
             core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
@@ -57,6 +58,12 @@ def main():
     print(core_neighbour_distance)
     print(core_neighbour_accessory_count)
     print(core_neighbour_low_freq)
+    print(master_info_dict)
+    print(sys.getsizeof(core_neighbour_pairs))
+    print(sys.getsizeof(core_neighbour_distance))
+    print(sys.getsizeof(core_neighbour_accessory_count))
+    print(sys.getsizeof(core_neighbour_low_freq))
+    print(sys.getsizeof(master_info_dict))
 
     ### FUNCTION ###
     # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
@@ -71,9 +78,9 @@ def main():
 
     ### DO CALCULATIONS ###
     # TODO mean number length between core genes
-    for neighbours in core_neighbour_distance:
-        print(mean(core_neighbour_distance[neighbours]))
-        print(std(core_neighbour_distance[neighbours]))
+    # for neighbours in core_neighbour_distance:
+    #     print(mean(core_neighbour_distance[neighbours]))
+    #     print(std(core_neighbour_distance[neighbours]))
 
     # TODO SD of length between core genes
     # TODO plot -
