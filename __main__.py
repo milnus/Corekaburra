@@ -1,9 +1,14 @@
-from .parse_gene_presence_absence import read_gene_presence_absence
+from parse_gene_presence_absence import read_gene_presence_absence
+from gff_parser import segment_genome_content
+from merge_dicts import merge_dicts_counts, merge_dicts_lists
+import concurrent.futures
+
 
 #def get_arguments():
     # TODO - Set up arguments parser
     # ARGUMENTS:
     #
+
 
 def main():
     # TODO - Get arguments
@@ -11,12 +16,42 @@ def main():
     # TODO Check if all gff files are present in input folder
 
     # TODO - Open gene_presence_absence file and return dict with a key for each core gene cluster and all locus_tags as the value for each key.
-    core_dict, low_freq_dict = read_gene_presence_absence(# TODO - Give arguments)
+    core_dict, low_freq_dict = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv",
+                                                          0.99, 0.05)
 
+    gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
+                 "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
     # TODO for-loop over each gff - Try to multiprocess
     # TODO Parse gff and extract core and low frequency genes from gffs
-    gff="/path/to/gff"
-    core_pairs, distance, acc_count, low_freq = segment_genome_content(gff, core_gene_dict, low_freq_gene_dict)
+    # TODO - Multi processing
+
+    # Initialise dictionaries to contain results from all gff files
+    core_neighbour_pairs = {}
+    core_neighbour_distance = {}
+    core_neighbour_accessory_count = {}
+    core_neighbour_low_freq = {}
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict) for gff in gff_files]
+        # core_pairs, distance, acc_count, low_freq
+
+        for output in concurrent.futures.as_completed(results):
+            # Split the outputs from
+            core_pairs, distance, acc_count, low_freq = output.result()
+
+            # Merge results
+            core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
+            core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
+            core_neighbour_accessory_count = merge_dicts_counts(core_neighbour_accessory_count, acc_count)
+            core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
+
+    print(core_neighbour_pairs)
+    print(core_neighbour_distance)
+    print(core_neighbour_accessory_count)
+    print(core_neighbour_low_freq)
+
+
+
 
     # TODO Get all results and mash together into one.
 
@@ -46,3 +81,6 @@ def main():
     ### WRITE PLOTS ###
 
     ###################
+
+if __name__ == "__main__":
+    main()
