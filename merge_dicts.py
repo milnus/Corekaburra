@@ -23,13 +23,3 @@ def merge_dicts_lists(parent_dict, merge_dict):
             parent_dict[key] = merge_dict[key]
 
     return parent_dict
-
-#
-# merge_dict_1 = {'a': 1,
-#                 'b': -10}
-#
-# merge_dict_2 = {'a': 1,
-#                 'b': 2}
-# res = merge_dicts_lists(merge_dict_1, merge_dict_2)
-#
-# print(res)
