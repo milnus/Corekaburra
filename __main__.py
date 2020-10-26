@@ -2,8 +2,14 @@
 from parse_gene_presence_absence import read_gene_presence_absence
 from gff_parser import segment_genome_content
 from merge_dicts import merge_dicts_counts, merge_dicts_lists
+from output_writer_functions import master_info_writer
+from time_calculator import time_calculator
+from commandline_interface import get_commandline_arguments
 import concurrent.futures
+import time
+import csv
 from numpy import mean, std
+
 import sys
 
 # For plots
@@ -13,27 +19,28 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-#def get_arguments():
-    # TODO - Set up arguments parser
-    # ARGUMENTS:
-    #
-
-
 def main():
     # TODO - Get arguments
+    args = get_commandline_arguments()
 
     # TODO Check if all gff files are present in input folder
 
+    # local_pres_abs = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
     # TODO - Open gene_presence_absence file and return dict with a key for each core gene cluster and all locus_tags as the value for each key.
-    core_dict, low_freq_dict = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv",
+    time_start = time.time()
+    core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
                                                           0.99, 0.05)
+    time_calculator(time_start, time.time(), "Reading in gene presence/absence file")
 
-    gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
-                 "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
+    # local_gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
+    #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
+    gff_files = args.input_gffs
+
     # TODO for-loop over each gff - Try to multiprocess
     # TODO Parse gff and extract core and low frequency genes from gffs
     # TODO - Multi processing
 
+    time_start = time.time()
     # Initialise dictionaries to contain results from all gff files
     core_neighbour_pairs = {}
     core_neighbour_distance = {}
@@ -54,17 +61,8 @@ def main():
             core_neighbour_accessory_count = merge_dicts_counts(core_neighbour_accessory_count, acc_count)
             core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
 
-    print(core_neighbour_pairs)
-    print(core_neighbour_distance)
-    print(core_neighbour_accessory_count)
-    print(core_neighbour_low_freq)
+    time_calculator(time_start, time.time(), "Searching gff files for core genomes")
     print(master_info_dict)
-    print(sys.getsizeof(core_neighbour_pairs))
-    print(sys.getsizeof(core_neighbour_distance))
-    print(sys.getsizeof(core_neighbour_accessory_count))
-    print(sys.getsizeof(core_neighbour_low_freq))
-    print(sys.getsizeof(master_info_dict))
-
     ### FUNCTION ###
     # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
     ################
@@ -90,6 +88,14 @@ def main():
     ### WRITE OUTPUTS ###
     # TODO write raw distance outputs in long format
     # TODO possibly construct pseudo core with core-core distances
+    # TODO write comprehensice output format for everything from master_info except low frequency gene present (But take counts)
+
+    # TODO write comprehensive output of low frequency genes present in core regions
+    # TODO give argument of output folder!
+    # Write master information to output file
+    time_start = time.time()
+    master_info_writer(master_info_dict, verbose=True)
+    time_calculator(time_start, time.time(), "write comprehensive output")
 
     #####################
 
