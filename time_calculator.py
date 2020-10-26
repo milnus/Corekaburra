@@ -2,7 +2,7 @@ import datetime
 
 
 def time_calculator(start_time, end_time, task):
-    total_time = end_time - start_time
+    total_time = int(end_time - start_time)
 
     seconds = total_time
     minutes = 0
@@ -16,4 +16,4 @@ def time_calculator(start_time, end_time, task):
         if minutes > 59:
             hours = minutes // 60
             minutes = minutes % 60
-    print(f"Time used on {task}: {datetime.time(hours,minutes, seconds)}")
+    print(f"Time used on {task}: {datetime.time(hours, minutes, seconds)}")

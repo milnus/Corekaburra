@@ -1,7 +1,7 @@
 import argparse
 
 
-def get_commandline_arguments():
+def get_commandline_arguments(args):
     # Set up parser
     parser = argparse.ArgumentParser(description='Welcome to Coredial!\n '
                                                  'Program to determine consensus core sequence from multiple genomes.\n'
@@ -13,7 +13,8 @@ def get_commandline_arguments():
                         '--input_gffs',
                         help='Path to gff files used for pan-genome',
                         required=True,
-                        dest='input_gffs')
+                        dest='input_gffs',
+                        nargs='+')
 
     parser.add_argument('-i_pres_abs',
                         '--input_presence_absence',
@@ -32,6 +33,6 @@ def get_commandline_arguments():
                         required=False,
                         dest='output_prefix')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     return args
