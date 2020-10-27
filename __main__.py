@@ -14,27 +14,27 @@ import sys
 
 # For plots
 import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import pandas as pd
+# import seaborn as sns
+# import matplotlib.pyplot as plt
 
 
 def main():
     # TODO - Get arguments
-    #args = get_commandline_arguments(sys.argv[1:])
+    args = get_commandline_arguments(sys.argv[1:])
 
     # TODO Check if all gff files are present in input folder
 
-    local_pres_abs = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
+    # local_pres_abs = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
     # TODO - Open gene_presence_absence file and return dict with a key for each core gene cluster and all locus_tags as the value for each key.
     time_start = time.time()
-    core_dict, low_freq_dict = read_gene_presence_absence(local_pres_abs,
+    core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
                                                           0.99, 0.05)
     time_calculator(time_start, time.time(), "reading in gene presence/absence file")
 
-    gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff"]
-    # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
-    # gff_files = args.input_gffs
+    # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
+    #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
+    gff_files = args.input_gffs
 
     # TODO for-loop over each gff - Try to multiprocess
     # TODO Parse gff and extract core and low frequency genes from gffs
@@ -47,7 +47,7 @@ def main():
     core_neighbour_accessory_count = {}
     core_neighbour_low_freq = {}
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
         results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict) for gff in gff_files]
         # core_pairs, distance, acc_count, low_freq
 

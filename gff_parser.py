@@ -41,11 +41,11 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
     # Set core cluster names
     if gff_line is not None:
         current_core_gene_cluster = core_genes[gff_name][gff_line[8]]
-
         try:
             previous_core_gene_cluster = core_genes[gff_name][previous_core_gene_id]
         except KeyError:
             previous_core_gene_cluster = previous_core_gene_id
+
     else:
         current_core_gene_cluster = "Sequence_break"
         previous_core_gene_cluster = core_genes[gff_name][previous_core_gene_id]
@@ -121,6 +121,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 
     # Set that first core gene has not been found
     first_core_gene = True
+    # Set dummy variable for previous_gene_id
+    previous_core_gene_id = "Hello_coder_reader_hope_you_think_this_looks_okay"
     # Set variable to determine of genome is complete or single contig, or if multi contigs are present
     single_contig = True
     # Set variable to get first contig
@@ -183,22 +185,22 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
             # Note that gff has multiple contigs
             single_contig = False
 
-            # Record the core gene neighbouring a sequence break
-            (previous_core_gene_id,
-             previous_core_gene_end_coor,
-             accessory_gene_count,
-             low_freq_genes_in_region,
-             core_gene_pair_distance,
-             accessory_gene_content,
-             low_freq_gene_content, core_gene_pairs, master_info) = record_core_core_region(core_genes, gff_name, None,
-                                                                               previous_core_gene_id,
-                                                                               previous_core_gene_end_coor,
-                                                                               accessory_gene_count,
-                                                                               low_freq_genes_in_region,
-                                                                               core_gene_pair_distance,
-                                                                               accessory_gene_content,
-                                                                               low_freq_gene_content,
-                                                                               core_gene_pairs, master_info)
+            # Check if there is core gene on traversed contig, if not then last core gene is sequence break, then skip.
+            if previous_core_gene_id is not "Sequence_break":
+                # Record the core gene neighbouring a sequence break
+                (previous_core_gene_id,
+                 previous_core_gene_end_coor,
+                 accessory_gene_count,
+                 low_freq_genes_in_region,
+                 core_gene_pair_distance,
+                 accessory_gene_content,
+                 low_freq_gene_content,
+                 core_gene_pairs,
+                 master_info) = record_core_core_region(core_genes, gff_name, None, previous_core_gene_id,
+                                                        previous_core_gene_end_coor, accessory_gene_count,
+                                                        low_freq_genes_in_region, core_gene_pair_distance,
+                                                        accessory_gene_content, low_freq_gene_content,
+                                                        core_gene_pairs, master_info)
 
     # Check if genome is complete or a single contig. If then add information for last and first core gene, if not
     # then add the first and last core gene as being neighbours to sequence breaks.
@@ -220,7 +222,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
         low_freq_gene_content[core_gene_neighbours] = low_freq_genes_in_region + first_core_low_freq_genes
 
     else:
-        # Add first and larst core gene as being neighbour to a sequence break
+        # Add first core gene as being neighbour to a sequence break
         (previous_core_gene_id,
          previous_core_gene_end_coor,
          accessory_gene_count,
@@ -228,30 +230,32 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
          core_gene_pair_distance,
          accessory_gene_content,
          low_freq_gene_content, core_gene_pairs, master_info) = record_core_core_region(core_genes, gff_name, None,
-                                                                           previous_core_gene_id,
-                                                                           previous_core_gene_end_coor,
-                                                                           accessory_gene_count,
-                                                                           low_freq_genes_in_region,
-                                                                           core_gene_pair_distance,
-                                                                           accessory_gene_content,
-                                                                           low_freq_gene_content,
-                                                                           core_gene_pairs, master_info)
-
-        (previous_core_gene_id,
-         previous_core_gene_end_coor,
-         accessory_gene_count,
-         low_freq_genes_in_region,
-         core_gene_pair_distance,
-         accessory_gene_content,
-         low_freq_gene_content, core_gene_pairs, master_info) = record_core_core_region(core_genes, gff_name, None,
-                                                                           first_core_gene_id,
-                                                                           first_core_gene_start_coor,
-                                                                           first_core_accessory_count,
-                                                                           first_core_low_freq_genes,
-                                                                           core_gene_pair_distance,
-                                                                           accessory_gene_content,
-                                                                           low_freq_gene_content,
-                                                                           core_gene_pairs, master_info)
+                                                                                        first_core_gene_id,
+                                                                                        first_core_gene_start_coor,
+                                                                                        first_core_accessory_count,
+                                                                                        first_core_low_freq_genes,
+                                                                                        core_gene_pair_distance,
+                                                                                        accessory_gene_content,
+                                                                                        low_freq_gene_content,
+                                                                                        core_gene_pairs, master_info)
+        # Add last core gene as being neighbour to a sequence break
+        # if the last core gene has not been recorded already
+        if previous_core_gene_id is not "Sequence_break":
+            (previous_core_gene_id,
+             previous_core_gene_end_coor,
+             accessory_gene_count,
+             low_freq_genes_in_region,
+             core_gene_pair_distance,
+             accessory_gene_content,
+             low_freq_gene_content, core_gene_pairs, master_info) = record_core_core_region(core_genes, gff_name, None,
+                                                                               previous_core_gene_id,
+                                                                               previous_core_gene_end_coor,
+                                                                               accessory_gene_count,
+                                                                               low_freq_genes_in_region,
+                                                                               core_gene_pair_distance,
+                                                                               accessory_gene_content,
+                                                                               low_freq_gene_content,
+                                                                               core_gene_pairs, master_info)
 
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, low_freq_gene_content, master_info
 
