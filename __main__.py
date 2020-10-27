@@ -30,7 +30,7 @@ def main():
     time_start = time.time()
     core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
                                                           0.99, 0.05)
-    time_calculator(time_start, time.time(), "reading in gene presence/absence file")
+    time_calculator(time_start, time.time(), "reading in gene presence/absence file\n")
 
     # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
     #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
@@ -48,8 +48,9 @@ def main():
     core_neighbour_low_freq = {}
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict) for gff in gff_files]
-        # core_pairs, distance, acc_count, low_freq
+        print(f'{len(gff_files)} GFF files to process')
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, i)
+                   for i, gff in enumerate(gff_files)]
 
         for output in concurrent.futures.as_completed(results):
             # Split the outputs from
@@ -61,7 +62,7 @@ def main():
             core_neighbour_accessory_count = merge_dicts_counts(core_neighbour_accessory_count, acc_count)
             core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
 
-    time_calculator(time_start, time.time(), "Searching gff files for core genomes")
+    time_calculator(time_start, time.time(), "Searching gff files for core genomes\n")
 
     ### FUNCTION ###
     # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
@@ -86,6 +87,7 @@ def main():
     #######################
 
     ### WRITE OUTPUTS ###
+    print("Printing outputs")
     # TODO write raw distance outputs in long format
     # TODO possibly construct pseudo core with core-core distances
     # TODO write comprehensice output format for everything from master_info except low frequency gene present (But take counts)
@@ -95,7 +97,7 @@ def main():
     # Write master information to output file
     time_start = time.time()
     master_info_writer(master_info_dict, verbose=True)
-    time_calculator(time_start, time.time(), "write comprehensive output")
+    time_calculator(time_start, time.time(), "write comprehensive output\n")
 
     #####################
 
