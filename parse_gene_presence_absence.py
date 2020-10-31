@@ -3,10 +3,10 @@ import csv
 from math import ceil, floor
 
 
-def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, input_path=""):
+def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, verbose=True):
     """Function that pass a Roary gene presence/absence file and returns directories of core and low frequency genes"""
 
-    file = os.path.join(input_path, file_name)
+    file = os.path.join("", file_name)
 
     if os.path.isfile(file):
         with open(file, 'r', newline='', ) as gene_presence_absence:
@@ -28,16 +28,21 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, inp
             # Initialise reader object
             reader = csv.reader(gene_presence_absence, delimiter=',')
             # Counters
-            core_gene_number = 1
-            low_freq_gene_number = 1
+            core_gene_number = 0
+            low_freq_gene_number = 0
+            acc_gene_number = 0
             # Determine number of isolates that represent core and low frequency genes
             core_gene_isolate_presence = floor(len(gff_file_dict.keys()) * core_gene_presence)
             low_freq_gene_isolate_presence = ceil(len(gff_file_dict.keys()) * low_freq_gene)
 
+            if verbose:
+                print(f"\n------------Opening the gene presence/absence file------------")
+                print(f"Core genes must be found in {core_gene_isolate_presence} or more isolates")
+                print(f"Low frequency genes must be found in {low_freq_gene_isolate_presence} or fewer isolates\n")
+
             # initialise data structure to return
             core_gene_dict = dict.fromkeys(gff_files[14:])
             low_freq_gene_dict = dict.fromkeys(gff_files[14:])
-            gene_cluster_lookup = {}
             # Set keys
             for key in core_gene_dict.keys():
                 core_gene_dict[key] = {}
@@ -49,15 +54,28 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, inp
                 avg_gene_presence = int(line[4])
 
                 # Check if core gene, if then add annotations to genomes
+                # TODO - Handle genes that are refound
+                # TODO - Handle genes that have a paralog and are concatenated by ';'
                 if core_gene_isolate_presence <= gene_isolate_presence == avg_gene_presence:
                     for genome in core_gene_dict.keys():
                         core_gene_dict[genome][line[14+gff_file_dict[genome]]] = line[0]
                     core_gene_number += 1
 
-                if low_freq_gene_isolate_presence >= gene_isolate_presence == avg_gene_presence:
+                # Check if accessory if then add annotation to genomes
+                elif low_freq_gene_isolate_presence >= gene_isolate_presence == avg_gene_presence:
                     for genome in low_freq_gene_dict.keys():
                         if len(line[14+gff_file_dict[genome]]) > 0:
                             low_freq_gene_dict[genome][line[14+gff_file_dict[genome]]] = line[0]
                     low_freq_gene_number += 1
+
+                # If not core or low frequency count as regular accessory
+                else:
+                    acc_gene_number += 1
+
+        if verbose:
+            print("A total of:")
+            print(f"{core_gene_number} core gene clusters were identified")
+            print(f"{low_freq_gene_number} low frequency gene clusters were identified")
+            print(f"{acc_gene_number} intermediate accessory gene clusters were identified\n")
 
     return core_gene_dict, low_freq_gene_dict

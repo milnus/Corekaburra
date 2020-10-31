@@ -8,7 +8,7 @@ from commandline_interface import get_commandline_arguments
 import concurrent.futures
 import time
 import csv
-from numpy import mean, std
+import numpy as np
 
 import sys
 
@@ -20,6 +20,7 @@ import numpy as np
 
 
 def main():
+    total_time_start = time.time()
     # TODO - Get arguments
     args = get_commandline_arguments(sys.argv[1:])
 
@@ -30,7 +31,7 @@ def main():
     time_start = time.time()
     core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
                                                           0.99, 0.05)
-    time_calculator(time_start, time.time(), "reading in gene presence/absence file\n")
+    time_calculator(time_start, time.time(), "reading in gene presence/absence file")
 
     # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
     #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
@@ -46,6 +47,16 @@ def main():
     core_neighbour_distance = {}
     core_neighbour_accessory_count = {}
     core_neighbour_low_freq = {}
+    master_info_total = {}
+    non_core_contig_info = {}
+
+    num_distances = 0
+    num_core_neighbours = 0
+    all_core_neighbours = 0
+    num_master_info_total = 0
+    total_num_contigs = 0
+    all_master_lines = 0
+    unique_core_pairs = 0
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
         print(f'{len(gff_files)} GFF files to process')
@@ -54,15 +65,33 @@ def main():
 
         for output in concurrent.futures.as_completed(results):
             # Split the outputs from
-            core_pairs, distance, acc_count, low_freq, master_info_dict = output.result()
+            core_pairs, distance, acc_count, low_freq, master_info_return, core_less_contigs_return = output.result()
+
+            for key in master_info_return.keys():
+                info = master_info_return[key]
+                # accessory_num_identified = accessory_num_identified + len(info[5])
+                if info[4] < len(info[5]):
+                    print(info)
 
             # Merge results into single dictionaries
             core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
             core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
-            core_neighbour_accessory_count = merge_dicts_counts(core_neighbour_accessory_count, acc_count)
+            core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
             core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
+            master_info_total.update(master_info_return)
+            non_core_contig_info.update(core_less_contigs_return)
 
-    time_calculator(time_start, time.time(), "Searching gff files for core genomes\n")
+    time_calculator(time_start, time.time(), "Searching gff files for core genomes")
+
+    # TODO Calculate the total number of accessory genes in the presence absence file and the number found during gff seach and compare
+    # TODO Find if the master info for some low frequency genes are exploded here, if then something is wrong with update? if not then something is wrong with writer function.
+    # accessory_num_identified = 0
+
+    # print(f"accessory_num_identified {accessory_num_identified}")
+
+    # print("keys found in ")
+    # print(set(master_info_return.keys()) - set(core_neighbour_distance.keys()))
+
 
     ### FUNCTION ###
     # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
@@ -88,6 +117,7 @@ def main():
 
     ### WRITE OUTPUTS ###
     print("Printing outputs")
+    # TODO Write out coreless contigs and their accessory information
     # TODO write raw distance outputs in long format
     # TODO possibly construct pseudo core with core-core distances
     # TODO write comprehensice output format for everything from master_info except low frequency gene present (But take counts)
@@ -96,15 +126,14 @@ def main():
     # TODO give argument of output folder!
     # Write master information to output file
     time_start = time.time()
-    master_info_writer(master_info_dict, verbose=True)
-    time_calculator(time_start, time.time(), "write comprehensive output\n")
-
+    master_info_writer(master_info_total, verbose=True)
+    time_calculator(time_start, time.time(), "write comprehensive output")
     #####################
 
     ### WRITE PLOTS ###
 
     ###################
-
+    time_calculator(total_time_start, time.time(), "running the entire program")
 
 if __name__ == "__main__":
     main()

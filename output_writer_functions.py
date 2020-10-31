@@ -16,6 +16,12 @@ def master_info_writer(master_info, verbose=False):
 
         # Write remaining rows:
         for key in master_info.keys():
-            row_info = master_info[key][0:3] + master_info[key][3] + [master_info[key][4]] + [len(master_info[key][5])]
+            if len(master_info[key][5]) > master_info[key][4]:
+                print(f"{master_info[key]} - Accessory smaller than low frequency")
+            row_info = master_info[key][0:3] + \
+                       [master_info[key][3]] + \
+                       [master_info[key][4]] + \
+                       [len(master_info[key][5])]
+
             writer.writerow(row_info)
     out_file.close()
