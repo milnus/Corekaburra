@@ -71,9 +71,9 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
     accessory_gene_content[core_gene_neighbours_str] = accessory_gene_count
     low_freq_gene_content[core_gene_neighbours_str] = low_freq_genes_in_region
 
-    if accessory_gene_count < len(low_freq_genes_in_region):
-        print([gff_name, core_gene_neighbours[0], core_gene_neighbours[1], core_core_distance,
-               accessory_gene_count, low_freq_genes_in_region])
+    # if accessory_gene_count < len(low_freq_genes_in_region):
+    #     print([gff_name, core_gene_neighbours[0], core_gene_neighbours[1], core_core_distance,
+    #            accessory_gene_count, low_freq_genes_in_region])
 
     # Add info to master dict
     master_info[f'{core_gene_neighbours_str}-{gff_name}'] = [gff_name,
@@ -259,10 +259,10 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 
     else:
         # Add first core gene as being neighbour to a sequence break
-        (previous_core_gene_id,
-         previous_core_gene_end_coor,
-         accessory_gene_count,
-         low_freq_genes_in_region,
+        (_,
+         _,
+         _,
+         _,
          core_gene_pair_distance,
          accessory_gene_content,
          low_freq_gene_content, core_gene_pairs, master_info) = record_core_core_region(core_genes, gff_name, None,
