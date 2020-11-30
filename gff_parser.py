@@ -55,7 +55,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
         core_gene_neighbours = [previous_core_gene_cluster, current_core_gene_cluster]
 
     # Merge core neighbours
-    core_gene_neighbours_str = f'{core_gene_neighbours[0]}-{core_gene_neighbours[1]}'
+    core_gene_neighbours_str = f'{core_gene_neighbours[0]}--{core_gene_neighbours[1]}'
     core_gene_pairs.append(core_gene_neighbours_str)
 
     # Set core neighbour distance
@@ -63,7 +63,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
         core_core_distance = int(gff_line[3]) - previous_core_gene_end_coor
     else:
         core_core_distance = np.nan
-        # core_core_distance = ' '
+
     # Add core neighbour distance
     core_gene_pair_distance[core_gene_neighbours_str] = core_core_distance
 
@@ -71,12 +71,8 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
     accessory_gene_content[core_gene_neighbours_str] = accessory_gene_count
     low_freq_gene_content[core_gene_neighbours_str] = low_freq_genes_in_region
 
-    # if accessory_gene_count < len(low_freq_genes_in_region):
-    #     print([gff_name, core_gene_neighbours[0], core_gene_neighbours[1], core_core_distance,
-    #            accessory_gene_count, low_freq_genes_in_region])
-
     # Add info to master dict
-    master_info[f'{core_gene_neighbours_str}-{gff_name}'] = [gff_name,
+    master_info[f'{core_gene_neighbours_str}--{gff_name}'] = [gff_name,
                                                              core_gene_neighbours[0],
                                                              core_gene_neighbours[1],
                                                              core_core_distance,
@@ -108,7 +104,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     # TODO - Make it so that all accessory genes are recorded by their name in the core-core region. This would allow to to observe movement in the pan-genome of individual accessory genes.
 
     # Initialize data structures to be returned
-    # List of sorted core gene neighbours separated by '-'. (Sorted as the orientation of contigs is sometimes random)
+    # List of sorted core gene neighbours separated by '--'. (Sorted as the orientation of contigs is sometimes random)
     core_gene_pairs = []
     # Dict of distances between core gene neighbours. Key is the core_gene_pairs, and values is the distance in basepairs from end to start for neighbouring genes.
     core_gene_pair_distance = {}
@@ -120,6 +116,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     master_info = {}
     # Dict to store info on accessory genes from contigs where no core gene is present.
     core_less_contigs = {}
+    # initiate variable that holds the first gene for file is genome is complete.
+    start_gene_cluster = False
 
     # Split input path to gff to get genome name
     gff_name = gff_path.split('/')[-1]
@@ -150,6 +148,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 
             # Check if gene is core - if then test if fist or not, else assume to be accessory gene
             if line[8] in core_genes[gff_name]:
+
                 # Check if core gene is the first observed in file - if then set information else record information
                 if first_core_gene:
                     # Set information on first core gene to be used when finishing search
@@ -211,6 +210,25 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                                                         accessory_gene_content, low_freq_gene_content,
                                                         core_gene_pairs, master_info)
 
+                # TODO # Check if first gene on contig is a core gene, if the record it.
+                if line[8] in core_genes[gff_name]:
+                    previous_core_gene_id = "Sequence_break"
+
+                    (previous_core_gene_id,
+                     previous_core_gene_end_coor,
+                     accessory_gene_count,
+                     low_freq_genes_in_region,
+                     core_gene_pair_distance,
+                     accessory_gene_content,
+                     low_freq_gene_content,
+                     core_gene_pairs,
+                     master_info) = record_core_core_region(core_genes, gff_name, line, previous_core_gene_id,
+                                                            previous_core_gene_end_coor, accessory_gene_count,
+                                                            low_freq_genes_in_region, core_gene_pair_distance,
+                                                            accessory_gene_content, low_freq_gene_content,
+                                                            core_gene_pairs, master_info)
+
+
                 # Set new contig
                 previous_contig = line[0]
 
@@ -219,7 +237,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                 # TODO - Record intermediate accessory names
                 # Record info on accessory genes on core-less contig, if any accessory genes are present
                 if accessory_gene_count > 0:
-                    core_less_contigs[f'{gff_name}-{previous_contig}'] = [accessory_gene_count, low_freq_genes_in_region]
+                    core_less_contigs[f'{gff_name}--{previous_contig}'] = [accessory_gene_count, low_freq_genes_in_region]
                 accessory_gene_count = 0
                 low_freq_genes_in_region = []
 
@@ -235,7 +253,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 
         # Add core neighbours
         core_gene_neighbours = sorted([last_core_gene_cluster, first_core_gene_cluster])
-        core_gene_neighbours = f'{core_gene_neighbours[0]}-{core_gene_neighbours[1]}'
+        core_gene_neighbours = f'{core_gene_neighbours[0]}--{core_gene_neighbours[1]}'
         core_gene_pairs.append(core_gene_neighbours)
 
         # Add core neighbour distance
@@ -250,12 +268,15 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
         low_freq_gene_content[core_gene_neighbours] = last_first_low_freq_count
 
         # Add to master info dict
-        master_info[f'{core_gene_neighbours}-{gff_name}'] = [gff_name,
+        master_info[f'{core_gene_neighbours}--{gff_name}'] = [gff_name,
                                                              first_core_gene_cluster,
                                                              last_core_gene_cluster,
                                                              core_core_distance,
                                                              last_first_accessory_count,
                                                              last_first_low_freq_count]
+
+        # Add first gene in file to list, to aid as start point for consensus core gene graph
+        start_gene_cluster = first_core_gene_cluster
 
     else:
         # Add first core gene as being neighbour to a sequence break
@@ -292,9 +313,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                                                                                accessory_gene_content,
                                                                                low_freq_gene_content,
                                                                                core_gene_pairs, master_info)
-
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, \
-           low_freq_gene_content, master_info, core_less_contigs
+           low_freq_gene_content, master_info, core_less_contigs, start_gene_cluster
 
 
 def segment_genome_content(input_file, core_genes, low_freq_genes, i):
