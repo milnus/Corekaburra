@@ -1,8 +1,11 @@
 # General function
 from parse_gene_presence_absence import read_gene_presence_absence
 from gff_parser import segment_genome_content
-from merge_dicts import merge_dicts_counts, merge_dicts_lists
-from output_writer_functions import master_info_writer
+from merge_dicts import merge_dicts_counts, merge_dicts_lists, merge_first_genes
+from output_writer_functions import master_info_writer, \
+    write_consensus_core_gene_synteny, \
+    write_alternative_core_gene_counts
+from consesus_core_genome import determine_core_gene_consesus, identify_rearrangements, characterise_rearrangements
 from time_calculator import time_calculator
 from commandline_interface import get_commandline_arguments
 import concurrent.futures
@@ -21,7 +24,7 @@ import numpy as np
 
 def main():
     total_time_start = time.time()
-    # TODO - Get arguments
+    # TODO - Make commandline input take the Panaroo output folder to easier get access to gene_presence_absence and gene_date file
     args = get_commandline_arguments(sys.argv[1:])
 
     # TODO Check if all gff files are present in input folder
@@ -33,14 +36,12 @@ def main():
                                                           0.99, 0.05)
     time_calculator(time_start, time.time(), "reading in gene presence/absence file")
 
+    # TODO - Add in the refound genes into the gff files and print the corrected GFF files.
     # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
     #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
     gff_files = args.input_gffs
 
-    # TODO for-loop over each gff - Try to multiprocess
-    # TODO Parse gff and extract core and low frequency genes from gffs
-    # TODO - Multi processing
-
+    # Loop over all gffs and extract info from each of them.
     time_start = time.time()
     # Initialise dictionaries to contain results from all gff files
     core_neighbour_pairs = {}
@@ -49,14 +50,8 @@ def main():
     core_neighbour_low_freq = {}
     master_info_total = {}
     non_core_contig_info = {}
-
-    num_distances = 0
-    num_core_neighbours = 0
-    all_core_neighbours = 0
-    num_master_info_total = 0
-    total_num_contigs = 0
-    all_master_lines = 0
-    unique_core_pairs = 0
+    merged_start_gene_clusters = []
+    merged_second_gene_clusters = []
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
         print(f'{len(gff_files)} GFF files to process')
@@ -64,37 +59,39 @@ def main():
                    for i, gff in enumerate(gff_files)]
 
         for output in concurrent.futures.as_completed(results):
-            # Split the outputs from
-            core_pairs, distance, acc_count, low_freq, master_info_return, core_less_contigs_return = output.result()
+            # Split the outputs
+            core_pairs, distance, acc_count, \
+            low_freq, master_info_return, \
+            core_less_contigs_return, start_gene_cluster = output.result()
 
-            for key in master_info_return.keys():
-                info = master_info_return[key]
-                # accessory_num_identified = accessory_num_identified + len(info[5])
-                if info[4] < len(info[5]):
-                    print(info)
-
-            # Merge results into single dictionaries
+            # Merge results into single/master dictionaries
             core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
             core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
             core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
             core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
             master_info_total.update(master_info_return)
             non_core_contig_info.update(core_less_contigs_return)
+            merged_start_gene_clusters, merged_second_gene_clusters = merge_first_genes(start_gene_cluster,
+                                                                                        merged_start_gene_clusters,
+                                                                                        merged_second_gene_clusters,
+                                                                                        core_pairs[0])
 
-    time_calculator(time_start, time.time(), "Searching gff files for core genomes")
-
-    # TODO Calculate the total number of accessory genes in the presence absence file and the number found during gff seach and compare
-    # TODO Find if the master info for some low frequency genes are exploded here, if then something is wrong with update? if not then something is wrong with writer function.
-    # accessory_num_identified = 0
-
-    # print(f"accessory_num_identified {accessory_num_identified}")
-
-    # print("keys found in ")
-    # print(set(master_info_return.keys()) - set(core_neighbour_distance.keys()))
+    time_calculator(time_start, time.time(), "searching gff files for core genomes")
 
 
     ### FUNCTION ###
-    # TODO Get the synteny of genes if genome is complete with score 1-n_core_genes
+    # Determine the most common core gene synteny.
+    time_start = time.time()
+    # Find the core gene synteny and possible core genes with alternative neighbours
+    consensus_core_genome, possible_rearrangement_genes, core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs, merged_start_gene_clusters, merged_second_gene_clusters)
+
+    # Identify alternative connections and their occurrence
+    alt_core_pairs, alt_core_pair_count = identify_rearrangements(consensus_core_genome, possible_rearrangement_genes, master_info_total)
+
+    # TODO look at number of alternative core-genome pairs. if one give missing info, if two try to find size, if three or more too complex.
+    rearrangement_predictions = characterise_rearrangements(alt_core_pairs)
+
+    time_calculator(time_start, time.time(), "determining best core gene synteny")
     ################
 
     ### DETERMINE CONSENSUS ###
@@ -127,7 +124,14 @@ def main():
     # Write master information to output file
     time_start = time.time()
     master_info_writer(master_info_total, verbose=True)
-    time_calculator(time_start, time.time(), "write comprehensive output")
+    # Write outputs related to core gene synteny
+    print(consensus_core_genome)
+    print(core_path_coverage)
+    write_consensus_core_gene_synteny(consensus_core_genome, core_path_coverage)
+    write_alternative_core_gene_counts(alt_core_pair_count)
+    rearrangement_predictions #TODO - write output for rearrangement prediciton - First possibly make predictions for two alternative core pairs
+
+    time_calculator(time_start, time.time(), "writing output files")
     #####################
 
     ### WRITE PLOTS ###
