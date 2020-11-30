@@ -1,12 +1,13 @@
 import csv
 import time
 
+
 def master_info_writer(master_info, verbose=False):
     if verbose:
         print("Printing master output")
 
 
-    with open('low_frequency_gene_placement.tsv', 'w', newline='', encoding='utf-8', ) as out_file:
+    with open('low_frequency_gene_placement.tsv', 'w', newline='', encoding='utf-8') as out_file:
         writer = csv.writer(out_file, delimiter="\t")
 
         # Create header
@@ -22,6 +23,31 @@ def master_info_writer(master_info, verbose=False):
                        [master_info[key][3]] + \
                        [master_info[key][4]] + \
                        [len(master_info[key][5])]
+
+            writer.writerow(row_info)
+    out_file.close()
+
+
+def write_consensus_core_gene_synteny(core_gene_synteny, core_path_coverage):
+    with open('consesus_core_gene_synteny.txt', 'w', newline='', encoding='utf-8') as out_file:
+        for i, gene in enumerate(core_gene_synteny):
+            for entery in list(map(lambda e: [gene, e], core_path_coverage[i])):
+                out_file.write(f'{entery[0].strip()}\t{entery[1]}\n')
+
+    out_file.close()
+
+
+def write_alternative_core_gene_counts(alternative_core_gene_counts):
+    with open('alternative_core_pairs_count.tsv', 'w', newline='', encoding='utf-8') as out_file:
+        writer = csv.writer(out_file, delimiter="\t")
+
+        header = ['Core_gene_1', 'Core_gene_2', 'Num._connections']
+        writer.writerow(header)
+
+        for key in alternative_core_gene_counts.keys():
+            split_key = key.split('--')
+
+            row_info = [split_key[0].strip(), split_key[1].strip(), alternative_core_gene_counts[key]]
 
             writer.writerow(row_info)
     out_file.close()
