@@ -77,7 +77,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
                                                              core_gene_neighbours[1],
                                                              core_core_distance,
                                                              accessory_gene_count,
-                                                             low_freq_genes_in_region.copy()] # - TODO maybe .copy
+                                                             low_freq_genes_in_region.copy()]
 
     # Update previous core gene id and end of core gene
     if gff_line is not None:
@@ -115,7 +115,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     # Dict containing master information - used to write comprehensive output files
     master_info = {}
     # Dict to store info on accessory genes from contigs where no core gene is present.
-    core_less_contigs = {}
+    coreless_contigs = {}
     # initiate variable that holds the first gene for file is genome is complete.
     start_gene_cluster = False
 
@@ -134,11 +134,10 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     # Initialise the accessory gene counter and low frequency gene list
     accessory_gene_count = 0
     low_freq_genes_in_region = []
-    contig_counter = 0
 
     # Go through each line of GFF file
     for line in gff_generator:
-        # Set first contig found in file
+        # Set first contig fofund in file
         if first_contig:
             previous_contig = line[0]
             first_contig = False
@@ -237,7 +236,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                 # TODO - Record intermediate accessory names
                 # Record info on accessory genes on core-less contig, if any accessory genes are present
                 if accessory_gene_count > 0:
-                    core_less_contigs[f'{gff_name}--{previous_contig}'] = [accessory_gene_count, low_freq_genes_in_region]
+                    coreless_contigs[f'{gff_name}--{previous_contig}'] = [accessory_gene_count, low_freq_genes_in_region]
                 accessory_gene_count = 0
                 low_freq_genes_in_region = []
 
@@ -314,7 +313,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
                                                                                low_freq_gene_content,
                                                                                core_gene_pairs, master_info)
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, \
-           low_freq_gene_content, master_info, core_less_contigs, start_gene_cluster
+           low_freq_gene_content, master_info, coreless_contigs, start_gene_cluster
 
 
 def segment_genome_content(input_file, core_genes, low_freq_genes, i):
