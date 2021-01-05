@@ -119,17 +119,19 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
         sorted_neighbours = sorted([consensus_core_genome[i], consensus_core_genome[i-1]])
         core_genome_pairs.append(f'{sorted_neighbours[0]}--{sorted_neighbours[1]}')
 
+    # Make searchable set of all core gene pairs
     core_genome_pairs = set(core_genome_pairs)
 
+    # TODO!
     # Search each key that contain a gene with possible rearrangements.
     # If two core gene pairs is not present then predict rearrangement and size. - store genome and rearrangements
     # If only one is present predict possible rearrangements, but unsure due to only one core pair identified
     # If three or more then it is complex and no further prediction can be made. - Possible contamination?
 
-    # initialize dict of alternative core neighbours
+    # initialize dict of alternative core gene neighbours
     alt_core_pairs = {}
 
-    # Identify the alternative core neighbours for each genome:
+    # Identify the alternative core gene neighbours for each genome:
     for key in master_info_dict.keys():
         split_key = key.split("--")
         if "Sequence_break" != split_key[0] and "Sequence_break" != split_key[1]:
@@ -141,6 +143,7 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
                     alt_core_pairs[split_key[2]] = alt_core_pairs[split_key[2]] + list(difference)
                 except KeyError:
                     alt_core_pairs[split_key[2]] = list(difference)
+
 
     print(f'Number of genomes with alternative core neighbours {len(alt_core_pairs.keys())} - '
           f'{round(len(alt_core_pairs.keys())/332 * 100, ndigits=1)}%')
@@ -157,7 +160,33 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
     return alt_core_pairs, alt_core_pair_count
 
 
-def characterise_rearrangements(alt_core_pairs):
+def simple_rearrangement_prediction(gene_pairs, consensus_core_genome):
+    print("predicting rearrangements")
+    # Pair all neighbouring genes in consensus sequence
+    core_genome_pairs = []
+    for i in range(len(consensus_core_genome)):
+        sorted_neighbours = sorted([consensus_core_genome[i], consensus_core_genome[i - 1]])
+        core_genome_pairs.append(f'{sorted_neighbours[0]}--{sorted_neighbours[1]}')
+
+
+    # TODO - Check if alternative neighbours are neighbours in the concensus if paired differently
+    individual_genes = gene_pairs[0].split('--') + gene_pairs[1].split('--')
+
+    new_gene_pairs = [f'{individual_genes[0]}--{individual_genes[2]}',
+                      f'{individual_genes[1]}--{individual_genes[3]}']
+
+    if new_gene_pairs[0] in core_genome_pairs and new_gene_pairs[1] in core_genome_pairs:
+        print("Solution found")
+    else:
+        new_gene_pairs = [f'{individual_genes[1]}--{individual_genes[2]}',
+                          f'{individual_genes[0]}--{individual_genes[3]}']
+
+        if new_gene_pairs[0] in consensus_core_genome and new_gene_pairs[1] in consensus_core_genome:
+            print("Solution found")
+
+
+def characterise_rearrangements(alt_core_pairs, consensus_core_genome):
+    print("characterising rearrangements")
     rearrangement_predictions = [[], []]
 
     # Go through each genome with alternative core pairs
@@ -173,9 +202,18 @@ def characterise_rearrangements(alt_core_pairs):
             rearrangement_predictions[0].append(genome)
             rearrangement_predictions[1].append('Possible prediction')
 
+            simple_rearrangement_prediction(alt_core_pairs[genome], consensus_core_genome)
+
         # If more than two are present then more than one solution is possible and no prediction can be made.
         if len(alt_core_pairs[genome]) > 2:
             rearrangement_predictions[0].append(genome)
             rearrangement_predictions[1].append('Possible prediction')
+            # TODO - Look at predicting more complex rearrangements.
+
+    '''Use consensus core synteny to work out how rearrangements may have occured. 
+    If A and B are connected in the concesus and C and D
+    are connected, then if A and C are connected, and B and D are found next to 
+    sequence breaks then it may be a possible recombination'''
+
 
     return rearrangement_predictions # TODO - Use this output

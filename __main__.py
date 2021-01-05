@@ -27,18 +27,21 @@ def main():
     # TODO - Make commandline input take the Panaroo output folder to easier get access to gene_presence_absence and gene_date file
     args = get_commandline_arguments(sys.argv[1:])
 
-    # TODO Check if all gff files are present in input folder
+    # TODO - Check if all gff files are present in input folder
+    # TODO - Check if Panaroo of Roary input file is given
+    # TODO - Check if gene_data and gene_presence_absence files are present
 
     # local_pres_abs = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
-    # TODO - Open gene_presence_absence file and return dict with a key for each core gene cluster and all locus_tags as the value for each key.
     time_start = time.time()
+    # TODO - check if the genes merged with a ; are neighbours in given genome. If, then keep the group as nothing is in between.
+    # TODO - Add the user specified thresholds for core and low frequency genes.
     core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
-                                                          0.99, 0.05)
+                                                          1, 0.05)
     time_calculator(time_start, time.time(), "reading in gene presence/absence file")
 
-    # TODO - Add in the refound genes into the gff files and print the corrected GFF files.
-    # gff_files = ["/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Recombination_detection_181020/all_aligned_to_single_reference/GCA_900475985.gff",
-    #              "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/annotations_gff/GCA_004135875.gff"]
+    # TODO - IF Panaroo input is given - Add in the refound genes into the gff files and print the corrected GFF files.
+
+    # Get gff files from arguments
     gff_files = args.input_gffs
 
     # Loop over all gffs and extract info from each of them.
@@ -76,20 +79,29 @@ def main():
                                                                                         merged_second_gene_clusters,
                                                                                         core_pairs[0])
 
-    time_calculator(time_start, time.time(), "searching gff files for core genomes")
+    time_calculator(time_start, time.time(), "searching gff files for core genes")
 
 
     ### FUNCTION ###
     # Determine the most common core gene synteny.
     time_start = time.time()
     # Find the core gene synteny and possible core genes with alternative neighbours
-    consensus_core_genome, possible_rearrangement_genes, core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs, merged_start_gene_clusters, merged_second_gene_clusters)
+    consensus_core_genome, \
+    possible_rearrangement_genes, \
+    core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs,
+                                                      merged_start_gene_clusters,
+                                                      merged_second_gene_clusters)
 
     # Identify alternative connections and their occurrence
-    alt_core_pairs, alt_core_pair_count = identify_rearrangements(consensus_core_genome, possible_rearrangement_genes, master_info_total)
+    alt_core_pairs, alt_core_pair_count = identify_rearrangements(consensus_core_genome,
+                                                                  possible_rearrangement_genes,
+                                                                  master_info_total)
 
     # TODO look at number of alternative core-genome pairs. if one give missing info, if two try to find size, if three or more too complex.
-    rearrangement_predictions = characterise_rearrangements(alt_core_pairs)
+    # TODO Determine all alternative connections between core genes and their frequency. - SEE next line
+    '''Use consensus core synteny to work out how rearrangements may have occured. If A and B are connected in the concesus and C and D
+    are connected, then if A and C are connected, and B and D are found next to sequence breaks then it may be a possible recombination'''
+    rearrangement_predictions = characterise_rearrangements(alt_core_pairs, consensus_core_genome)
 
     time_calculator(time_start, time.time(), "determining best core gene synteny")
     ################
@@ -98,7 +110,6 @@ def main():
     # TODO Determine start cluster from possible consensus from complete genomes - else determine relative consensus from connections
     # TODO Do a greedy walk through a graph where all nodes are a core cluster and the edge weight is the number of times two core clusters are observed to be neighbours
     # TODO for-loop - Determine following clusters from connections to first cluster
-    # TODO Determine all alternative connections between core genes and their frequency.
     ###########################
 
     ### DO CALCULATIONS ###
@@ -125,11 +136,9 @@ def main():
     time_start = time.time()
     master_info_writer(master_info_total, verbose=True)
     # Write outputs related to core gene synteny
-    print(consensus_core_genome)
-    print(core_path_coverage)
     write_consensus_core_gene_synteny(consensus_core_genome, core_path_coverage)
     write_alternative_core_gene_counts(alt_core_pair_count)
-    rearrangement_predictions #TODO - write output for rearrangement prediciton - First possibly make predictions for two alternative core pairs
+    # rearrangement_predictions #TODO - write output for rearrangement prediciton - First possibly make predictions for two alternative core pairs
 
     time_calculator(time_start, time.time(), "writing output files")
     #####################
