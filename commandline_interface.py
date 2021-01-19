@@ -16,11 +16,17 @@ def get_commandline_arguments(args):
                         dest='input_gffs',
                         nargs='+')
 
-    parser.add_argument('-i_pres_abs',
-                        '--input_presence_absence',
-                        help='Path to gene presence/absence file from a pan-genome',
+    # parser.add_argument('-i_pres_abs',
+    #                     '--input_presence_absence',
+    #                     help='Path to gene presence/absence file from a pan-genome',
+    #                     required=True,
+    #                     dest='input_pres_abs')
+
+    parser.add_argument('-i_pan',
+                        '--input_pangenome_folder',
+                        help='Path to the folder produced by Panaroo or Roary',
                         required=True,
-                        dest='input_pres_abs')
+                        dest='input_pan')
 
     parser.add_argument('-o',
                         help='Path to where output files will be placed',
@@ -32,6 +38,23 @@ def get_commandline_arguments(args):
                         help='Prefix for output files, if any is desired',
                         required=False,
                         dest='output_prefix')
+
+    parser.add_argument('-a',
+                        '--annotate_refound',
+                        help='Flag to toggle off creation of new gff files, with annotation of refound genes.\n'
+                             'Only done if input pangenome is detected as comming from Panaroo',
+                        required=False,
+                        default=True,
+                        action='store_false',
+                        dest='annotate')
+
+    parser.add_argument('-q',
+                        '--quiet',
+                        help='Flag to toggle off printed info about the run',
+                        required=False,
+                        default=False,
+                        action='store_true',
+                        dest='quiet')
 
     args = parser.parse_args(args)
 
