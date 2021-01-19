@@ -4,6 +4,7 @@ from parse_gene_presence_absence import read_gene_presence_absence
 from merge_dicts import merge_dicts_lists, merge_dicts_counts
 from consesus_core_genome import characterise_rearrangements
 from check_inputs import define_input_source, check_gene_data
+from correct_gffs import read_gene_data
 import os
 import glob
 from numpy import arange, ceil
@@ -148,14 +149,23 @@ class TestGffparser(unittest.TestCase):
     #
     #     characterise_rearrangements(consus_genome, alternative_core_pairs)
 
+
     def test_soruce_identification(self):
         # Identify Roary file
-        source = define_input_source("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Roray_gene_presence_absence")
+        path = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Roray_gene_presence_absence"
+        source, file_path = define_input_source(path)
         self.assertEqual(source, "Roary")
+        self.assertEqual(file_path,
+                         "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Roray_gene_presence_absence/gene_presence_absence.csv")
 
         # Identify Panaroo file
-        source = define_input_source('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Panaroo_gene_presence_absence')
+        path = '/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Panaroo_gene_presence_absence'
+        source, file_path = define_input_source(path)
         self.assertEqual(source, "Panaroo")
+        self.assertNotEqual(file_path,
+                         '/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Panaroo_gene_presence_absence/gene_presence_absence.csv')
+        self.assertEqual(file_path,
+                            '/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Test_source_identification/Panaroo_gene_presence_absence/gene_presence_absence_roary.csv')
 
     def test_locate_gene_data(self):
         check_return = check_gene_data('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/same_genome_pan_split')
@@ -164,6 +174,17 @@ class TestGffparser(unittest.TestCase):
 
         with self.assertRaises(FileNotFoundError):
             check_gene_data('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome')
+
+    def test_reading_gene_data_csv(self):
+        gene_data = read_gene_data('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_gene_data_reading/test_gene_data.csv')
+
+        expected_dict = {
+            'GCA_900636485': {'49_refound_1369': 'ATGACGATAGATGAAGCGTTGCAAAATTTACGTGATAACTTTAATAAAATAATGAATGTCCTAAAAAACGATTGGAAAGCACTATTGTTTCTTGCAATCACAATATTTGGGATGATGGTAACCGTGTCGTATTTTAGCTATCGCGACGCACGACAATATTACGAGTCGCAAATCACAGGACTACGTACACAGCTAAGCAGGACACAAAAGCAGCTTAAACGTGCTAGCGAAGATAGAGCTAGACAGACAAAGCGGATTGCGGAACTTACGCACAACGGAGGGTAG'},
+            'GCA_001019635': {'8_refound_250': 'ATGGAACCAAAATTACATCGGCAACTGCGTCAAAAATATGACGACGCTGAAAAACAATATCTTGAAAAGTTTGGAGAAGACTCGCTTGATAGAGTATTTTTTTGGGAGCCAGACGTTTACTTTGATGAGTGGAAAAAGGTTCTACCAGATGCAACACTGGAATTAAACAAAGCTATTAATAGCGGGGTGGCGATTGATCCAGATCCAGAAAACGCAATATATTAA',
+                              '8_refound_251': 'ATGAAAAGCTTTTTAAATTTAGTCAAACAAAAGTTGTTTAAACCAGGTCTAAAAAAACTCGTAAAGCTTCACAACTCCCAGAACGTTAATATATGCTTATATATCAACGATTGGAACTAATTTATGGTTCGCACCATGGTTTTTGTGGAAGGATCAAAAGTTGTCCTGAAAATTTCTCTTAACCGTGTTTAA'}
+        }
+
+        self.assertEqual(expected_dict, gene_data)
 
 if __name__ == '__main__':
     unittest.main()
