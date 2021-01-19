@@ -12,11 +12,13 @@ def define_input_source(folder):
     try:
         with open(os.path.join(folder, 'gene_presence_absence.csv'), 'r') as gene_pres_abs:
             if '"' in gene_pres_abs.readline():
-                return "Roary"
+                gene_pres_abs_file_path = os.path.join(folder, 'gene_presence_absence.csv')
+                return "Roary", gene_pres_abs_file_path
             else:
                 gene_pres_abs.close()
-                if os.path.isfile(os.path.join(folder, 'gene_presence_absence_roary.csv')):
-                    return "Panaroo"
+                gene_pres_abs_file_path = os.path.join(folder, 'gene_presence_absence_roary.csv')
+                if os.path.isfile(gene_pres_abs_file_path):
+                    return "Panaroo", gene_pres_abs_file_path
 
     except FileNotFoundError:
         raise FileNotFoundError('No gene presence absence file was found in given pan genome folder')
