@@ -4,8 +4,11 @@ from gff_parser import segment_genome_content
 from merge_dicts import merge_dicts_counts, merge_dicts_lists, merge_first_genes
 from output_writer_functions import master_info_writer, \
     write_consensus_core_gene_synteny, \
-    write_alternative_core_gene_counts
-from consesus_core_genome import determine_core_gene_consesus, identify_rearrangements, characterise_rearrangements
+    write_alternative_core_gene_counts, \
+    write_core_gene_types
+from consesus_core_genome import determine_core_gene_consesus, identify_rearrangements, \
+    characterise_rearrangements, core_pair_matrix
+from check_inputs import define_input_source, check_gene_data, check_gff_files
 from time_calculator import time_calculator
 from commandline_interface import get_commandline_arguments
 import concurrent.futures
@@ -27,22 +30,38 @@ def main():
     # TODO - Make commandline input take the Panaroo output folder to easier get access to gene_presence_absence and gene_date file
     args = get_commandline_arguments(sys.argv[1:])
 
-    # TODO - Check if all gff files are present in input folder
-    # TODO - Check if Panaroo of Roary input file is given
-    # TODO - Check if gene_data and gene_presence_absence files are present
+    ## Check input
+    if not args.quiet:
+        print("\n----Checking presence of input files in pan genome folder----\n")
 
-    # local_pres_abs = "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Accessory_exploration/Micro_evolution/Emm75/Pangenome/gene_presence_absence_roary.csv"
+    # Check if Panaroo or Roary input folder is given
+    source_program, input_pres_abs_file_path = define_input_source(args.input_pan)
+
+    # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
+    if args.annotate and source_program is not 'Rorary':
+        check_gene_data(args.input_pan)
+
+    if not args.quiet:
+        print(f"Pan genome determined to come from {source_program}")
+        print("All files found, let's move on!\n")
+        print("--------------------------------------------------------------\n")
+
+    ## Read in gene presence absence file
     time_start = time.time()
     # TODO - check if the genes merged with a ; are neighbours in given genome. If, then keep the group as nothing is in between.
     # TODO - Add the user specified thresholds for core and low frequency genes.
-    core_dict, low_freq_dict = read_gene_presence_absence(args.input_pres_abs,
+    core_dict, low_freq_dict, attribute_dict = read_gene_presence_absence(input_pres_abs_file_path,
                                                           1, 0.05)
+    # TODO - Check if all gff files are present in input folder and gene presence absence file - report missing files or mismatches.
+    if check_gff_files(args.input_gffs):
+        print("All .gff files are present!")
+
+    # TODO - Insert correct_gffs
+    # annotation_dict
+
     time_calculator(time_start, time.time(), "reading in gene presence/absence file")
 
     # TODO - IF Panaroo input is given - Add in the refound genes into the gff files and print the corrected GFF files.
-
-    # Get gff files from arguments
-    gff_files = args.input_gffs
 
     # Loop over all gffs and extract info from each of them.
     time_start = time.time()
@@ -57,9 +76,9 @@ def main():
     merged_second_gene_clusters = []
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-        print(f'{len(gff_files)} GFF files to process')
+        print(f'{len(args.input_gffs)} GFF files to process')
         results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, i)
-                   for i, gff in enumerate(gff_files)]
+                   for i, gff in enumerate(args.input_gffs)]
 
         for output in concurrent.futures.as_completed(results):
             # Split the outputs
@@ -92,10 +111,15 @@ def main():
                                                       merged_start_gene_clusters,
                                                       merged_second_gene_clusters)
 
+    # Assign core-gene synteny types:
+    # TODO: insert function for core gene synteny types
+
     # Identify alternative connections and their occurrence
-    alt_core_pairs, alt_core_pair_count = identify_rearrangements(consensus_core_genome,
-                                                                  possible_rearrangement_genes,
-                                                                  master_info_total)
+    alt_core_pairs, alt_core_pair_count, \
+    core_genome_types, alt_core_comp_types = identify_rearrangements(consensus_core_genome,
+                                                                     possible_rearrangement_genes,
+                                                                     master_info_total,
+                                                                     args.input_gffs)
 
     # TODO look at number of alternative core-genome pairs. if one give missing info, if two try to find size, if three or more too complex.
     # TODO Determine all alternative connections between core genes and their frequency. - SEE next line
@@ -123,6 +147,16 @@ def main():
     # TODO kruwalski plot
     #######################
 
+    # TODO - Insert timer and printer to indicate the process and seperate printed messages nicely.
+    # Constuct matrix over presence of alternative core pairs in genomes
+    # The matrix is filled with 3, 2, 1, or 0, depending ong the evidence level for a core-core neighbour pair
+    # 3 = Genomic evidence, where two genes are found connected by sequence
+    # 2 = Strong suspicion. The consensus core neighbours had no sequence breaks
+    # 1 = Weak evidence. at least one consensus core neighbour was next to a sequence break leading to a possible connection between then consensus neoghbours
+    # 0 = No evidence for the alternative connection.
+    alt_core_pair_matrix = core_pair_matrix(core_genome_types, alt_core_comp_types,
+                                            alt_core_pair_count, master_info_total, consensus_core_genome)
+
     ### WRITE OUTPUTS ###
     print("Printing outputs")
     # TODO Write out coreless contigs and their accessory information
@@ -139,6 +173,7 @@ def main():
     write_consensus_core_gene_synteny(consensus_core_genome, core_path_coverage)
     write_alternative_core_gene_counts(alt_core_pair_count)
     # rearrangement_predictions #TODO - write output for rearrangement prediciton - First possibly make predictions for two alternative core pairs
+    write_core_gene_types(core_genome_types, alt_core_pair_matrix)
 
     time_calculator(time_start, time.time(), "writing output files")
     #####################
