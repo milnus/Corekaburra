@@ -1,10 +1,13 @@
 import unittest
+from hypothesis import given
+import hypothesis.strategies as st
 from gff_parser import get_genome_size_from_gff, segment_genome_content
 from parse_gene_presence_absence import read_gene_presence_absence
 from merge_dicts import merge_dicts_lists, merge_dicts_counts
 from consesus_core_genome import characterise_rearrangements
 from check_inputs import define_input_source, check_gene_data
-from correct_gffs import read_gene_data
+from correct_gffs import read_gene_data, extract_genome_fasta
+from random import randint, choices
 import os
 import glob
 from numpy import arange, ceil
@@ -13,13 +16,13 @@ from numpy import arange, ceil
 class TestPresenceAbsenceParser(unittest.TestCase):
 
     def test_parser_core_genes(self):
-        core_genes, accessory_genes = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
+        core_genes, accessory_genes, _ = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
                                                                  1, 0.05, verbose=False)
         keys = [key for key in core_genes.keys()]
         self.assertEqual(len(core_genes[keys[1]]), 10)
 
     def test_parser_low_freq_genes(self):
-        core_genes, accessory_genes = read_gene_presence_absence(
+        core_genes, accessory_genes, _ = read_gene_presence_absence(
             "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
             1, 0.05, verbose=False)
 
@@ -27,7 +30,6 @@ class TestPresenceAbsenceParser(unittest.TestCase):
         for key in accessory_genes.keys():
             low_frew_genes += len(accessory_genes[key])
         self.assertEqual(low_frew_genes, 5)
-
 
 
 class TestGffparser(unittest.TestCase):
@@ -38,7 +40,7 @@ class TestGffparser(unittest.TestCase):
         self.assertEqual(genome_length, 1600)
 
     def test_segmentation_core_gene_number_all_complete(self):
-        core_genes, accessory_genes = read_gene_presence_absence(
+        core_genes, accessory_genes, _ = read_gene_presence_absence(
             "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
             1, 0.05, verbose=False)
 
@@ -54,7 +56,7 @@ class TestGffparser(unittest.TestCase):
         self.assertEqual(len(core_result_dict.keys()), 10)
 
     def test_segmentation_distance_number(self):
-        core_genes, accessory_genes = read_gene_presence_absence(
+        core_genes, accessory_genes, _ = read_gene_presence_absence(
             "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
             1, 0.05, verbose=False)
 
@@ -71,7 +73,7 @@ class TestGffparser(unittest.TestCase):
 
 
     def test_segmentation_accessory_gene_number(self):
-        core_genes, accessory_genes = read_gene_presence_absence(
+        core_genes, accessory_genes, _ = read_gene_presence_absence(
             "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/complete/mock_gene_presence_absence.csv",
             1, 0.05, verbose=False)
 
@@ -96,7 +98,7 @@ class TestGffparser(unittest.TestCase):
         # TODO - Construct mock gene_presence_absence_file
         # TODO - Load Panaroo file
         # Load mock Panaroo gene presence absence file
-        read_core, read_low_freq = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_gene_pres_abs_parser/read_mock_gene_presence_absence.csv",
+        read_core, read_low_freq, _ = read_gene_presence_absence("/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_gene_pres_abs_parser/read_mock_gene_presence_absence.csv",
                                                                   1, 0.05, verbose=False)
 
         # Test number of keys to see if all genomes are read in
@@ -104,7 +106,7 @@ class TestGffparser(unittest.TestCase):
 
         ## Test if the expected number of core genes are found
         for i in arange(0.8, 1, 0.1):
-            read_core, _ = read_gene_presence_absence(
+            read_core, _, _ = read_gene_presence_absence(
                 "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_gene_pres_abs_parser/read_mock_gene_presence_absence.csv",
                 i, 0.05, verbose=False)
 
@@ -120,7 +122,7 @@ class TestGffparser(unittest.TestCase):
 
         # Test low frequency genes
         for i in arange(0.1, 0.8, 0.1):
-            _, read_low_freq = read_gene_presence_absence(
+            _, read_low_freq, _ = read_gene_presence_absence(
                 "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_gene_pres_abs_parser/read_mock_gene_presence_absence.csv",
                 1, i, verbose=False)
 
@@ -185,6 +187,31 @@ class TestGffparser(unittest.TestCase):
         }
 
         self.assertEqual(expected_dict, gene_data)
+
+    def test_reading_fasta_from_gff(self):
+        single_genome_dict, _ = extract_genome_fasta('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Sample_gff_files/single_contig_mock_for_reading_fasta_in_gff.gff')
+        self.assertEqual(len(single_genome_dict), 1)
+        self.assertEqual(len(single_genome_dict[list(single_genome_dict.keys())[0]]), 540)
+
+        multi_genome_dict, _ = extract_genome_fasta('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Sample_gff_files/multi_contig_mock_for_reading_fasta_in_gff.gff')
+        self.assertEqual(len(multi_genome_dict), 2)
+        self.assertEqual(len(multi_genome_dict[list(multi_genome_dict.keys())[0]]), 540)
+        self.assertEqual(len(multi_genome_dict[list(multi_genome_dict.keys())[1]]), 300)
+
+    def test_finding_largest_locus_tag(self):
+        _, locus_tag = extract_genome_fasta('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/Sample_gff_files/single_contig_mock_for_reading_fasta_in_gff.gff')
+
+        self.assertEqual(locus_tag, 'MONDJAPC_01960')
+
+
+class TestCoreGeneSyntenyTypes(unittest.TestCase):
+    def test_assign_core_synteny_types(self):
+        thing = []
+
+        self.assertEqual(len(set(thing)), 1)
+
+        thing_90 = []
+        self.assertEqual(len(set(thing_90)), 2)
 
 if __name__ == '__main__':
     unittest.main()
