@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def parse_gff(input_file):
     """ Read a gff file and return it as a generator object that return all line containing CDS """
     with open(input_file, 'r') as gff_file:
