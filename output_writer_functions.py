@@ -51,3 +51,23 @@ def write_alternative_core_gene_counts(alternative_core_gene_counts):
 
             writer.writerow(row_info)
     out_file.close()
+
+
+def write_core_gene_types(core_genome_types, alt_core_pair_matrix):
+    with open('core_genome_synteny_types.csv', 'w', newline='', encoding='utf-8') as out_file:
+        header = ['Genome', 'Type']
+
+        writer = csv.writer(out_file, delimiter=',')
+        writer.writerow(header)
+        for key in core_genome_types:
+            writer.writerow([key, core_genome_types[key]])
+
+        out_file.close()
+
+
+    with open('core_pair_matrix.csv', 'w', newline='', encoding='utf-8') as out_file:
+        writer = csv.DictWriter(out_file, fieldnames=alt_core_pair_matrix[1])
+        writer.writeheader()
+        writer.writerows(alt_core_pair_matrix[0])
+
+
