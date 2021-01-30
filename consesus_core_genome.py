@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+from os.path import basename
 
 
 def construct_core_graph(core_neighbour_pairs):
@@ -74,7 +75,8 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
         # Check if more than one neighbour is present in, then chose the one with largest edge weight,
         # Else walk along only path available
         if len(new_neighbours) > 1:
-            largest_weight_index = np.where(np.max(edge_weights))[0][0]
+            max_weight = np.max(edge_weights)
+            largest_weight_index = np.where([index == max_weight for index in edge_weights])[0][0]
             best_neighbour = new_neighbours[largest_weight_index]
 
         else:
@@ -94,7 +96,6 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
 
     # Insert connections from last gene to first gene
     _ , core_path_coverage[-1] = get_new_neighbours(visited_list[-1], [visited_list[-2]], core_gene_graph)
-
     return visited_list, possible_rearrangement_genes, core_path_coverage
 
 
@@ -112,7 +113,49 @@ def determine_core_gene_consesus(core_neighbour_pairs, start_gene_cluster, secon
     return consensus_core_genome, possible_rearrangement_genes, core_path_coverage
 
 
-def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes, master_info_dict):
+def assign_core_gene_synteny_types(alternative_core_pairs, gff_names):
+    """ Function that assigns a type to each genome based on its core genome synteny and the consensus.
+     returns a dict with each genome as a key and the value being the consensus core genome type.
+     a type = 1 is consensus everything else is not consensus."""
+    # Get name of genomes
+    gff_names = [basename(gff).split('.')[0] for gff in gff_names]
+
+    # construct dict with each genome as key and value as core gene synteny type
+    type_dict = dict.fromkeys(gff_names)
+
+    # Get list of all genomes with an alternative core pair
+    alternative_genomes = alternative_core_pairs.keys()
+
+    # Construct dict to hold all alternative core-pair and their associated type
+    alt_core_comp_types = {}
+
+    # Initialise alternative type counter
+    type_counter = 2
+    # Go through all genomes and assign core gene synteny type dependant on their composition
+    for key in type_dict.keys():
+        # Check if alternative core gene neighbours are present,
+        # If they give search for type, if not then give consencus type, 1.
+        if key in alternative_genomes:
+            # extract alternative core neighbours and sort and make string to be possible key in dict
+            current_pairs = alternative_core_pairs[key]
+            current_pairs.sort()
+            current_pairs = str(current_pairs)
+
+            # Check if combination of alternative core gene neighbours has been assigned a type,
+            # if not assign new type.
+            if current_pairs in list(alt_core_comp_types.keys()):
+                type_dict[key] = alt_core_comp_types[current_pairs]
+            else:
+                alt_core_comp_types[str(alternative_core_pairs[key])] = type_counter
+                type_dict[key] = type_counter
+                type_counter = type_counter + 1
+        else:
+            type_dict[key] = 1
+
+    return type_dict, alt_core_comp_types
+
+
+def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes, master_info_dict, gff_names):
     # Pair all neighbouring genes in the consensus core genome
     core_genome_pairs = []
     for i in range(len(consensus_core_genome)):
@@ -146,18 +189,21 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
 
 
     print(f'Number of genomes with alternative core neighbours {len(alt_core_pairs.keys())} - '
-          f'{round(len(alt_core_pairs.keys())/332 * 100, ndigits=1)}%')
+          f'{round(len(alt_core_pairs.keys())/len(gff_names) * 100, ndigits=1)}%\n')
 
     # Record the number of times each alternative core pair occur
     alt_core_pair_count = {}
     for key in alt_core_pairs.keys():
         for pair in alt_core_pairs[key]:
-            if pair in alt_core_pair_count.keys():
+            if pair in list(alt_core_pair_count.keys()):
                 alt_core_pair_count[pair] += 1
             else:
                 alt_core_pair_count[pair] = 1
 
-    return alt_core_pairs, alt_core_pair_count
+    # Assign core gene synteny types to genomes
+    core_genome_types, alt_core_comp_types = assign_core_gene_synteny_types(alt_core_pairs, gff_names)
+
+    return alt_core_pairs, alt_core_pair_count, core_genome_types, alt_core_comp_types
 
 
 def simple_rearrangement_prediction(gene_pairs, consensus_core_genome):
@@ -217,3 +263,146 @@ def characterise_rearrangements(alt_core_pairs, consensus_core_genome):
 
 
     return rearrangement_predictions # TODO - Use this output
+
+
+def determine_partners_neighbours(alt_core_gene, core_genome_pairs, cur_genome_pairs):
+    # Find consensus neighbours for genes in the alternative pair
+    consensus_pairs = [gene for gene in core_genome_pairs if gene[0] is alt_core_gene or gene[1] is alt_core_gene]
+
+    # Remove consensus pairs found in the current genome
+    consensus_pairs = [pair for pair in consensus_pairs if pair not in cur_genome_pairs]
+
+    # Flatten list of list to list
+    consensus_neighbours = [gene for pair in consensus_pairs for gene in pair]
+
+    # Find remove the gene from the alternative pair and keep consensus neighbours
+    consensus_neighbours = [gene for gene in consensus_neighbours if gene is not alt_core_gene]
+
+    # Find neighbours of the consesus neighbours in the current genome
+    cur_consensus_neighbours = [pair for pair in cur_genome_pairs if pair[1] in consensus_neighbours
+                               or pair[0] in consensus_neighbours]
+
+    # Flatten the list of neighbours to the consensus neighbours
+    consensus_neighbours = [gene for pair in cur_consensus_neighbours for gene in pair]
+    # print(consensus_neighbours)
+
+    # Count the number of sequence breaks
+    partner_sequence_breaks = consensus_neighbours.count('Sequence_break')
+
+    return partner_sequence_breaks
+
+
+def core_pair_matrix(core_genome_types, alt_core_comp_types, alt_core_pair_count, master_info_total, consensus_genome):
+    """ Function to produce a matrix of presence or absence of alternative core neighbours to be viewed in Phandango"""
+    # Construct header for output file
+    header = ['genome']
+    for pair in alt_core_pair_count.keys():
+        header.append(pair)
+
+    # Initialise the dict that will become the matrix with gene pairs as coluns and genomes as rows.
+    alt_core_pair_matrix = {}
+    for genome in core_genome_types:
+        alt_core_pair_matrix[genome] = dict.fromkeys(header[1:], 0)
+        alt_core_pair_matrix[genome].update({'genome': genome})
+
+    # Construct dict that contain the genome type as key and alternative core neghbours associated with it as values.
+    genome_type_gene_dict = {}
+    for gene_pairs in alt_core_comp_types:
+        core_gene_type = alt_core_comp_types[gene_pairs]
+        gene_pairs = gene_pairs.replace('[', '')
+        gene_pairs = gene_pairs.replace(']', '')
+        gene_pairs = gene_pairs.split(', ')
+
+        gene_pairs = [eval(gene_pair) for gene_pair in gene_pairs]
+
+        genome_type_gene_dict[core_gene_type] = gene_pairs
+
+    # Fill the matrix with presence (3) or leave as absent (0)
+    for key in core_genome_types:
+        genome_type = core_genome_types[key]
+        if genome_type is not 1:
+            for core_pair in genome_type_gene_dict[genome_type]:
+                alt_core_pair_matrix[key][core_pair] = 3
+
+    # TODO - Go though and see of an isolate contain a sequence break by both genes in an alternative pair.
+    #  if so then mark it as 0.5 or probable.
+    # Find core genes where both genes are next to a sequence break and can be found in a alternative pair
+    sequence_break_pairs = [pair.split('--') for pair in master_info_total.keys() if 'Sequence_break' in pair]
+    # Remove the Sequence_break enteries. Keep gene neighbouring sequnece break and genome name
+    sequence_break_pairs = [[element for element in pair if element != 'Sequence_break'] for pair in sequence_break_pairs]
+
+    # Pair all neighbouring genes in the consensus core genome
+    core_genome_pairs = []
+    for i in range(len(consensus_genome)):
+        sorted_neighbours = sorted([consensus_genome[i], consensus_genome[i - 1]])
+        core_genome_pairs.append(sorted_neighbours)
+
+
+    # TODO - predict if a consensus - core-core neighbourship is possible.
+    # Initiate counters to keep track of core-core variants searched and found
+    core_variants_predicted_weak = 1
+    core_variants_predicted_strong = 1
+    core_variants_predicted = 1
+    genomes_searched = 1
+    # Go through each header and find genomes that contain both core genes of a alternative pair next to a sequence break
+    for cur_genome in alt_core_pair_matrix.keys():
+        # Find breaks for current genome
+        breaks_cur_genome = [pair for pair in sequence_break_pairs if cur_genome in pair]
+        if len(breaks_cur_genome):
+            # Isolate core gene neighbour pairs for genome
+            cur_genome_core_pairs = [pair.split('--')[0:2] for pair in master_info_total.keys() if cur_genome in pair]
+
+            # Go through all alternative core pairs and examine the ones not present in the current genome.
+            for alt_core_pair in alt_core_pair_matrix[cur_genome]:
+                # Check that genome entry is not checked
+                if alt_core_pair is not 'genome':
+                    # Check that the alternative core neighbours are not present
+                    if alt_core_pair_matrix[cur_genome][alt_core_pair] != 2:
+                        # Split alternative variant into two elements in list
+                        core_pair = alt_core_pair.split('--')
+
+                        # Search if a combination of core genes near sequnce breaks can match the alternative pair,
+                        # If then set evidence level to 1.
+                        if len([gene for gene in breaks_cur_genome if gene[0] in core_pair[0]]) and \
+                                len([gene for gene in breaks_cur_genome if gene[0] in core_pair[1]]) \
+                                or \
+                                len([gene for gene in breaks_cur_genome if gene[0] in core_pair[1]]) and \
+                                len([gene for gene in breaks_cur_genome if gene[0] in core_pair[0]]):
+
+                            # Check that the possible alternative pair is not because of many breaks in genome
+                            alt_core_pair_possible = False
+
+                            seq_breaks_gene_1 = determine_partners_neighbours(core_pair[0],
+                                                                               core_genome_pairs,
+                                                                               cur_genome_core_pairs)
+                            seq_breaks_gene_2 = determine_partners_neighbours(core_pair[1],
+                                                                              core_genome_pairs,
+                                                                              cur_genome_core_pairs)
+                            if seq_breaks_gene_1 > 0 and seq_breaks_gene_2 > 0:
+                                alt_core_pair_possible = True
+
+                            if alt_core_pair_possible:
+                                alt_core_pair_matrix[cur_genome][alt_core_pair] = 1
+                                core_variants_predicted_weak += 1
+                            else:
+                                alt_core_pair_matrix[cur_genome][alt_core_pair] = 2
+                                core_variants_predicted_strong += 1
+
+                            core_variants_predicted += 1
+
+
+            # Increment the counter for variants searched
+            genomes_searched += 1
+
+    # TODO - set as verbose oberated:
+    print(f'A total of {genomes_searched} genomes were searched for alternative'
+          f' core-core neighbours separated by a sequence break')
+    print(f'{core_variants_predicted} alternative core-core neighbours were predicted, when examining genomes with '
+          f'sequnce breaks.')
+    print(f'{core_variants_predicted_weak} of the predicted alternative core neighbours had weak evidence')
+    print(f'{core_variants_predicted_strong} of the predicted alternative core neighbours had strong evidence')
+
+    # Convert to list to be writen as output file
+    matrix_list = [dict_content for dict_content in alt_core_pair_matrix.values()]
+
+    return [matrix_list, header]
