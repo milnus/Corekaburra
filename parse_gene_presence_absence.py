@@ -4,7 +4,8 @@ from math import ceil, floor
 
 
 def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, verbose=True):
-    """Function that pass a Roary gene presence/absence file and returns directories of core and low frequency genes"""
+    """Function that pass a Roary style gene presence/absence file.
+    Returns directories of core and low frequency genes, and a directory of pan genome clusters and their annotation"""
 
     file = os.path.join("", file_name)
 
@@ -46,8 +47,17 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
             core_gene_dict = {item: {} for item in gff_file_names[14:]}
             low_freq_gene_dict = {item: {} for item in gff_file_names[14:]}
 
-            # Read lines from file and determine if core, low frequency or 'regular' accessory.
+            # Initialise dict that contain annotations
+            annotation_dict = {}
+
+            # Read lines from file and determine if core, low frequency or 'regular' accessory and record annotations
             for line in reader:
+                # Record annotations of refound genes
+                if any(['refound' in gene for gene in line[14:]]):
+                    refound_genes = [gene for gene in line[14:] if 'refound' in gene]
+                    for gene in refound_genes:
+                        annotation_dict[gene] = line[2]
+
                 # Get number of genes in line and average presence of genes in genomes
                 gene_isolate_presence = int(line[3])
                 avg_gene_presence = int(line[4])
@@ -81,4 +91,4 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
     else:
         raise FileNotFoundError('Given gene presence absence file not found. Please check and try again.')
 
-    return core_gene_dict, low_freq_gene_dict
+    return core_gene_dict, low_freq_gene_dict, annotation_dict
