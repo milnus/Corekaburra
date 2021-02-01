@@ -119,6 +119,8 @@ def assign_core_gene_synteny_types(alternative_core_pairs, gff_names):
      a type = 1 is consensus everything else is not consensus."""
     # Get name of genomes
     gff_names = [basename(gff).split('.')[0] for gff in gff_names]
+    if '_corrected' in gff_names[0]:
+        gff_names = [gff.split('_corrected')[0] for gff in gff_names]
 
     # construct dict with each genome as key and value as core gene synteny type
     type_dict = dict.fromkeys(gff_names)
@@ -156,6 +158,11 @@ def assign_core_gene_synteny_types(alternative_core_pairs, gff_names):
 
 
 def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes, master_info_dict, gff_names):
+
+    # Correct gff file names
+    # if '_corrected' in gff_names[0]:
+    #     gff_names = [name.split('corrected') for name in gff_names]
+
     # Pair all neighbouring genes in the consensus core genome
     core_genome_pairs = []
     for i in range(len(consensus_core_genome)):
@@ -284,7 +291,6 @@ def determine_partners_neighbours(alt_core_gene, core_genome_pairs, cur_genome_p
 
     # Flatten the list of neighbours to the consensus neighbours
     consensus_neighbours = [gene for pair in cur_consensus_neighbours for gene in pair]
-    # print(consensus_neighbours)
 
     # Count the number of sequence breaks
     partner_sequence_breaks = consensus_neighbours.count('Sequence_break')
@@ -394,7 +400,7 @@ def core_pair_matrix(core_genome_types, alt_core_comp_types, alt_core_pair_count
             # Increment the counter for variants searched
             genomes_searched += 1
 
-    # TODO - set as verbose oberated:
+    # TODO - set as verbose operated:
     print(f'A total of {genomes_searched} genomes were searched for alternative'
           f' core-core neighbours separated by a sequence break')
     print(f'{core_variants_predicted} alternative core-core neighbours were predicted, when examining genomes with '

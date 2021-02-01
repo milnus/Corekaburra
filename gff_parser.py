@@ -123,6 +123,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
     # Split input path to gff to get genome name
     gff_name = gff_path.split('/')[-1]
     gff_name = gff_name.split('.')[0]
+    if 'corrected' in gff_name:
+        gff_name = gff_name.split('_corrected')[0]
 
     # Set that first core gene has not been found
     first_core_gene = True
@@ -320,7 +322,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path):
 def segment_genome_content(input_file, core_genes, low_freq_genes, i):
     """ Single function segmenting the gff into core gene regions to be used for simple multi processing"""
     if (i+1) % 25 == 0 or i == 0:
-        print(f"Processing GFF file #{i+1}")
+        print(f"Determining core-core synteny for GFF file #{i+1}")
     gff_generator = parse_gff(input_file)
     return_data = segment_gff_content(gff_generator=gff_generator, gff_path=input_file, core_genes=core_genes, low_freq_genes=low_freq_genes)
 
