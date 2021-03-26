@@ -61,7 +61,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, previous_core_gene_i
 
     # Set core neighbour distance
     if gff_line is not None and previous_core_gene_cluster is not "Sequence_break":
-        core_core_distance = int(gff_line[3]) - previous_core_gene_end_coor
+        core_core_distance = int(gff_line[3]) - previous_core_gene_end_coor - 1
     else:
         core_core_distance = np.nan
 
@@ -274,7 +274,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
 
         # Add core neighbour distance
         core_core_distance = get_genome_size_from_gff(gff_path) - previous_core_gene_end_coor \
-                            + first_core_gene_start_coor
+                            + first_core_gene_start_coor - 1
 
         core_gene_pair_distance[core_gene_neighbours] = core_core_distance
 
