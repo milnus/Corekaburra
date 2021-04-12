@@ -10,7 +10,7 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
     file = os.path.join("", file_name)
 
     # Check if file exists, if the read otherwise raise error.
-    if os.path.isfile(file):
+    if os.path.isfile(file): # TODO - THIS CHECK IS IRRELEVANT WITH THE CHECK OF THE SOURCE PROGRAM!
         with open(file, 'r', newline='', ) as gene_presence_absence:
             # Read column header line
             gff_file_names = gene_presence_absence.readline()
@@ -46,6 +46,7 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
             # initialise dict of dicts to hold genes from each gffs and to be returned
             core_gene_dict = {item: {} for item in gff_file_names[14:]}
             low_freq_gene_dict = {item: {} for item in gff_file_names[14:]}
+            acc_gene_dict = {item: {} for item in gff_file_names[14:]}
 
             # Initialise dict that contain annotations
             annotation_dict = {}
@@ -63,11 +64,11 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
                 avg_gene_presence = int(line[4])
 
                 # Check if core gene, if then add annotations to genomes
-                # TODO - Handle genes that are refound
                 # TODO - Handle genes that have a paralog and are concatenated by ';', and check if neighbours
                 if core_gene_isolate_presence <= gene_isolate_presence == avg_gene_presence:
                     # Add gene cluster to genomes
                     for genome in core_gene_dict.keys():
+                        # Check if there is an annotation for the given genome
                         if len(line[14 + gff_file_dict[genome]]) > 0:
                             core_gene_dict[genome][line[14+gff_file_dict[genome]]] = line[0]
                     core_gene_number += 1
@@ -81,6 +82,9 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
 
                 # If not core or low frequency count as regular accessory
                 else:
+                    for genome in acc_gene_dict.keys():
+                        if len(line[14+gff_file_dict[genome]]) > 0:
+                            acc_gene_dict[genome][line[14+gff_file_dict[genome]]] = line[0]
                     acc_gene_number += 1
 
         if verbose:
@@ -91,4 +95,4 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
     else:
         raise FileNotFoundError('Given gene presence absence file not found. Please check and try again.')
 
-    return core_gene_dict, low_freq_gene_dict, annotation_dict
+    return core_gene_dict, low_freq_gene_dict, acc_gene_dict, annotation_dict

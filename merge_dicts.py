@@ -39,7 +39,7 @@ def merge_dicts_lists(parent_dict, merge_dict):
 
 def merge_first_genes(start_gene_cluster, merged_start_gene_clusters, merged_second_gene_clusters, first_core_pair):
     """ Function that merge first genes and find second genes found in complete genomes,
-    used to inform core-genome synteny direction """
+    used to inform core-genome synteny direction and start gene """
     # Check if first gene is available
     if start_gene_cluster:
         # Record first gene

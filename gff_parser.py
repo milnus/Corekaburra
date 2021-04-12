@@ -120,7 +120,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     master_info = {}
     # Dict to store info on accessory genes from contigs where no core gene is present.
     coreless_contigs = {}
-    # initiate variable that holds the first gene for file is genome is complete.
+    # initiate variable that holds the first gene for file is genome is complete. - # How do you determine from a gff file if a genome is complete?
     start_gene_cluster = False
 
     # Split input path to gff to get genome name

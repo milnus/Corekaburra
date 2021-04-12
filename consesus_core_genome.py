@@ -59,11 +59,13 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
         new_neighbours, edge_weights = get_new_neighbours(second_gene, visited_list, core_gene_graph)
 
         # Initialise list to hold the weights for core-core edges.
-        # First core gene
+        # Connection to first core gene
         _, edge_weights_first = get_new_neighbours(second_gene, [], core_gene_graph)
-        _, edge_weights_second = get_new_neighbours(second_gene, [start_gene], core_gene_graph)
-        core_path_coverage = [[edge_weights_first[0]], edge_weights_second]
-
+        # Connection to second core gene
+        third_gene, edge_weights_second = get_new_neighbours(second_gene, [start_gene], core_gene_graph)
+        # start core coverage output
+        core_path_coverage = [[start_gene, second_gene, edge_weights_first[0]],
+                              [second_gene, third_gene[0], edge_weights_second[0]]]
 
     # TODO - Else, when only contigged genomes are pressent (Search for dnaA? first naively using regex in list then more sofisticated)
 
@@ -71,8 +73,13 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
     possible_rearrangement_genes = []
 
     # Search Graph for path
+    # TODO - The logic of running until new_neoghbours is zero can be dangerous if only incomplete genomes are available
+    #  as a break in the same place in all of them may lead to a truncated consensus. Implement a check to see
+    #  if all core genes are included.
+
+    # TODO - Fix so that all nodes are visited in graph to constuct consensus core genome.
     while len(new_neighbours) > 0:
-        # Check if more than one neighbour is present in, then chose the one with largest edge weight,
+        # Check if more than one neighbour is present if, then choose the one with largest edge weight,
         # Else walk along only path available
         if len(new_neighbours) > 1:
             max_weight = np.max(edge_weights)
@@ -85,8 +92,16 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
         # Add next node in core genome synteny
         visited_list.append(best_neighbour)
         new_neighbours, edge_weights = get_new_neighbours(best_neighbour, visited_list, core_gene_graph)
-        core_path_coverage = core_path_coverage + [edge_weights]
+        coverage_pairs = map(lambda best, new, cov:
+                             [best, new, cov],
+                             [best_neighbour]*len(new_neighbours), new_neighbours, edge_weights)
+        # for i in coverage_pairs:
+        #     print(i)
+        # print(list(coverage_pairs))
+        # core_path_coverage = core_path_coverage + [edge_weights]
+        core_path_coverage = core_path_coverage + list(coverage_pairs)
         # TODO - Use core_path_coverage to produce a plot that show the how much coverage each edge has.
+        # TDOD - possibly produce a list and an output file that contain only the coverage of consensus core gene synteny.
 
         # Check if more than one neighbour is available due to possible rearrangements
         if len(new_neighbours) > 1:
@@ -95,7 +110,9 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
             possible_rearrangement_genes = possible_rearrangement_genes + possible_pairs
 
     # Insert connections from last gene to first gene
-    _ , core_path_coverage[-1] = get_new_neighbours(visited_list[-1], [visited_list[-2]], core_gene_graph)
+    _, end_to_start_coverage = get_new_neighbours(visited_list[-1], [visited_list[-2]], core_gene_graph)
+    core_path_coverage = core_path_coverage + [[visited_list[-1], start_gene, end_to_start_coverage[0]]]
+
     return visited_list, possible_rearrangement_genes, core_path_coverage
 
 
@@ -196,7 +213,7 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
 
 
     print(f'Number of genomes with alternative core neighbours {len(alt_core_pairs.keys())} - '
-          f'{round(len(alt_core_pairs.keys())/len(gff_names) * 100, ndigits=1)}%\n')
+          f'{round(len(alt_core_pairs.keys())/len(gff_names) * 100, ndigits=1)}%\n') # TODO - Change to say number out of total instead of a percentage
 
     # Record the number of times each alternative core pair occur
     alt_core_pair_count = {}

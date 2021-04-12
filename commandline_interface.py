@@ -16,12 +16,6 @@ def get_commandline_arguments(args):
                         dest='input_gffs',
                         nargs='+')
 
-    # parser.add_argument('-i_pres_abs',
-    #                     '--input_presence_absence',
-    #                     help='Path to gene presence/absence file from a pan-genome',
-    #                     required=True,
-    #                     dest='input_pres_abs')
-
     parser.add_argument('-i_pan',
                         '--input_pangenome_folder',
                         help='Path to the folder produced by Panaroo or Roary',
