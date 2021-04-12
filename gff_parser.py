@@ -8,10 +8,18 @@ def parse_gff(input_file):
             if "##FASTA" in line:
                 break
             if "#" not in line and 'CDS' in line:
+                # Strip line for newline and split columns into list
                 line = line.strip()
                 line = line.split("\t")
-                gene_id = line[8][line[8].find('ID'):line[8].find(';')]
-                gene_id = gene_id[gene_id.find('=')+1:]
+
+                # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
+                if "old_locus_tag=" in line[8]:
+                    gene_id = line[8][line[8].find('old_locus_tag'):]
+                else:
+                    gene_id = line[8][line[8].find('ID'):line[8].find(';')]
+
+                # Remove equal sign from id and add as identifyer for the returned gff line
+                gene_id = gene_id[gene_id.find('=') + 1:]
                 line[8] = gene_id
                 yield line
 
