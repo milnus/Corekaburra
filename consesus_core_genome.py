@@ -1,9 +1,9 @@
 import networkx as nx
 import numpy as np
-from os.path import basename
+from os.path import basename, join
 
 
-def construct_core_graph(core_neighbour_pairs):
+def construct_core_graph(core_neighbour_pairs, output_path):
     # Initiate core gene graph
     G = nx.Graph()
 
@@ -19,8 +19,90 @@ def construct_core_graph(core_neighbour_pairs):
             # Add edge
             G.add_edges_from(ebunch_to_add=core_genes)
 
-    # TODO - Return graph with nodes of core genes and weight being the number of times observed to be connected
+    # Write out core gene graph
+    nx.write_gml(G, join(output_path, 'core_graph.gml'))
+
     return G
+
+
+def clean_core_graph(core_gene_graph, output_path):
+    """ Function to clean the core genome for any nodes that has more than two degrees. This also resolves any cliques.
+    Additionally all genes with more than two dregrees are noted as being possible rearrangement spots."""
+
+    # Get all nodes in graph
+    graph_nodes = list(core_gene_graph.nodes())
+
+    # Initialise gene and pas counters
+    j = 0
+    n_pas = 1
+
+    # Initialise list to hold possible rearrangements
+    possible_rearrangement_genes = []
+
+    # Get the number of cliques and nodes that do not have 2 degrees
+    n_cliques = len([clique for clique in nx.enumerate_all_cliques(core_gene_graph) if len(clique) >= 3])
+    n_degrees = sum([1 for node in core_gene_graph.degree if node[1] != 2])
+
+    # Print initial info
+    print(f'Cleaning core genome graph\n') #TODO - MAKE MORE CLEAR
+
+    print(f'Pas number: {n_pas}')
+    print(f'Number of cliques present in graph: {n_cliques}')
+    print(f'Number of nodes not having degree of 2 present in graph: {n_degrees}\n')
+
+    # Start cleaning core gene graph until done
+    while True:
+        neighbours = 0
+
+        # Search until a node with at least three degrees is found
+        while neighbours < 3:
+            # Check if the last node is reached and if there are no more cliques and if all nodes has 2 degrees,
+            # if then return the graph - all is done
+            if j == len(graph_nodes) and n_cliques == 0 and n_degrees == 0:
+                print('Finished cleaning core genome graph. No more cliques and all nodes has two edges')
+                nx.write_gml(core_gene_graph, join(output_path, 'cleaned_core_graph.gml'))
+                return core_gene_graph, possible_rearrangement_genes
+
+            # Check if last node is reached, then restart as not all nodes has been resolved for additional degrees
+            elif j == len(graph_nodes):
+                j = 0
+                n_pas += 1
+
+                print(f'Pas number: {n_pas}')
+                print(f'Number of cliques present in graph: {n_cliques}')
+                print(f'Number of nodes not having degree of 2 present in graph: {n_degrees}\n')
+
+                if n_pas == 50:
+                    raise NotImplementedError('The core graph cleaning process reached 50 rounds. Is it stuck? '
+                                              'Please check that the number of cliques and degrees not having 2 edges '
+                                              'has gone down during the couple of passes!')
+
+            # If the final node is not reached fetch the next node in line and examine its number of degrees
+            else:
+                edges_oi = core_gene_graph.edges(graph_nodes[j])
+
+                neighbours = len(edges_oi)
+
+                j += 1
+
+        # Get the weight of each edge leading for a given node
+        edge_weights = [core_gene_graph.get_edge_data(edge[0], edge[1])['weight'] for edge in edges_oi]
+
+        # Find the least weighted edge
+        min_edge_index = list(np.where(edge_weights == np.amin(edge_weights))[0])
+
+        # If a single minimum weight can be found or
+        # if the number of degrees is at least three larger than the number of degrees with the minimum weight,
+        # then remove the degrees
+        if len(min_edge_index) == 1 or len(edges_oi) > len(min_edge_index) + 3:
+            edges_oi = list(edges_oi)
+            [core_gene_graph.remove_edge(*list(edges_oi)[index]) for index in min_edge_index]
+
+            possible_rearrangement_genes += [edges_oi[index] for index in min_edge_index]
+
+            # Recalculate degree and clique numbers
+            n_cliques = len([clique for clique in nx.enumerate_all_cliques(core_gene_graph) if len(clique) >= 3])
+            n_degrees = sum([1 for node in core_gene_graph.degree if node[1] != 2])
 
 
 def get_most_frequent_gene(gene_list):
@@ -83,8 +165,14 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
         # Else walk along only path available
         if len(new_neighbours) > 1:
             max_weight = np.max(edge_weights)
-            largest_weight_index = np.where([index == max_weight for index in edge_weights])[0][0]
-            best_neighbour = new_neighbours[largest_weight_index]
+            largest_weight_index = np.where([index == max_weight for index in edge_weights])[0]#[0]
+            if len(largest_weight_index) == 1:
+                best_neighbour = new_neighbours[largest_weight_index[0]]
+            else:
+                raise ValueError(f'Multiple core gene neighbours were equally likely to neighbour to: {visited_list[-1]},\n'
+                                 f'The new neighbours variable was: {new_neighbours}\n'
+                                 f'The edge weights were: {edge_weights}.')
+                # TODO - Handle better!
 
         else:
             best_neighbour = new_neighbours[0]
@@ -113,14 +201,23 @@ def find_core_gene_synteny(core_gene_graph, start_gene_clusters, second_gene_clu
     _, end_to_start_coverage = get_new_neighbours(visited_list[-1], [visited_list[-2]], core_gene_graph)
     core_path_coverage = core_path_coverage + [[visited_list[-1], start_gene, end_to_start_coverage[0]]]
 
+    print(f"visited_list[-1] {visited_list[-1]}")
+    print(f"start_gene{start_gene}")
+
+    print(f"Number of nodes in core graph: {core_gene_graph.number_of_nodes()}")
+    print(f'Number of nodes visited: {len(visited_list)}')
+
     return visited_list, possible_rearrangement_genes, core_path_coverage
 
 
-def determine_core_gene_consesus(core_neighbour_pairs, start_gene_cluster, second_gene_cluster):
-    core_gene_graph = construct_core_graph(core_neighbour_pairs)
+def determine_core_gene_consesus(core_neighbour_pairs, start_gene_cluster, second_gene_cluster, output_path):
+    core_gene_graph = construct_core_graph(core_neighbour_pairs, output_path)
+
+    # TODO - Clean up graph and find alternative core pairs
+    core_gene_graph, possible_rearrangement_genes = clean_core_graph(core_gene_graph, output_path)
 
     consensus_core_genome, \
-    possible_rearrangement_genes, \
+    _, \
     core_path_coverage = find_core_gene_synteny(core_gene_graph,
                                                 start_gene_cluster,
                                                 second_gene_cluster)
