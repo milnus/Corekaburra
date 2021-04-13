@@ -120,7 +120,7 @@ def main():
         possible_rearrangement_genes, \
         core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs,
                                                           merged_start_gene_clusters,
-                                                          merged_second_gene_clusters)
+                                                          merged_second_gene_clusters, args.output_path)
 
     # Assign core-gene synteny types:
     # TODO: insert function for core gene synteny types

@@ -328,7 +328,7 @@ def identify_rearrangements(consensus_core_genome, possible_rearrangement_genes,
 
 
 def simple_rearrangement_prediction(gene_pairs, consensus_core_genome):
-    print("predicting rearrangements")
+    # print("predicting rearrangements")
     # Pair all neighbouring genes in consensus sequence
     core_genome_pairs = []
     for i in range(len(consensus_core_genome)):
