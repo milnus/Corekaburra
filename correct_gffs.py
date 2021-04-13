@@ -12,7 +12,8 @@ from parse_gene_presence_absence import read_gene_presence_absence
 
 
 def read_gene_data(gene_data_file):
-    """ Function to read the gene_data.csv file outputted by Panaroo """
+    """ Function to read the gene_data.csv file outputted by Panaroo and
+    return a dict of genomes with their refound genes"""
     # Construct dictionary to hold refound genes and sequences for these
     gene_data_dict = {}
 
@@ -25,8 +26,8 @@ def read_gene_data(gene_data_file):
 
             # Check if refound gene
             if 'refound' in line[2]:
-                # Try to add the refound gene to the gene_data dict,
-                # if the genome is not found gene gene_data dict, then construct dict for the genome and add the gene
+                # Try to add the refound gene to the gene_data dict as a key to value being the DNA sequence,
+                # if the genome is not found in gene_data dict, then construct dict for the genome and add the gene
                 try:
                     gene_data_dict[line[0]][line[2]] = line[5]
                 except KeyError:
@@ -121,37 +122,9 @@ def construct_gff_line(gene_oi, genome_oi, contig, strand, annotation, refound_g
 
 
 def add_gene_to_gff(tmp_gff, gene_oi, genome_oi, contig, strand, annotation, refound_gene_tag, largest_locus_tag):
-    # # Get path to temporary folder and where to put file
-    # tmp_gff = os.path.join(temp_folder_path, f'{gff_file_name.split(".gff")[0]}_tmp.gff')
-    #
-    # # Write gff file
-    # with open(tmp_gff, 'w') as gff_file:
-    #     for feature in gff_db.all_features():
-    #         gff_file.writelines(str(feature) + '\n')
-    #     gff_file.write(gff_line + '\n')
-    # # TODO - close file?
-    #
-    # os.remove(data_base)
-    # # Reload temporary gff file
-    # # TODO - Keep_order=False - speeds up this process!
-    # gffutils.create_db(tmp_gff, data_base, force=True, keep_order=False)
-    #
-    # # Attach gff file
-    # gff_db = gffutils.FeatureDB(data_base)
-
-    # TODO - append new gene to file that has been open and closed once to make less reads and writes...
-
-    # Open the file in append mode
-
-    # Add the gene line
-
-    # Close file
-    #TODO ####### CUT #########
-
-    # Prepare the start, end, and locus_tag of the gene feature line.
     gene_start = genome_oi.find(gene_oi) + 1
     gene_end = gene_start + len(gene_oi)
-    locus_tag_parts = largest_locus_tag.split('_')
+    locus_tag_parts = largest_locus_tag.rsplit('_', maxsplit=1)
     locus_tag_parts[1] = int(locus_tag_parts[1]) + 1
     new_locus_tag = f'{locus_tag_parts[0]}_{locus_tag_parts[1]}'
 
@@ -174,12 +147,12 @@ def add_gene_to_gff(tmp_gff, gene_oi, genome_oi, contig, strand, annotation, ref
 
 
 def write_contig(file, contig_name, sequnce):
-    # Wrtie contig name
+    # Write contig name
     file.write(f'>{contig_name}\n')
 
     # Write bulk of sequence
     for i in range(len(sequnce) // 60):
-        file.write(sequnce[0+60*i:61+60*i] + '\n')
+        file.write(sequnce[0+60*i:60+60*i] + '\n')
 
     # Write remainder of sequence
     remainder = len(sequnce) % 60
@@ -278,6 +251,8 @@ def annotate_refound_genes(gff_name, gene_data_dict, temp_folder_path, annotatio
 
 
 def correct_gffs(gffs, gene_data_file, output_folder, annotation_dict):
+    # TODO - Make verbose
+    print("Reading gene_data.csv")
     # Read Gene_data.csv file into dict with a dict of refound genes for each genome
     gene_data_dict = read_gene_data(gene_data_file)
 
@@ -286,11 +261,32 @@ def correct_gffs(gffs, gene_data_file, output_folder, annotation_dict):
     os.mkdir(temp_folder_path)
     # Construct directory to hold corrected gff files:
     corrected_gff_out_dir = os.path.join(output_folder, 'Corrected_gff_files')
-    os.mkdir(corrected_gff_out_dir)
+    # Try and construct folder, if present check if content matches input to avoid process
+    try:
+        os.mkdir(corrected_gff_out_dir)
+    except FileExistsError:
+        corrected_folder_content = os.listdir(corrected_gff_out_dir)
 
+        gff_names = [os.path.basename(gff) for gff in gffs]
+
+        corrected_files = [file for file in corrected_folder_content if f'{file.split("_corrected")[0]}.gff' in gff_names]
+        if len(corrected_files) == len(gffs):
+            os.rmdir(temp_folder_path)
+            return corrected_gff_out_dir
+
+        else:
+            os.rmdir('genome_corer_tmp')
+            raise FileNotFoundError
+            #TODO - RAISE ERROR THAT SOME FILES ARE NOT IN THE corrected
+            # Find the files and process them
+            # If none of the files match then abort.
+
+
+    # TODO - Make verbose
+    print("Start correcting GFF files with refound genes from Panaroo")
     # Multi process the annotation of the genomes. (Process has been found to be better than threads)
     total_time = time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=15) as executor:
         result = [executor.submit(annotate_refound_genes, gff, gene_data_dict, temp_folder_path,
                                   annotation_dict, corrected_gff_out_dir, i) for i, gff in enumerate(gffs)]
 
