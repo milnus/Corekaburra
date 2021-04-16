@@ -3,7 +3,7 @@ import csv
 from math import ceil, floor
 
 
-def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, verbose=True):
+def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, source_program, verbose=True):
     """Function that pass a Roary style gene presence/absence file.
     Returns directories of core and low frequency genes, and a directory of pan genome clusters and their annotation"""
 
@@ -18,10 +18,16 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
             gff_file_names = gff_file_names.strip()
             # split column names
             gff_file_names = gff_file_names.split(',')
+            print(gff_file_names)
+
+            # Remove the quotes from Rorary input
+            if source_program == 'Roary':
+                gff_file_names = [filename.replace('"', '') for filename in gff_file_names]
 
             # Index gff filenames and column position in dict for better search
             gff_file_dict = {}
             for i, gff_name in enumerate(gff_file_names[14:]):
+                print(gff_name)
                 gff_file_dict[gff_name] = i
 
             # Read remaining lines and construct a nested dicts one dict for each genome and its core genes,
@@ -53,6 +59,10 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
 
             # Read lines from file and determine if core, low frequency or 'regular' accessory and record annotations
             for line in reader:
+                # Remove quotes if Roary
+                if source_program == 'Roary':
+                    line = [element.replace('"', '') for element in line]
+
                 # Record annotations of refound genes
                 if any(['refound' in gene for gene in line[14:]]):
                     refound_genes = [gene for gene in line[14:] if 'refound' in gene]
@@ -96,3 +106,8 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, ver
         raise FileNotFoundError('Given gene presence absence file not found. Please check and try again.')
 
     return core_gene_dict, low_freq_gene_dict, acc_gene_dict, annotation_dict
+
+if __name__ == '__main__':
+    core_dict, *_ = read_gene_presence_absence('/Users/mjespersen/Downloads/gene_presence_absence.csv', 1, 0.05, 'Roary')
+
+    # print([core_dict[key] for key in core_dict.keys() if key == '10702_6_1'])

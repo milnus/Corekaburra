@@ -51,7 +51,7 @@ def main():
     # TODO - check if the genes merged with a ; are neighbours in given genome. If, then keep the group as nothing is in between.
     # TODO - Add the user specified thresholds for core and low frequency genes.
     core_dict, low_freq_dict, acc_gene_dict, attribute_dict = read_gene_presence_absence(input_pres_abs_file_path,
-                                                          1, 0.05)
+                                                          1, 0.05, source_program)
     time_calculator(time_start, time.time(), "reading in gene presence/absence file")
     # TODO - Check if all gff files are present in input folder and gene presence absence file - report missing files or mismatches.
 
