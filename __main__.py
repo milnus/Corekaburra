@@ -16,7 +16,7 @@ from commandline_interface import get_commandline_arguments
 from construct_multi_fasta_genome import construct_consensus_alignment
 # from plots import consesus_genome_coverage
 import concurrent.futures
-from os import listdir
+from os import listdir, mkdir
 from os.path import join
 import time
 
@@ -62,6 +62,13 @@ def main():
     # Check presence of gff files.
     if check_gff_files(args.input_gffs):
         print("All .gff files were found!")
+
+    # Construct output folder
+    try:
+        mkdir(args.output_path)
+        print("Output folder constructed")  # TODO - make verbose
+    except FileExistsError:
+        print("Output folder exists") # TODO - make verbose
 
     # Add in the refound genes into the gff files and print the corrected GFF files.
     if source_program == "Panaroo" and args.annotate:
