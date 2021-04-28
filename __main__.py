@@ -120,32 +120,32 @@ def main():
 
     ### FUNCTION ###
     # Determine the most common core gene synteny.
-    time_start = time.time()
+    # time_start = time.time()
     # Find the core gene synteny and possible core genes with alternative neighbours
     # TODO - FIX how the first and second gene in the genome is determined!
-    consensus_core_genome, \
-        possible_rearrangement_genes, \
-        core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs,
-                                                          merged_start_gene_clusters,
-                                                          merged_second_gene_clusters, args.output_path)
+    # consensus_core_genome, \
+    #     possible_rearrangement_genes, \
+    #     core_path_coverage = determine_core_gene_consesus(core_neighbour_pairs,
+    #                                                       merged_start_gene_clusters,
+    #                                                       merged_second_gene_clusters, args.output_path)
 
     # Assign core-gene synteny types:
     # TODO: insert function for core gene synteny types
 
     # Identify alternative connections and their occurrence
-    alt_core_pairs, alt_core_pair_count, \
-        core_genome_types, alt_core_comp_types = identify_rearrangements(consensus_core_genome,
-                                                                         possible_rearrangement_genes,
-                                                                         master_info_total,
-                                                                         args.input_gffs)
+    # alt_core_pairs, alt_core_pair_count, \
+    #     core_genome_types, alt_core_comp_types = identify_rearrangements(consensus_core_genome,
+    #                                                                      possible_rearrangement_genes,
+    #                                                                      master_info_total,
+    #                                                                      args.input_gffs)
 
     # TODO look at number of alternative core-genome pairs. if one give missing info, if two try to find size, if three or more too complex.
     # TODO Determine all alternative connections between core genes and their frequency. - SEE next line
     '''Use consensus core synteny to work out how rearrangements may have occured. If A and B are connected in the concesus and C and D
     are connected, then if A and C are connected, and B and D are found next to sequence breaks then it may be a possible recombination'''
-    rearrangement_predictions = characterise_rearrangements(alt_core_pairs, consensus_core_genome)
+    # rearrangement_predictions = characterise_rearrangements(alt_core_pairs, consensus_core_genome)
 
-    time_calculator(time_start, time.time(), "determining best core gene synteny")
+    # time_calculator(time_start, time.time(), "determining best core gene synteny")
     ################
 
     ### DETERMINE CONSENSUS ###
@@ -156,9 +156,9 @@ def main():
 
     # TODO - constuct a multiple sequence alignment fasta from a possible input of alignments.
     #  If panaroo then look for: aligned_gene_sequences
-    if source_program == 'Panaroo':
-        if alignment_folder:
-            construct_consensus_alignment(consensus_core_genome.copy(), alignment_folder, core_neighbour_distance)
+    # if source_program == 'Panaroo':
+    #     if alignment_folder:
+    #         construct_consensus_alignment(consensus_core_genome.copy(), alignment_folder, core_neighbour_distance)
 
     ### DO CALCULATIONS ###
     # TODO mean number length between core genes
@@ -178,8 +178,8 @@ def main():
     # 2 = Strong suspicion. The consensus core neighbours had no sequence breaks
     # 1 = Weak evidence. at least one consensus core neighbour was next to a sequence break leading to a possible connection between then consensus neoghbours
     # 0 = No evidence for the alternative connection.
-    alt_core_pair_matrix = core_pair_matrix(core_genome_types, alt_core_comp_types,
-                                            alt_core_pair_count, master_info_total, consensus_core_genome)
+    # alt_core_pair_matrix = core_pair_matrix(core_genome_types, alt_core_comp_types,
+    #                                         alt_core_pair_count, master_info_total, consensus_core_genome)
 
     ### WRITE OUTPUTS ###
     print("Printing outputs")
@@ -194,11 +194,11 @@ def main():
     time_start = time.time()
     master_info_writer(master_info_total, verbose=True)
     # Write outputs related to core gene synteny
-    write_consensus_core_gene_synteny(consensus_core_genome)
-    write_core_gene_coverage(core_path_coverage)
-    write_alternative_core_gene_counts(alt_core_pair_count)
+    # write_consensus_core_gene_synteny(consensus_core_genome)
+    # write_core_gene_coverage(core_path_coverage)
+    # write_alternative_core_gene_counts(alt_core_pair_count)
     # rearrangement_predictions #TODO - write output for rearrangement prediciton - First possibly make predictions for two alternative core pairs
-    write_core_gene_types(core_genome_types, alt_core_pair_matrix)
+    # write_core_gene_types(core_genome_types, alt_core_pair_matrix)
 
     time_calculator(time_start, time.time(), "writing output files")
     #####################

@@ -18,7 +18,6 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, sou
             gff_file_names = gff_file_names.strip()
             # split column names
             gff_file_names = gff_file_names.split(',')
-            print(gff_file_names)
 
             # Remove the quotes from Rorary input
             if source_program == 'Roary':
@@ -27,7 +26,6 @@ def read_gene_presence_absence(file_name, core_gene_presence, low_freq_gene, sou
             # Index gff filenames and column position in dict for better search
             gff_file_dict = {}
             for i, gff_name in enumerate(gff_file_names[14:]):
-                print(gff_name)
                 gff_file_dict[gff_name] = i
 
             # Read remaining lines and construct a nested dicts one dict for each genome and its core genes,
