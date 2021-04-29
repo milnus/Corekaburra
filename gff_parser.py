@@ -294,8 +294,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
 
         # Add to master info dict
         master_info[f'{core_gene_neighbours}--{gff_name}'] = [gff_name,
-                                                             first_core_gene_cluster,
-                                                             last_core_gene_cluster,
+                                                             core_gene_neighbours[0],
+                                                             core_gene_neighbours[1],
                                                              core_core_distance,
                                                               len(last_first_accessory_content) +
                                                               len(last_first_low_freq_count),
