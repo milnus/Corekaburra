@@ -8,14 +8,14 @@ python:
 
 before_install:
   - pip3 install cwltool
-  - docker build -t Corekaburra .
+  - docker build -t corekaburra .
 
 script:
   # Both of these same tests, in Docker
   # Functional tests
-  - docker run --entrypoint /Corekaburra/.travis/unit-test.sh Corekaburra
+  - docker run --entrypoint /Corekaburra/.travis/unit-test.sh corekaburra
   # Unit tests
-  - docker run --entrypoint /Corekaburra/functional_tests/Corekaburra-test.sh Corekaburra -p Corekaburra -d /Corekaburra/functional_tests/test_data -v
+  - docker run --entrypoint /Corekaburra/functional_tests/Corekaburra-test.sh corekaburra -p Corekaburra -d /Corekaburra/functional_tests/test_data -v
 
   # CWL definition test
   - cwltool Corekaburra.cwl --fasta_file functional_tests/test_data/two_sequence.fasta
