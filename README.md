@@ -1,4 +1,4 @@
-[![travis](https://travis-ci.org/milnus/Corekaburra.svg?branch=master)](https://travis-ci.org/milnus/Corekaburra)
+[![Build Status](https://app.travis-ci.com/milnus/Corekaburra.svg?token=28TZmx3MewJSs5GVS7VU&branch=main)](https://app.travis-ci.com/milnus/Corekaburra)
 
 # Overview 
 
