@@ -25,5 +25,5 @@ setup(
     license='LICENSE',
     description=('A prototypical bioinformatics command line tool'),
     long_description=(LONG_DESCRIPTION),
-    install_requires=["biopython"],
+    install_requires=["biopython", "networkx", "gffutils"],
 )
