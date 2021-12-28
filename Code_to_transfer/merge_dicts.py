@@ -37,9 +37,17 @@ def merge_dicts_lists(parent_dict, merge_dict):
     return parent_dict
 
 
-# Seems depricated and uneccesary when .update is available
-# def merge_master_dict(master_parent, master_merge):
-#     for key in master_merge.keys():
-#         master_parent[key] = master_merge[key]
-#
-#     return master_parent
+def merge_first_genes(start_gene_cluster, merged_start_gene_clusters, merged_second_gene_clusters, first_core_pair):
+    """ Function that merge first genes and find second genes found in complete genomes,
+    used to inform core-genome synteny direction and start gene """
+    # Check if first gene is available
+    if start_gene_cluster:
+        # Record first gene
+        merged_start_gene_clusters = merged_start_gene_clusters + [start_gene_cluster]
+
+        # Record second gene in file
+        second_gene = first_core_pair.split('--')
+        second_gene.remove(start_gene_cluster)
+        merged_second_gene_clusters = merged_second_gene_clusters + second_gene
+
+    return merged_start_gene_clusters, merged_second_gene_clusters
