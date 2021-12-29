@@ -64,7 +64,10 @@ def check_gff_in_pan(file_list, gene_presence_absence_path):
         if len(file_list) < len(genome_names):
             warnings.warn(
                 "Not all gff in pan genome given as input. I will run with it but are you sure this is deliberate?")
+            # TODO - LOG above!
 
         return True  # True used for unit testing
 
-    raise FileNotFoundError('Unexpected occurrence in the matching of input GFF files and the pan genome presence/absence file')
+    # Exit with error is not all inputs can be found in the pan-genome presence absence file
+    exit_with_error('Unexpected occurrence in the matching of input GFF files and the pan genome presence/absence file',
+                    EXIT_INPUT_FILE_ERROR)

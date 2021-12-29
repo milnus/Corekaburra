@@ -125,5 +125,40 @@ class TestPresenceOfGenedataFile(unittest.TestCase):
             check_inputs.check_gene_data(input_folder_path)
 
 
+class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
+    # Test pairing of all files in pan genome
+    def test_input_gff_pres_abs_pairing_all_gffs(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella', 'Christina_the_Streptococcus', 'Ajwa_the_Shigella']
+
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+
+        self.assertEqual(return_bool, True)
+
+    # Test pairing of some files in pan genome - Warning
+    def test_input_gff_pres_abs_pairing_some(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella.gff', 'Christina_the_Streptococcus.gff']
+
+        with self.assertWarns(Warning):
+            return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+
+        self.assertEqual(return_bool, True)
+
+    # Test when given a file not in pan genome among others that are in the pan genome
+    def test_input_gff_pres_abs_file_not_in_pan(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['not_found.gff', 'Silas_the_Salmonella.gff', 'Christina_the_Streptococcus.gff']
+
+        with self.assertRaises(SystemExit):
+            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+
+    def test_input_gff_pres_abs_some_file_not_in_pan(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['not_found.gff', 'also_not_found.gff', 'definitely_not_found.gff']
+
+        with self.assertRaises(SystemExit):
+            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+
 if __name__ == '__main__':
     unittest.main()

@@ -25,9 +25,9 @@ except ModuleNotFoundError:
     from read_complete_genome_file import parse_complete_genome_file
 
 try:
-    from Corekaburra.check_inputs import define_pangenome_program
+    from Corekaburra.check_inputs import define_pangenome_program, check_gene_data
 except ModuleNotFoundError:
-    from check_inputs import define_pangenome_program
+    from check_inputs import define_pangenome_program, check_gene_data
 
 from argparse import ArgumentParser
 from math import floor
@@ -125,13 +125,25 @@ def main():
     source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan)
 
     # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
-    if args.annotate and source_program is not 'Rorary':
+    if args.annotate and source_program is 'Panaroo':
         gene_data_path = check_gene_data(args.input_pan)
     if not args.quiet:
         print(f"Pan genome determined to come from {source_program}")
         print("All files found, let's move on!\n")
         print("--------------------------------------------------------------\n")
 
+    # TODO - Make the program work with less than all files in the pangenome. Just make sure that all gff files supplied can be found in the pan genome. This will make is possible to look at hotspots and segments in different lineages
+    check_gff_in_pan(args.input_gffs, input_pres_abs_file_path)
+
+
+    # Construct output folder
+    try:
+        mkdir(args.output_path)
+        if not args.quiet:
+            print("Output folder constructed")
+    except FileExistsError:
+        if not args.quiet:
+            print("Output folder exists")
 
 
 # If this script is run from the command line then call the main function.
