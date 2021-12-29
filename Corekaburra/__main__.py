@@ -19,12 +19,17 @@ try:
 except ModuleNotFoundError:
     from commandline_interface import get_commandline_arguments
 
+try:
+    from Corekaburra.read_complete_genome_file import parse_complete_genome_file
+except ModuleNotFoundError:
+    from read_complete_genome_file import parse_complete_genome_file
+
 from argparse import ArgumentParser
 from math import floor
 import sys
 import pkg_resources
 
-EXIT_FILE_IO_ERROR = 1
+EXIT_INPUT_FILE_ERROR = 1
 EXIT_COMMAND_LINE_ERROR = 2
 EXIT_FASTA_FILE_ERROR = 3
 DEFAULT_MIN_LEN = 0
@@ -68,7 +73,7 @@ def init_logging(debug_log, quiet, out_path):
     file_logger.addHandler(file_handler)
 
     # Log command-line argument and debug line for Corekaburra start
-    file_logger.info(f"command line: {' '.join(argv)}")
+    file_logger.info(f"command line: {' '.join(sys.argv)}")
 
     return file_logger
 
@@ -99,6 +104,13 @@ def main():
 
     # get arguments from the commandline
     args = get_commandline_arguments(sys.argv[1:])
+
+    # TODO - Add in function(s) that will check all files to not be empty. - Andrew?
+
+    if args.comp_genomes is not None:
+        comp_genomes = parse_complete_genome_file(args.comp_genomes, args.input_gffs)
+    else:
+        comp_genomes = None
 
 
 # If this script is run from the command line then call the main function.
