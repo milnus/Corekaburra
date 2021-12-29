@@ -24,6 +24,11 @@ try:
 except ModuleNotFoundError:
     from read_complete_genome_file import parse_complete_genome_file
 
+try:
+    from Corekaburra.check_inputs import define_pangenome_program
+except ModuleNotFoundError:
+    from check_inputs import define_pangenome_program
+
 from argparse import ArgumentParser
 from math import floor
 import sys
@@ -98,7 +103,6 @@ def main():
     """
     This is the main function for running Corekaburra.
     Requires a pan-genome folder from an allowed program, along with GFF3 files used for producing the pan-genome
-    :return:
     """
     total_time_start = time.time()
 
@@ -107,10 +111,27 @@ def main():
 
     # TODO - Add in function(s) that will check all files to not be empty. - Andrew?
 
+    # Check the presence of provided complete genomes among input GFFs
     if args.comp_genomes is not None:
         comp_genomes = parse_complete_genome_file(args.comp_genomes, args.input_gffs)
     else:
         comp_genomes = None
+
+    # Check source program from pan-genome and presence of nessecary files
+    if not args.quiet:
+        print("\n----Checking presence of input files in pan genome folder----\n")
+
+    # Check if Panaroo or Roary input folder is given
+    source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan)
+
+    # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
+    if args.annotate and source_program is not 'Rorary':
+        gene_data_path = check_gene_data(args.input_pan)
+    if not args.quiet:
+        print(f"Pan genome determined to come from {source_program}")
+        print("All files found, let's move on!\n")
+        print("--------------------------------------------------------------\n")
+
 
 
 # If this script is run from the command line then call the main function.

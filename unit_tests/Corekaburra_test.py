@@ -15,6 +15,7 @@ import logging
 # import Corekaburra functions
 from Corekaburra import exit_with_error
 from Corekaburra import read_complete_genome_file
+from Corekaburra import check_inputs
 
 
 
@@ -77,6 +78,37 @@ class TestParsingCompleteGenomes(unittest.TestCase):
             read_complete_genome_file.parse_complete_genome_file(complete_genome_file,
                                                                  gff_files)
 
+
+class TestPangenomeSourceProgram(unittest.TestCase):
+    def test_roary_input(self):
+        input_folder_path = 'TestPangenomeSourceProgram/Mock_roary'
+
+        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path)
+
+        self.assertEqual("Roary", return_program)
+        self.assertEqual(input_folder_path + '/gene_presence_absence.csv', return_path)
+
+    def test_panaroo_input(self):
+        input_folder_path = 'TestPangenomeSourceProgram/Mock_panaroo'
+
+        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path)
+
+        self.assertEqual("Panaroo", return_program)
+        self.assertEqual(input_folder_path + '/gene_presence_absence_roary.csv', return_path)
+
+    # def test_pirate_input(self): TODO - Make Corekaburra take Pirate input!
+    #     pass
+    #     input_folder_path = 'TestPangenomeSourceProgram/Mock_pirate'
+    #
+    #     return_program, return_path = check_inputs.define_pangenome_program(input_folder_path)
+    #
+    #     self.assertEqual("Pirate", return_program)
+
+    def test_unknown_input(self):
+        input_folder_path = 'TestPangenomeSourceProgram/Mock_unknwon'
+
+        with self.assertRaises(SystemExit):
+            check_inputs.define_pangenome_program(input_folder_path)
 
 if __name__ == '__main__':
     unittest.main()
