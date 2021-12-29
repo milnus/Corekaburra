@@ -110,5 +110,20 @@ class TestPangenomeSourceProgram(unittest.TestCase):
         with self.assertRaises(SystemExit):
             check_inputs.define_pangenome_program(input_folder_path)
 
+
+class TestPresenceOfGenedataFile(unittest.TestCase):
+    def test_Genedata_File_present(self):
+        input_folder_path = 'TestPresenceOfGenedataFile/present'
+        return_path = check_inputs.check_gene_data(input_folder_path)
+
+        self.assertEqual(return_path, input_folder_path +'/gene_data.csv')
+
+    def test_Genedata_File_absent(self):
+        input_folder_path = 'TestPresenceOfGenedataFile/absent'
+
+        with self.assertRaises(SystemExit):
+            check_inputs.check_gene_data(input_folder_path)
+
+
 if __name__ == '__main__':
     unittest.main()
