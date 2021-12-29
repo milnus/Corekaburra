@@ -1,9 +1,5 @@
 import argparse
 import sys
-try:
-    from Corekaburra.exit_with_error import exit_with_error
-except ModuleNotFoundError:
-    from exit_with_error import exit_with_error
 
 EXIT_COMMAND_LINE_ERROR = 2
 
