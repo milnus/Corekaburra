@@ -25,9 +25,14 @@ except ModuleNotFoundError:
     from read_complete_genome_file import parse_complete_genome_file
 
 try:
-    from Corekaburra.check_inputs import define_pangenome_program, check_gene_data
+    from Corekaburra.check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan
 except ModuleNotFoundError:
-    from check_inputs import define_pangenome_program, check_gene_data
+    from check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan
+
+try:
+    from Corekaburra.parse_gene_presence_absence import read_gene_presence_absence
+except ModuleNotFoundError:
+    from parse_gene_presence_absence import read_gene_presence_absence
 
 from argparse import ArgumentParser
 from math import floor
@@ -138,13 +143,25 @@ def main():
 
     # Construct output folder
     try:
-        mkdir(args.output_path)
+        os.mkdir(args.output_path)
         if not args.quiet:
             print("Output folder constructed")
     except FileExistsError:
         if not args.quiet:
             print("Output folder exists")
 
+    # Construct temporary folder:
+    # TODO - check that the temporary folder does not exist and that the user does not have a folder with same name already. (Maybe use a time stamp for the start to make it unique.)
+    tmp_folder_path = os.path.join(args.output_path, 'Corekaburra_tmp')
+    os.mkdir(tmp_folder_path)
+
+    ## Read in gene presence absence file
+    time_start = time.time()
+    # TODO - Add the user specified thresholds for core and low frequency genes.
+    core_dict, low_freq_dict, acc_gene_dict, attribute_dict = read_gene_presence_absence(input_pres_abs_file_path,
+                                                                                         1, 0.05, source_program,
+                                                                                         args.input_gffs,
+                                                                                         tmp_folder_path)
 
 # If this script is run from the command line then call the main function.
 if __name__ == '__main__':
