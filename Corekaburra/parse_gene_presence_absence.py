@@ -24,6 +24,13 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
 
 
 def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
+    """
+    Function that check for that placement of fragmented gene parts, to determine if they are neighbouring or have some genomic feature between them
+    :param fragments_in_line: List of genes that are found to be fragmented, one composite of fragments for each index
+    :param input_gffs: A list of file-paths to the gff files given as input
+    :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
+    :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
+    """
     return_list = []
     for fragment in fragments_in_line:
         # split the two fragments
@@ -79,10 +86,17 @@ def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
 
 
 def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, verbose=True):
-    """Function that pass a Roary style gene presence/absence file.
-    Returns directories of core and low frequency genes, and a directory of pan genome clusters and their annotation"""
-
-    # file = os.path.join("", pres_abs_file)
+    """
+    Function that pass a Roary style gene presence/absence file.
+    :param pres_abs_file: File path to the gene presence/absence file identified
+    :param core_gene_presence: The ratio of genomes in which a gene must present, to be seen as a core gene
+    :param low_freq_gene: The ratio of genomes in which a gene must not surpass, to be seen as a low-frequency gene
+    :param source_program: The program from which the pan-genome was produced
+    :param input_gffs: A list of file-paths to the gff files given as input
+    :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
+    :param verbose: Indeicater on verbosety level # TODO - Likely change to logger!
+    :return: Directories of directories of core and low frequency genes, and a directory of pan genome clusters and their annotation.
+    """
 
     # Open the presence/absense file to index gene into core, accessory, or low-frequency genes
     with open(pres_abs_file, 'r', newline='', ) as gene_presence_absence:
