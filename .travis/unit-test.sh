@@ -4,7 +4,7 @@ set -e
 errors=0
 
 # Run unit tests
-python Corekaburra/Corekaburra_test.py || {
+python unit_tests/Corekaburra_test.py || {
     echo "'python python/Corekaburra/Corekaburra_test.py' failed"
     let errors+=1
 }

@@ -208,14 +208,14 @@ def main():
             core_less_contigs_return = output.result()
 
             # Merge results into single/master dictionaries
-            core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
-            core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
-            core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
-            core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
-            master_info_total.update(master_info_return)
-            non_core_contig_info.update(core_less_contigs_return)
-
-    time_calculator(time_start, time.time(), "searching gff files for core genes")
+    #         core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
+    #         core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
+    #         core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
+    #         core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
+    #         master_info_total.update(master_info_return)
+    #         non_core_contig_info.update(core_less_contigs_return)
+    #
+    # time_calculator(time_start, time.time(), "searching gff files for core genes")
 
 if __name__ == '__main__':
     main()
