@@ -17,6 +17,7 @@ from Corekaburra import exit_with_error
 from Corekaburra import read_complete_genome_file
 from Corekaburra import check_inputs
 from Corekaburra import parse_gene_presence_absence
+from Corekaburra import gff_parser
 
 
 
@@ -271,6 +272,24 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
 
         self.assertEqual(expected_return, return_bool)
+
+    def test_fragments_on_separate_contigs(self):
+        """ One gene fragmented with parts on separate contigs """
+        fragments_in_line = ['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2',
+                             'Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2']
+        input_gffs = ['TestCheckingFragmentedGenes/Silas_the_Salmonella.gff',
+                      'TestCheckingFragmentedGenes/Zion_the_Streptococcus.gff',
+                      'TestCheckingFragmentedGenes/Silas_the_Legionella.gff',
+                      'TestCheckingFragmentedGenes/Lilly_the_Shigella.gff']
+        tmp_folder_path = 'test_tmp_folder'
+
+        expected_return = [False, False]
+
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+
+        self.assertEqual(expected_return, return_bool)
+
+    # TODO - Can a fragmented gene be recognised, if spanning contigs?
 
 
 class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
@@ -639,6 +658,1846 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
+
+
+class TestParsingGffFile(unittest.TestCase):
+    """ Test of the function that is used to pass a gff file and return a generator object of CDS lines """
+    def test_gff_generator_generation_not_corrected(self):
+        input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella.gff'
+
+        expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
+                           ['contig_1', '.', 'CDS', '100', '190', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.1'],
+                           ['contig_1', '.', 'CDS', '200', '290', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.2'],
+                           ['contig_1', '.', 'CDS', '300', '390', '.', '.', '.', 'Silas_the_Salmonella_tag-1-3'],
+                           ['contig_1', '.', 'CDS', '400', '490', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.1'],
+                           ['contig_1', '.', 'CDS', '500', '590', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.2'],
+                           ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
+                           ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
+                           ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
+
+        return_generator = gff_parser.parse_gff(input_gff_file)
+
+        for expected, generated in zip(expected_output, return_generator):
+            self.assertEqual(expected, generated)
+
+    def test_gff_generator_generation_corrected_gff(self):
+        input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella_corrected.gff'
+
+        expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
+                           ['contig_1', '.', 'CDS', '100', '190', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.1'],
+                           ['contig_1', '.', 'CDS', '200', '290', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.2'],
+                           ['contig_1', '.', 'CDS', '300', '390', '.', '.', '.', 'Silas_the_Salmonella_tag-1-3'],
+                           ['contig_1', '.', 'CDS', '400', '490', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.1'],
+                           ['contig_1', '.', 'CDS', '500', '590', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.2'],
+                           ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
+                           ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
+                           ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"],
+                           ['contig_1', 'Panaroo', 'CDS', '900', '1000', '.', '+', '0', 'refound_gene_1']]
+
+        return_generator = gff_parser.parse_gff(input_gff_file)
+
+        for expected, generated in zip(expected_output, return_generator):
+            self.assertEqual(expected, generated)
+
+
+class TestGetContigLenth(unittest.TestCase):
+    """
+    Test function that passes a gff file and counts the length of each contig in attached genome
+    """
+    def test_single_contig(self):
+        input_gff_path = 'TestGetContigLenth/single_contig_unwrapped.txt'
+        expected_dict = {'contig_1': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_single_wrapped_contig(self):
+        input_gff_path = 'TestGetContigLenth/single_contig_wrapped.txt'
+        expected_dict = {'contig_1': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_multiple_contigs(self):
+        input_gff_path = 'TestGetContigLenth/multi_contig_unwrapped.txt'
+        expected_dict = {'contig_1': 1300,
+                         'contig_2': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_multiple_wrapped_contigs(self):
+        input_gff_path = 'TestGetContigLenth/multi_contig_wrapped.txt'
+        expected_dict = {'contig_1': 1300,
+                         'contig_2': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
+
+
+class TestRecordCoreCoreRegion(unittest.TestCase):
+    def test_recording_neighbouring_core_genes(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '150', '.', '.', '.', 'Core_ID_2']
+        contig_end = 1500
+        previous_core_gene_id = 'Core_ID_1'
+        previous_core_gene_end_coor = 10
+        acc_genes_in_region = []
+        low_freq_genes_in_region = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Core_ID_2'
+        expected_previous_core_gene_end_coor = 150
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_2': 79}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_2': []}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': []}
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_2']
+        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2',
+                                                                     79, 0, [], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_neighbouring_core_genes_w_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '150', '.', '.', '.', 'Core_ID_2']
+        contig_end = 1500
+        previous_core_gene_id = 'Core_ID_1'
+        previous_core_gene_end_coor = 10
+        acc_genes_in_region = ['acc_gene_1', 'acc_gene_2']
+        low_freq_genes_in_region = ['low_freq_1']
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Core_ID_2'
+        expected_previous_core_gene_end_coor = 150
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_2': 79}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_2': ['acc_gene_1', 'acc_gene_2']}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': ['low_freq_1']}
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_2']
+        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2',
+                                                                     79, 3, ['acc_gene_1', 'acc_gene_2'], ['low_freq_1']]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_w_fragment_given(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_1'}}
+        gff_name = 'gff_name'
+        gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '150', '.', '.', '.', 'Core_ID_2']
+        contig_end = 1500
+        previous_core_gene_id = 'Core_ID_1'
+        previous_core_gene_end_coor = 10
+        acc_genes_in_region = []
+        low_freq_genes_in_region = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Core_ID_2'
+        expected_previous_core_gene_end_coor = 150
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {}
+        expected_accessory_gene_content = {}
+        expected_low_freq_gene_content = {}
+        expected_core_gene_pairs = []
+        expected_master_info = {}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_core_gene_before_seqeuncebreak(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1'}}
+        gff_name = 'gff_name'
+        gff_line = None
+        contig_end = 1500
+        previous_core_gene_id = 'Core_ID_1'
+        previous_core_gene_end_coor = 150
+        acc_genes_in_region = []
+        low_freq_genes_in_region = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Sequence_break'
+        expected_previous_core_gene_end_coor = 150
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1349}
+        expected_accessory_gene_content = {'pan_gene_1--Sequence_break': []}
+        expected_low_freq_gene_content = {'pan_gene_1--Sequence_break': []}
+        expected_core_gene_pairs = ['pan_gene_1--Sequence_break']
+        expected_master_info = {'pan_gene_1--Sequence_break--gff_name': ['gff_name', 'pan_gene_1', 'Sequence_break',
+                                                                         1349, 0, [], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_core_gene_before_seqeuncebreak_w_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1'}}
+        gff_name = 'gff_name'
+        gff_line = None
+        contig_end = 1500
+        previous_core_gene_id = 'Core_ID_1'
+        previous_core_gene_end_coor = 150
+        acc_genes_in_region = ['acc_1']
+        low_freq_genes_in_region = ['low_1', "low_2"]
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Sequence_break'
+        expected_previous_core_gene_end_coor = 150
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1349}
+        expected_accessory_gene_content = {'pan_gene_1--Sequence_break': ['acc_1']}
+        expected_low_freq_gene_content = {'pan_gene_1--Sequence_break': ['low_1', "low_2"]}
+        expected_core_gene_pairs = ['pan_gene_1--Sequence_break']
+        expected_master_info = {'pan_gene_1--Sequence_break--gff_name': ['gff_name', 'pan_gene_1', 'Sequence_break',
+                                                                         1349, 3, ['acc_1'], ['low_1', "low_2"]]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_first_core_gene_on_contig_as_first_gene(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1'}}
+        gff_name = 'gff_name'
+        gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        contig_end = 0
+        previous_core_gene_id = 'Sequence_break'
+        previous_core_gene_end_coor = 150
+        acc_genes_in_region = []
+        low_freq_genes_in_region = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Core_ID_1'
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'Sequence_break--pan_gene_1': 89}
+        expected_accessory_gene_content = {'Sequence_break--pan_gene_1': []}
+        expected_low_freq_gene_content = {'Sequence_break--pan_gene_1': []}
+        expected_core_gene_pairs = ['Sequence_break--pan_gene_1']
+        expected_master_info = {'Sequence_break--pan_gene_1--gff_name': ['gff_name', 'Sequence_break', 'pan_gene_1',
+                                                                         89, 0, [], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_recording_first_core_gene_on_contig_w_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1'}}
+        gff_name = 'gff_name'
+        gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        contig_end = None
+        previous_core_gene_id = 'Sequence_break'
+        previous_core_gene_end_coor = 150
+        acc_genes_in_region = ['acc_1', 'acc_2', 'acc_3']
+        low_freq_genes_in_region = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        core_gene_pairs = []
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = 'Core_ID_1'
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pair_distance = {'Sequence_break--pan_gene_1': 89}
+        expected_accessory_gene_content = {'Sequence_break--pan_gene_1': ['acc_1', 'acc_2', 'acc_3']}
+        expected_low_freq_gene_content = {'Sequence_break--pan_gene_1': []}
+        expected_core_gene_pairs = ['Sequence_break--pan_gene_1']
+        expected_master_info = {'Sequence_break--pan_gene_1--gff_name': ['gff_name', 'Sequence_break', 'pan_gene_1',
+                                                                         89, 3, ['acc_1', 'acc_2', 'acc_3'], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
+        return_low_freq_gene_content, return_core_gene_pairs, \
+        return_master_info = gff_parser.record_core_core_region(core_genes, gff_name, gff_line, contig_end,
+                                                                previous_core_gene_id, previous_core_gene_end_coor,
+                                                                acc_genes_in_region, low_freq_genes_in_region,
+                                                                core_gene_pair_distance, accessory_gene_content,
+                                                                low_freq_gene_content, core_gene_pairs,
+                                                                master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+
+class TestConnectFirstNLastGeneOnContig(unittest.TestCase):
+    """
+    Test for the function recordning connections between the first and the last gene on a contig in a complete genome
+    """
+    def test_connect_last_n_first_gene_different_genes_no_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        previous_core_gene_id = "Core_ID_2"
+        previous_core_gene_end_coor = 1450
+        first_core_gene_gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        acc_genes_in_region = []
+        first_core_accessory_content = []
+        low_freq_genes_in_region = []
+        first_core_low_freq_genes = []
+        contig_size = 1500
+        core_gene_pairs = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = ""
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_2']
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_2': 139}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_2': []}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': []}
+        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2', 139, 0, [], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info = gff_parser.connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene_id,
+                                                                            previous_core_gene_end_coor,
+                                                                            first_core_gene_gff_line,
+                                                                            acc_genes_in_region,
+                                                                            first_core_accessory_content,
+                                                                            low_freq_genes_in_region,
+                                                                            first_core_low_freq_genes, contig_size,
+                                                                            core_gene_pairs, core_gene_pair_distance,
+                                                                            accessory_gene_content,
+                                                                            low_freq_gene_content, master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_connect_last_n_first_gene_different_genes_w_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        previous_core_gene_id = "Core_ID_2"
+        previous_core_gene_end_coor = 1450
+        first_core_gene_gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        acc_genes_in_region = ['acc_1']
+        first_core_accessory_content = ['first_acc_1']
+        low_freq_genes_in_region = ['low_acc_1']
+        first_core_low_freq_genes = ['first_low_1']
+        contig_size = 1500
+        core_gene_pairs = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = ""
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_2']
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_2': 139}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_2': ['acc_1', 'first_acc_1']}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': ['low_acc_1', 'first_low_1']}
+        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2', 139, 4, ['acc_1', 'first_acc_1'], ['low_acc_1', 'first_low_1']]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info = gff_parser.connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene_id,
+                                                                            previous_core_gene_end_coor,
+                                                                            first_core_gene_gff_line,
+                                                                            acc_genes_in_region,
+                                                                            first_core_accessory_content,
+                                                                            low_freq_genes_in_region,
+                                                                            first_core_low_freq_genes, contig_size,
+                                                                            core_gene_pairs, core_gene_pair_distance,
+                                                                            accessory_gene_content,
+                                                                            low_freq_gene_content, master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_connect_same_gene_as_last_n_first_gene_no_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        previous_core_gene_id = "Core_ID_1"
+        previous_core_gene_end_coor = 180
+        first_core_gene_gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        acc_genes_in_region = []
+        first_core_accessory_content = []
+        low_freq_genes_in_region = []
+        first_core_low_freq_genes = []
+        contig_size = 1500
+        core_gene_pairs = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = ""
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_1']
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_1': 1409}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_1': []}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_1': []}
+        expected_master_info = {'pan_gene_1--pan_gene_1--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_1', 1409, 0, [], []]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info = gff_parser.connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene_id,
+                                                                            previous_core_gene_end_coor,
+                                                                            first_core_gene_gff_line,
+                                                                            acc_genes_in_region,
+                                                                            first_core_accessory_content,
+                                                                            low_freq_genes_in_region,
+                                                                            first_core_low_freq_genes, contig_size,
+                                                                            core_gene_pairs, core_gene_pair_distance,
+                                                                            accessory_gene_content,
+                                                                            low_freq_gene_content, master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+    def test_connect_same_gene_as_last_n_first_gene_w_accessory(self):
+        core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
+                                   'Core_ID_2': 'pan_gene_2'}}
+        gff_name = 'gff_name'
+        previous_core_gene_id = "Core_ID_1"
+        previous_core_gene_end_coor = 180
+        first_core_gene_gff_line = ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'Core_ID_1']
+        acc_genes_in_region = ['acc_2', 'acc_3']
+        first_core_accessory_content = ['acc_1']
+        low_freq_genes_in_region = ['low_1', 'low_2']
+        first_core_low_freq_genes = ['low_3']
+        contig_size = 1500
+        core_gene_pairs = []
+        core_gene_pair_distance = {}
+        accessory_gene_content = {}
+        low_freq_gene_content = {}
+        master_info = {}
+
+        # Set up the expected return values
+        expected_previous_core_gene_id = ""
+        expected_previous_core_gene_end_coor = 180
+        expected_acc_genes_in_region = []
+        expected_low_freq_genes_in_region = []
+        expected_core_gene_pairs = ['pan_gene_1--pan_gene_1']
+        expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_1': 1409}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_1': ['acc_2', 'acc_3', 'acc_1']}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_1': ['low_1', 'low_2', 'low_3']}
+        expected_master_info = {'pan_gene_1--pan_gene_1--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_1', 1409, 6, ['acc_2', 'acc_3', 'acc_1'], ['low_1', 'low_2', 'low_3']]}
+
+        return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
+        return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info = gff_parser.connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene_id,
+                                                                            previous_core_gene_end_coor,
+                                                                            first_core_gene_gff_line,
+                                                                            acc_genes_in_region,
+                                                                            first_core_accessory_content,
+                                                                            low_freq_genes_in_region,
+                                                                            first_core_low_freq_genes, contig_size,
+                                                                            core_gene_pairs, core_gene_pair_distance,
+                                                                            accessory_gene_content,
+                                                                            low_freq_gene_content, master_info)
+
+        self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
+        self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
+        self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
+        self.assertEqual(expected_low_freq_genes_in_region, return_low_freq_genes_in_region)
+        self.assertEqual(expected_accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(expected_low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(expected_core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(expected_core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(expected_master_info, return_master_info)
+
+
+class TestRecordCorelessContig(unittest.TestCase):
+    def test_adding_coreless_contig(self):
+        coreless_contigs = {}
+        acc_genes_in_region = ['acc_1']
+        low_freq_genes_in_region = ['low_1']
+        gff_name = 'gff_name'
+        contig_name = 'gff_contig_1'
+
+        expected_return = {'gff_name--gff_contig_1': [['acc_1'], ['low_1']]}
+
+        return_dict = gff_parser.record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, contig_name)
+
+        self.assertEqual(expected_return, return_dict)
+
+    def test_not_adding_coreless_contig(self):
+        coreless_contigs = {}
+        acc_genes_in_region = []
+        low_freq_genes_in_region = []
+        gff_name = 'gff_name'
+        contig_name = 'gff_contig_1'
+
+        expected_return = {}
+
+        return_dict = gff_parser.record_coreless_contig(coreless_contigs, acc_genes_in_region,
+                                                         low_freq_genes_in_region, gff_name, contig_name)
+
+        self.assertEqual(expected_return, return_dict)
+
+
+class TestSegmentingMockGffs(unittest.TestCase):
+    def test_single_chromosome_complete(self):
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4'}}
+        complete_genomes = ['test_single_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']}
+
+        master_info = {'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5', 359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+                       'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7', 269, 1, [], ['pan_gene_6']],
+                       'pan_gene_2--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_7', 478, 2, ['pan_gene_1'], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                              low_freq_genes, gff_path,
+                                                                                              acc_genes,
+                                                                                              complete_genomes)
+
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_single_chromosome_draft(self):
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4'}}
+        complete_genomes = []
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': []}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8']}
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5', 359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7', 269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_single_chromosome': ['test_single_chromosome', 'Sequence_break', 'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_single_chromosome': ['test_single_chromosome',  'pan_gene_7', 'Sequence_break', 299, 1, [], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_two_chromosomes_complete(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_3'],
+            ['gff_name_contig_2', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_5'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            ['gff_name_contig_2', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_6'],
+            ['gff_name_contig_2', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_6']
+                         ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4': 'pan_gene_10',
+                                                 'Core_ID_5': 'pan_gene_13',
+                                                 'Core_ID_6': 'pan_gene_15'
+        }}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14',
+                                                     'low_freq_6': 'pan_gene_16'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_3': 'pan_gene_9',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = ['test_double_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7',
+                           'pan_gene_10--pan_gene_13', 'pan_gene_13--pan_gene_15', 'pan_gene_10--pan_gene_15']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478,
+                                   'pan_gene_10--pan_gene_13': 359,
+                                   'pan_gene_13--pan_gene_15': 269,
+                                   'pan_gene_10--pan_gene_15': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1'],
+                                  'pan_gene_10--pan_gene_13': ['pan_gene_12'],
+                                  'pan_gene_13--pan_gene_15': [],
+                                  'pan_gene_10--pan_gene_15': ['pan_gene_9']
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8'],
+                                 'pan_gene_10--pan_gene_13': ['pan_gene_11'],
+                                 'pan_gene_13--pan_gene_15': ['pan_gene_14'],
+                                 'pan_gene_10--pan_gene_15': ['pan_gene_16'],
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5', 359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7', 269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_7', 478, 2, ['pan_gene_1'], ['pan_gene_8']],
+            'pan_gene_10--pan_gene_13--test_double_chromosome': ['test_double_chromosome', 'pan_gene_10', 'pan_gene_13', 359, 2, ['pan_gene_12'], ['pan_gene_11']],
+            'pan_gene_13--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_13', 'pan_gene_15', 269, 1, [], ['pan_gene_14']],
+            'pan_gene_10--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_10', 'pan_gene_15', 478, 2, ['pan_gene_9'], ['pan_gene_16']]
+        }
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_two_daft_contigs(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_5'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            ['gff_name_contig_2', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_6'],
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4': 'pan_gene_10',
+                                                 'Core_ID_5': 'pan_gene_13',
+                                                 'Core_ID_6': 'pan_gene_15'
+                                                 }}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = []
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break',
+                           'pan_gene_10--pan_gene_13', 'pan_gene_13--pan_gene_15',
+                           'Sequence_break--pan_gene_10', 'pan_gene_15--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299,
+                                   'pan_gene_10--pan_gene_13': 359,
+                                   'pan_gene_13--pan_gene_15': 269,
+                                   'Sequence_break--pan_gene_10': 178,
+                                   'pan_gene_15--Sequence_break': 299}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': [],
+                                  'pan_gene_10--pan_gene_13': ['pan_gene_12'],
+                                  'pan_gene_13--pan_gene_15': [],
+                                  'Sequence_break--pan_gene_10': [],
+                                  'pan_gene_15--Sequence_break': []
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8'],
+                                 'pan_gene_10--pan_gene_13': ['pan_gene_11'],
+                                 'pan_gene_13--pan_gene_15': ['pan_gene_14'],
+                                 'Sequence_break--pan_gene_10': [],
+                                 'pan_gene_15--Sequence_break': []
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break', 'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7', 'Sequence_break', 299, 1, [], ['pan_gene_8']],
+            'pan_gene_10--pan_gene_13--test_double_chromosome': ['test_double_chromosome', 'pan_gene_10', 'pan_gene_13',
+                                                                 359, 2, ['pan_gene_12'], ['pan_gene_11']],
+            'pan_gene_13--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_13', 'pan_gene_15',
+                                                                 269, 1, [], ['pan_gene_14']],
+            'Sequence_break--pan_gene_10--test_double_chromosome': ['test_double_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
+            'pan_gene_15--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_15', 'Sequence_break', 299, 0, [], []]
+
+        }
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_with_coreless_contig_draft_last_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = []
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': []
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8']
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break',
+                                                                   'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7',
+                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']]
+        }
+
+        coreless_contigs = {'test_double_chromosome--gff_name_contig_2': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_with_coreless_contig_complete_last_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = ['test_double_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_7', 478, 2, ['pan_gene_1'], ['pan_gene_8']]
+        }
+
+        coreless_contigs = {
+            'test_double_chromosome--gff_name_contig_2': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_with_coreless_contig_draft_first_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_2', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_2', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_2', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_2', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = []
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': []
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8']
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break',
+                                                                   'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7',
+                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']]
+        }
+
+        coreless_contigs = {
+            'test_double_chromosome--gff_name_contig_1': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_with_coreless_contig_middle_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            # Contig 3 annotations
+            ['gff_name_contig_3', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_4'],
+            ['gff_name_contig_3', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_5']
+        ]
+        core_genes = {'test_triple_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4': 'pan_gene_10',
+                                                 'Core_ID_5': 'pan_gene_13'
+                                                 }}
+        low_freq_genes = {'test_triple_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_triple_chromosome.gff'
+        acc_genes = {'test_triple_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = []
+
+        # Construct expected results
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break',
+                           'Sequence_break--pan_gene_10', 'pan_gene_10--pan_gene_13', 'pan_gene_13--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299,
+                                   'Sequence_break--pan_gene_10': 178,
+                                   'pan_gene_10--pan_gene_13': 359,
+                                   'pan_gene_13--Sequence_break': 619}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': [],
+                                  'Sequence_break--pan_gene_10': [],
+                                  'pan_gene_10--pan_gene_13': [],
+                                  'pan_gene_13--Sequence_break': []
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8'],
+                                 'Sequence_break--pan_gene_10': [],
+                                 'pan_gene_10--pan_gene_13': [],
+                                 'pan_gene_13--Sequence_break': []
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break',
+                                                                   'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_7',
+                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']],
+            'Sequence_break--pan_gene_10--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
+            'pan_gene_10--pan_gene_13--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_10', 'pan_gene_13', 359, 0, [], []],
+            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 619, 0, [], []]
+        }
+
+        coreless_contigs = {
+            'test_triple_chromosome--gff_name_contig_2': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_single_core_on_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            ['gff_name_contig_2', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_4']
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4': 'pan_gene_15'}}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = ['test_double_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'pan_gene_2--pan_gene_7', 'pan_gene_15--pan_gene_15']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478,
+                                   'pan_gene_15--pan_gene_15': 1249}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1'],
+                                  'pan_gene_15--pan_gene_15': ['pan_gene_12']
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8'],
+                                 'pan_gene_15--pan_gene_15': ['pan_gene_11', 'pan_gene_14']
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_7',
+                                                               478, 2, ['pan_gene_1'], ['pan_gene_8']],
+            'pan_gene_15--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_15', 'pan_gene_15',
+                                                                 1249, 3, ['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]
+        }
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_segmentation_of_fragmented_core_gene(self):
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '251', '270', '.', '.', '.', 'Core_ID_1_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1_1': 'pan_gene_2',
+                                                 'Core_ID_1_2': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4'}}
+        complete_genomes = ['test_single_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 339,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']}
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               339, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_7',
+                                                               478, 2, ['pan_gene_1'], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_segmentation_of_fragmented_core_gene_lone_contig(self):
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            ['gff_name_contig_2', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_4_1'],
+            ['gff_name_contig_2', '.', 'CDS', '10020', '1030', '.', '.', '.', 'Core_ID_4_2']
+        ]
+        core_genes = {'test_double_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4_1': 'pan_gene_15',
+                                                 'Core_ID_4_2': 'pan_gene_15'}}
+        low_freq_genes = {'test_double_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_double_chromosome.gff'
+        acc_genes = {'test_double_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4': 'pan_gene_12'}}
+        complete_genomes = ['test_double_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'pan_gene_2--pan_gene_7', 'pan_gene_15--pan_gene_15']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478,
+                                   'pan_gene_15--pan_gene_15': 1219}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1'],
+                                  'pan_gene_15--pan_gene_15': ['pan_gene_12']
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8'],
+                                 'pan_gene_15--pan_gene_15': ['pan_gene_11', 'pan_gene_14']
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_2', 'pan_gene_7',
+                                                               478, 2, ['pan_gene_1'], ['pan_gene_8']],
+            'pan_gene_15--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_15', 'pan_gene_15',
+                                                                 1219, 3, ['pan_gene_12'],
+                                                                 ['pan_gene_11', 'pan_gene_14']]
+        }
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_segmentation_of_fragmented_acc_gene(self):
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '270', '.', '.', '.', 'Core_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '460', '.', '.', '.', 'acc_ID_2_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '470', '500', '.', '.', '.', 'acc_ID_2_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2_1': 'pan_gene_4',
+                                                'acc_ID_2_2': 'pan_gene_4'}}
+        complete_genomes = ['test_single_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 339,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']}
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               339, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_7',
+                                                               478, 2, ['pan_gene_1'], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_segmentation_of_fragmented_acc_gene_between_first_n_last_gene(self):
+
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1150', '.', '.', '.', 'low_freq_3_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '1170', '1250', '.', '.', '.', 'low_freq_3_2']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3_1': 'pan_gene_8',
+                                                     'low_freq_3_2': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4'}}
+        complete_genomes = ['test_single_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']}
+
+        master_info = {'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5', 359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+                       'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7', 269, 1, [], ['pan_gene_6']],
+                       'pan_gene_2--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_7', 478, 2, ['pan_gene_1'], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                              low_freq_genes, gff_path,
+                                                                                              acc_genes,
+                                                                                              complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_segmentation_of_fragmented_acc_gene_on_coreless_contig(self):
+
+        # Set up input
+        gff_generator = [
+            # Contig 1 annotations
+            ['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+            ['gff_name_contig_1', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+            ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+            ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+            ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3'],
+            # Contig 2 annotations
+            ['gff_name_contig_2', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_4'],
+            ['gff_name_contig_2', '.', 'CDS', '450', '500', '.', '.', '.', 'acc_ID_4_1'],
+            ['gff_name_contig_2', '.', 'CDS', '501', '503', '.', '.', '.', 'acc_ID_4_2'],
+            ['gff_name_contig_2', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_5'],
+            # Contig 3 annotations
+            ['gff_name_contig_3', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_4'],
+            ['gff_name_contig_3', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_5']
+        ]
+        core_genes = {'test_triple_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7',
+                                                 'Core_ID_4': 'pan_gene_10',
+                                                 'Core_ID_5': 'pan_gene_13'
+                                                 }}
+        low_freq_genes = {'test_triple_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8',
+                                                     'low_freq_4': 'pan_gene_11',
+                                                     'low_freq_5': 'pan_gene_14'}}
+        gff_path = 'TestSegmentingMockGffs/test_triple_chromosome.gff'
+        acc_genes = {'test_triple_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2': 'pan_gene_4',
+                                                'acc_ID_4_1': 'pan_gene_12',
+                                                'acc_ID_4_2': 'pan_gene_12'}}
+        complete_genomes = []
+
+        # Construct expected results
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7',
+                           'Sequence_break--pan_gene_2', 'pan_gene_7--Sequence_break',
+                           'Sequence_break--pan_gene_10', 'pan_gene_10--pan_gene_13', 'pan_gene_13--Sequence_break']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'Sequence_break--pan_gene_2': 178,
+                                   'pan_gene_7--Sequence_break': 299,
+                                   'Sequence_break--pan_gene_10': 178,
+                                   'pan_gene_10--pan_gene_13': 359,
+                                   'pan_gene_13--Sequence_break': 619}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': [],
+                                  'Sequence_break--pan_gene_2': ['pan_gene_1'],
+                                  'pan_gene_7--Sequence_break': [],
+                                  'Sequence_break--pan_gene_10': [],
+                                  'pan_gene_10--pan_gene_13': [],
+                                  'pan_gene_13--Sequence_break': []
+                                  }
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'Sequence_break--pan_gene_2': [],
+                                 'pan_gene_7--Sequence_break': ['pan_gene_8'],
+                                 'Sequence_break--pan_gene_10': [],
+                                 'pan_gene_10--pan_gene_13': [],
+                                 'pan_gene_13--Sequence_break': []
+                                 }
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 1, [], ['pan_gene_6']],
+            'Sequence_break--pan_gene_2--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break',
+                                                                   'pan_gene_2', 178, 1, ['pan_gene_1'], []],
+            'pan_gene_7--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_7',
+                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']],
+            'Sequence_break--pan_gene_10--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
+            'pan_gene_10--pan_gene_13--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_10', 'pan_gene_13', 359, 0, [], []],
+            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 619, 0, [], []]
+        }
+
+        coreless_contigs = {
+            'test_triple_chromosome--gff_name_contig_2': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_single_fragmented_gene_on_either_side_of_core_gene(self):
+
+        # Set up input
+        gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '179', '270', '.', '.', '.', 'Core_ID_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '300', '425', '.', '.', '.', 'low_freq_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '450', '460', '.', '.', '.', 'acc_ID_2_1'],
+                         ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '685', '690', '.', '.', '.', 'acc_ID_2_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '700', '850', '.', '.', '.', 'low_freq_2'],
+                         ['gff_name_contig_1', '.', 'CDS', '950', '1000', '.', '.', '.', 'Core_ID_3'],
+                         ['gff_name_contig_1', '.', 'CDS', '1100', '1250', '.', '.', '.', 'low_freq_3']]
+        core_genes = {'test_single_chromosome': {'Core_ID_1': 'pan_gene_2',
+                                                 'Core_ID_2': 'pan_gene_5',
+                                                 'Core_ID_3': 'pan_gene_7'}}
+        low_freq_genes = {'test_single_chromosome': {'low_freq_1': 'pan_gene_3',
+                                                     'low_freq_2': 'pan_gene_6',
+                                                     'low_freq_3': 'pan_gene_8'}}
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        acc_genes = {'test_single_chromosome': {'acc_ID_1': 'pan_gene_1',
+                                                'acc_ID_2_1': 'pan_gene_4',
+                                                'acc_ID_2_2': 'pan_gene_4'}}
+        complete_genomes = ['test_single_chromosome']
+
+        # Set up expected outputs
+        core_gene_pairs = ['pan_gene_2--pan_gene_5', 'pan_gene_5--pan_gene_7', 'pan_gene_2--pan_gene_7']
+        core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 339,
+                                   'pan_gene_5--pan_gene_7': 269,
+                                   'pan_gene_2--pan_gene_7': 478}
+
+        accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
+                                  'pan_gene_5--pan_gene_7': ['pan_gene_4'],
+                                  'pan_gene_2--pan_gene_7': ['pan_gene_1']}
+
+        low_freq_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_3'],
+                                 'pan_gene_5--pan_gene_7': ['pan_gene_6'],
+                                 'pan_gene_2--pan_gene_7': ['pan_gene_8']}
+
+        master_info = {
+            'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5',
+                                                               339, 2, ['pan_gene_4'], ['pan_gene_3'], ],
+            'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7',
+                                                               269, 2, ['pan_gene_4'], ['pan_gene_6']],
+            'pan_gene_2--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_7',
+                                                               478, 2, ['pan_gene_1'], ['pan_gene_8']]}
+
+        coreless_contigs = {}
+
+        # Run function
+        return_core_gene_pairs, return_core_gene_pair_distance, \
+        return_accessory_gene_content, return_low_freq_gene_content, \
+        return_master_info, return_coreless_contigs = gff_parser.segment_gff_content(gff_generator, core_genes,
+                                                                                     low_freq_genes, gff_path,
+                                                                                     acc_genes,
+                                                                                     complete_genomes)
+
+        # Evaluate
+        self.assertEqual(core_gene_pairs, return_core_gene_pairs)
+        self.assertEqual(core_gene_pair_distance, return_core_gene_pair_distance)
+        self.assertEqual(accessory_gene_content, return_accessory_gene_content)
+        self.assertEqual(low_freq_gene_content, return_low_freq_gene_content)
+        self.assertEqual(master_info, return_master_info)
+        self.assertEqual(coreless_contigs, return_coreless_contigs)
+
+    def test_something(self): # TODO - What other wired and wonderfull examples can we come up with?
+        pass
 
 
 if __name__ == '__main__':

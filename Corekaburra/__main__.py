@@ -13,6 +13,7 @@ variety of statistics, and then prints a summary of the statistics as output. # 
 import os
 import logging
 import time
+import concurrent.futures
 
 try:
     from Corekaburra.commandline_interface import get_commandline_arguments
@@ -33,6 +34,11 @@ try:
     from Corekaburra.parse_gene_presence_absence import read_gene_presence_absence
 except ModuleNotFoundError:
     from parse_gene_presence_absence import read_gene_presence_absence
+
+try:
+    from Corekaburra.gff_parser import segment_genome_content
+except ModuleNotFoundError:
+    from gff_parser import segment_genome_content
 
 from argparse import ArgumentParser
 from math import floor
@@ -115,6 +121,7 @@ def main():
     args = get_commandline_arguments(sys.argv[1:])
 
     # TODO - Add in function(s) that will check all files to not be empty. - Andrew?
+    # TODO - Make Corekaburra take gzipped inputs
 
     # Check the presence of provided complete genomes among input GFFs
     if args.comp_genomes is not None:
@@ -163,6 +170,52 @@ def main():
                                                                                          args.input_gffs,
                                                                                          tmp_folder_path)
 
-# If this script is run from the command line then call the main function.
+    # TODO - Add this into the multiprocessing loop to not doubble files
+    # TODO - Add a user command to keep and discard the corrected files (But still using them - Make mutually exclusive with -a option)
+    # Add in the refound genes into the gff files and print the corrected GFF files.
+    # if source_program == "Panaroo" and args.annotate:
+    #     time_start = time.time()
+    #     print(f"\n----------Adding in refound annotations for gff files---------")
+    #
+    #     corrected_folder = correct_gffs(args.input_gffs, gene_data_path, args.output_path, attribute_dict,
+    #                                     temp_folder_path)
+    #
+    #     args.input_gffs = [join(corrected_folder, file) for file in listdir(corrected_folder) if '.gff' in file]
+    #     if not args.quiet:
+    #         time_calculator(time_start, time.time(), "add refound annotations to gff files")
+
+    # Loop over all gffs and extract info from each of them.
+    time_start = time.time()
+    # Initialise dictionaries to contain results from all gff files
+    core_neighbour_pairs = {}
+    core_neighbour_distance = {}
+    core_neighbour_accessory_count = {}
+    core_neighbour_low_freq = {}
+    master_info_total = {}
+    non_core_contig_info = {}
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=15) as executor: # TODO - change the max workers to the user specified number
+        print(f"\n------Start core region identification of given gff files-----")
+        print(f'{len(args.input_gffs)} GFF files to process')
+
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, i, comp_genomes)
+                   for i, gff in enumerate(args.input_gffs)]
+
+        for output in concurrent.futures.as_completed(results):
+            # Split the outputs
+            core_pairs, distance, acc_count, \
+            low_freq, master_info_return, \
+            core_less_contigs_return = output.result()
+
+            # Merge results into single/master dictionaries
+            core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
+            core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
+            core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
+            core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
+            master_info_total.update(master_info_return)
+            non_core_contig_info.update(core_less_contigs_return)
+
+    time_calculator(time_start, time.time(), "searching gff files for core genes")
+
 if __name__ == '__main__':
     main()
