@@ -68,7 +68,7 @@ def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
             min_frag_coor = min(frag_coors)
             region = (first_fragment_contig, min_frag_coor, max_frag_coor)
 
-            # Find all features that are completly within the region
+            # Find all features that are completely within the region
             region_features = gff_database.region(region=region, completely_within=True)
 
             # find all genes that are not part of the fragmented gene
@@ -80,8 +80,11 @@ def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
                 return_list.append(False)
             else:
                 return_list.append(True)
+        else:
+            return_list.append(False)
 
     return return_list
+    # TODO - find out what the non-closed file problem is here! Can be seen when running unit-tests.
     # TODO - Find out how the gff parser handles this? Does there need to be a check if a gene cluster is being paired to it self and if then drop it and change the end coordinates.
 
 
