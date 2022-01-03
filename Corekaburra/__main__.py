@@ -40,6 +40,11 @@ try:
 except ModuleNotFoundError:
     from gff_parser import segment_genome_content
 
+try:
+    from Corekaburra.merge_dicts import merge_dicts_lists, merge_dicts_counts
+except ModuleNotFoundError:
+    from merge_dicts import merge_dicts_lists, merge_dicts_counts
+
 from argparse import ArgumentParser
 from math import floor
 import sys
@@ -208,12 +213,12 @@ def main():
             core_less_contigs_return = output.result()
 
             # Merge results into single/master dictionaries
-    #         core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
-    #         core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
-    #         core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
-    #         core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
-    #         master_info_total.update(master_info_return)
-    #         non_core_contig_info.update(core_less_contigs_return)
+            core_neighbour_pairs = merge_dicts_counts(core_neighbour_pairs, core_pairs)
+            core_neighbour_distance = merge_dicts_lists(core_neighbour_distance, distance)
+            core_neighbour_accessory_count = merge_dicts_lists(core_neighbour_accessory_count, acc_count)
+            core_neighbour_low_freq = merge_dicts_lists(core_neighbour_low_freq, low_freq)
+            master_info_total.update(master_info_return)
+            non_core_contig_info.update(core_less_contigs_return)
     #
     # time_calculator(time_start, time.time(), "searching gff files for core genes")
 

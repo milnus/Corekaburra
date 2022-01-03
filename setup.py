@@ -19,7 +19,7 @@ setup(
     packages=['Corekaburra'],
     package_dir={'Corekaburra': 'Corekaburra'},
     entry_points={
-        'console_scripts': ['Corekaburra = Corekaburra.Corekaburra:main']
+        'console_scripts': ['Corekaburra = Corekaburra.__main__:main']
     },
     url='https://github.com/milnus/Corekaburra',
     license='LICENSE',
