@@ -144,8 +144,8 @@ def record_core_core_region(core_genes, gff_name, gff_line, contig_end, previous
     core_gene_pair_distance[core_gene_neighbours_str] = core_core_distance
 
     # Add counts and annotation for accessory and low frequency genes
-    acc_genes_in_region = list(set(acc_genes_in_region))
-    low_freq_genes_in_region = list(set(low_freq_genes_in_region))
+    acc_genes_in_region = sorted(list(set(acc_genes_in_region)))
+    low_freq_genes_in_region = sorted(list(set(low_freq_genes_in_region)))
 
     accessory_gene_content[core_gene_neighbours_str] = acc_genes_in_region.copy()
     low_freq_gene_content[core_gene_neighbours_str] = low_freq_genes_in_region.copy()
@@ -230,8 +230,8 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
     last_first_accessory_content = acc_genes_in_region.copy() + first_core_accessory_content.copy()
     last_first_low_freq_count = low_freq_genes_in_region.copy() + first_core_low_freq_genes.copy()
 
-    last_first_accessory_content = list(set(last_first_accessory_content))
-    last_first_low_freq_count = list(set(last_first_low_freq_count))
+    last_first_accessory_content = sorted(list(set(last_first_accessory_content)))
+    last_first_low_freq_count = sorted(list(set(last_first_low_freq_count)))
 
     accessory_gene_content[core_gene_neighbours_str] = last_first_accessory_content.copy()
     low_freq_gene_content[core_gene_neighbours_str] = last_first_low_freq_count.copy()
@@ -256,8 +256,8 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
 
 
 def record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, contig_name):
-    acc_genes_in_region = list(set(acc_genes_in_region))
-    low_freq_genes_in_region = list(set(low_freq_genes_in_region))
+    acc_genes_in_region = sorted(list(set(acc_genes_in_region)))
+    low_freq_genes_in_region = sorted(list(set(low_freq_genes_in_region)))
     if len(acc_genes_in_region) + len(low_freq_genes_in_region) > 0:
         coreless_contigs[f'{gff_name}--{contig_name}'] = [acc_genes_in_region, low_freq_genes_in_region]
 

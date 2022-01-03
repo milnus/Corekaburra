@@ -1155,8 +1155,8 @@ class TestConnectFirstNLastGeneOnContig(unittest.TestCase):
         expected_core_gene_pairs = ['pan_gene_1--pan_gene_2']
         expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_2': 139}
         expected_accessory_gene_content = {'pan_gene_1--pan_gene_2': ['acc_1', 'first_acc_1']}
-        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': ['low_acc_1', 'first_low_1']}
-        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2', 139, 4, ['acc_1', 'first_acc_1'], ['low_acc_1', 'first_low_1']]}
+        expected_low_freq_gene_content = {'pan_gene_1--pan_gene_2': ['first_low_1', 'low_acc_1']}
+        expected_master_info = {'pan_gene_1--pan_gene_2--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_2', 139, 4, ['acc_1', 'first_acc_1'], ['first_low_1', 'low_acc_1']]}
 
         return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
         return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
@@ -1172,6 +1172,7 @@ class TestConnectFirstNLastGeneOnContig(unittest.TestCase):
                                                                             accessory_gene_content,
                                                                             low_freq_gene_content, master_info)
 
+        # Assert expected against returned
         self.assertEqual(expected_previous_core_gene_id, return_previous_core_gene_id)
         self.assertEqual(expected_previous_core_gene_end_coor, return_previous_core_gene_end_coor)
         self.assertEqual(expected_acc_genes_in_region, return_acc_genes_in_region)
@@ -1260,9 +1261,9 @@ class TestConnectFirstNLastGeneOnContig(unittest.TestCase):
         expected_low_freq_genes_in_region = []
         expected_core_gene_pairs = ['pan_gene_1--pan_gene_1']
         expected_core_gene_pair_distance = {'pan_gene_1--pan_gene_1': 1409}
-        expected_accessory_gene_content = {'pan_gene_1--pan_gene_1': ['acc_2', 'acc_3', 'acc_1']}
+        expected_accessory_gene_content = {'pan_gene_1--pan_gene_1': ['acc_1', 'acc_2', 'acc_3']}
         expected_low_freq_gene_content = {'pan_gene_1--pan_gene_1': ['low_1', 'low_2', 'low_3']}
-        expected_master_info = {'pan_gene_1--pan_gene_1--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_1', 1409, 6, ['acc_2', 'acc_3', 'acc_1'], ['low_1', 'low_2', 'low_3']]}
+        expected_master_info = {'pan_gene_1--pan_gene_1--gff_name': ['gff_name', 'pan_gene_1', 'pan_gene_1', 1409, 6, ['acc_1', 'acc_2', 'acc_3'], ['low_1', 'low_2', 'low_3']]}
 
         return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
         return_low_freq_genes_in_region, return_core_gene_pairs, return_core_gene_pair_distance, \
@@ -1967,6 +1968,21 @@ class TestSegmentingMockGffs(unittest.TestCase):
                                                                                      low_freq_genes, gff_path,
                                                                                      acc_genes,
                                                                                      complete_genomes)
+        # Sort expected and returned lists in dicts
+        low_freq_gene_content = {x: sorted(low_freq_gene_content[x]) for x in
+                                 low_freq_gene_content.keys()}
+        accessory_gene_content = {x: sorted(accessory_gene_content[x]) for x in
+                                  accessory_gene_content.keys()}
+        master_info = {
+            x: [sorted(element) if element is list else element for element in master_info[x]] for x in
+            master_info.keys()}
+
+        return_low_freq_gene_content = {x: sorted(return_low_freq_gene_content[x]) for x in
+                                        return_low_freq_gene_content.keys()}
+        return_accessory_gene_content = {x: sorted(return_accessory_gene_content[x]) for x in
+                                         return_accessory_gene_content.keys()}
+        return_master_info = {x: [sorted(element) if element is list else element for element in return_master_info[x]]
+                              for x in return_master_info.keys()}
 
         # Evaluate
         self.assertEqual(core_gene_pairs.sort(), return_core_gene_pairs.sort())
