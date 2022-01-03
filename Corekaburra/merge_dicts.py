@@ -1,11 +1,16 @@
-import numpy
+def merge_dicts_counts(parent_dict, merge_object):
+    """
+    Function that can merge two dicts by keys and adding 1 to the value each time key is observed
+    :param parent_dict: Dict to which the second with should be merged into
+    :param merge_object: Dict or List to be merged into the first.
 
-def merge_dicts_counts(parent_dict, merge_dict):
-    """ Function that can merge two dicts by keys and adding 1 to the value each time key is observed"""
-    if isinstance(merge_dict, dict):
-        keys = merge_dict.keys()
-    elif isinstance(merge_dict, list):
-        keys = merge_dict
+    :return: Resulting dict following merge
+    """
+
+    if isinstance(merge_object, dict):
+        keys = merge_object.keys()
+    elif isinstance(merge_object, list):
+        keys = merge_object
 
     for key in keys:
         if key in parent_dict:
@@ -17,7 +22,13 @@ def merge_dicts_counts(parent_dict, merge_dict):
 
 
 def merge_dicts_lists(parent_dict, merge_dict):
-    """ Function to add two dictionaries by adding lists of matching keys """
+    """
+    Function to add two dictionaries by adding lists of matching keys
+    :param parent_dict: The Dict to which the second dict should be merged with
+    :param merge_dict: Dict to be merge with the parent
+
+    :return: Dict having the two inputs merged
+    """
 
     for key in merge_dict.keys():
         # Check if key is present, if then append the value to the key
@@ -35,19 +46,3 @@ def merge_dicts_lists(parent_dict, merge_dict):
                 parent_dict[key] = merge_dict[key]
 
     return parent_dict
-
-
-def merge_first_genes(start_gene_cluster, merged_start_gene_clusters, merged_second_gene_clusters, first_core_pair):
-    """ Function that merge first genes and find second genes found in complete genomes,
-    used to inform core-genome synteny direction and start gene """
-    # Check if first gene is available
-    if start_gene_cluster:
-        # Record first gene
-        merged_start_gene_clusters = merged_start_gene_clusters + [start_gene_cluster]
-
-        # Record second gene in file
-        second_gene = first_core_pair.split('--')
-        second_gene.remove(start_gene_cluster)
-        merged_second_gene_clusters = merged_second_gene_clusters + second_gene
-
-    return merged_start_gene_clusters, merged_second_gene_clusters

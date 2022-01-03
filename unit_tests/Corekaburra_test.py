@@ -18,6 +18,7 @@ from Corekaburra import read_complete_genome_file
 from Corekaburra import check_inputs
 from Corekaburra import parse_gene_presence_absence
 from Corekaburra import gff_parser
+from Corekaburra import merge_dicts
 
 
 
@@ -2514,6 +2515,137 @@ class TestSegmentingMockGffs(unittest.TestCase):
 
     def test_something(self): # TODO - What other wired and wonderfull examples can we come up with?
         pass
+
+
+class TestergingDicts(unittest.TestCase):
+    """ Functions to merge dictionaries and lists into dictionaries """
+    # Test merge_dicts_counts
+    def test_merge_dicts_counts_list_empty(self):
+        input_dict = {}
+        input_list = ['x', 'y', 'z']
+
+        expected_dict = {'x': 1,
+                         'y': 1,
+                         'z': 1}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    def test_merge_dicts_counts_dict_empty(self):
+        input_dict = {}
+        input_list = {'x': 2, 'y': 2, 'z': 2}
+
+        expected_dict = {'x': 1,
+                         'y': 1,
+                         'z': 1}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    def test_merge_dicts_counts_list_adding(self):
+        input_dict = {'x': 1,
+                      'y': 1,
+                      'z': 1}
+        input_list = ['x', 'y', 'z']
+
+        expected_dict = {'x': 2,
+                         'y': 2,
+                         'z': 2}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    def test_merge_dicts_counts_dict_adding(self):
+        input_dict = {'x': 1,
+                      'y': 1,
+                      'z': 1}
+        input_list = {'x': 1, 'y': 1, 'z': 1}
+
+        expected_dict = {'x': 2,
+                         'y': 2,
+                         'z': 2}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    def test_merge_dicts_counts_dict_mix(self):
+        input_dict = {'x': 1,
+                      'y': 1,
+                      'z': 1}
+        input_list = {'x': 1, 'y': 1}
+
+        expected_dict = {'x': 2,
+                         'y': 2,
+                         'z': 1}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    def test_merge_dicts_counts_list_mix(self):
+        input_dict = {'x': 1,
+                      'y': 1}
+        input_list = ['x', 'y', 'z']
+
+        expected_dict = {'x': 2,
+                         'y': 2,
+                         'z': 1}
+
+        return_dict = merge_dicts.merge_dicts_counts(input_dict, input_list)
+
+        self.assertEqual(return_dict, expected_dict)
+
+    # Test merge_dicts_lists
+    def test_merge_dicts_lists_empty(self):
+        input_dict = {}
+        merge_dict = {'x': ['test_3'],
+                      'y': ['test_2'],
+                      'z': ['test_1']}
+
+        expected_dict = {'x': ['test_3'],
+                         'y': ['test_2'],
+                         'z': ['test_1']}
+
+        return_dict = merge_dicts.merge_dicts_lists(input_dict, merge_dict)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_merge_dicts_lists_adding(self):
+        input_dict = {'x': ['init_3'],
+                      'y': ['init_2'],
+                      'z': ['init_1']}
+
+        merge_dict = {'x': ['test_3'],
+                      'y': ['test_2'],
+                      'z': ['test_1']}
+
+        expected_dict = {'x': ['init_3', 'test_3'],
+                         'y': ['init_2', 'test_2'],
+                         'z': ['init_1', 'test_1']}
+
+        return_dict = merge_dicts.merge_dicts_lists(input_dict, merge_dict)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_merge_dicts_lists_mix(self):
+        input_dict = {'x': ['init_3'],
+                      'y': ['init_2']}
+
+        merge_dict = {'x': ['test_3'],
+                      'y': ['test_2'],
+                      'z': ['test_1']}
+
+        expected_dict = {'x': ['init_3', 'test_3'],
+                         'y': ['init_2', 'test_2'],
+                         'z': ['test_1']}
+
+        return_dict = merge_dicts.merge_dicts_lists(input_dict, merge_dict)
+
+        self.assertEqual(expected_dict, return_dict)
 
 
 if __name__ == '__main__':
