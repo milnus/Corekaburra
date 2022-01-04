@@ -20,6 +20,7 @@ from Corekaburra import parse_gene_presence_absence
 from Corekaburra import gff_parser
 from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
+from Corekaburra import summary_table
 
 
 
@@ -2773,7 +2774,7 @@ class TestGeneCoOccurrence(unittest.TestCase):
     """
     Test function that identifies the number of genomes in which two core genes co-occur.
     """
-    def test_gene_co_occurrence(self):
+    def test_count_gene_co_occurrence(self):
         core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                    'Silas_the_Salmonella_tag-1-2.1': "B",
                                                    'Silas_the_Salmonella_tag-1-2.2': "B"},
@@ -2799,12 +2800,16 @@ class TestGeneCoOccurrence(unittest.TestCase):
         segment = ["B", "A"]
 
         expected_value = 10
+        a_occurrence = 10
+        b_occurrence = 10
 
-        return_value = consesus_core_genome.gene_co_occurrence(core_gene_dict, segment)
+        return_value, individual_occurrences = consesus_core_genome.count_gene_co_occurrence(core_gene_dict, segment)
 
         self.assertEqual(expected_value, return_value)
+        self.assertEqual(a_occurrence, individual_occurrences["A"])
+        self.assertEqual(b_occurrence, individual_occurrences["B"])
 
-    def test_gene_co_occurrence_no_occurence(self):
+    def test_count_gene_co_occurrence_no_occurence(self):
         core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-2.1': "B",
                                                    'Silas_the_Salmonella_tag-1-2.2': "B"},
                           'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A"},
@@ -2820,10 +2825,14 @@ class TestGeneCoOccurrence(unittest.TestCase):
         segment = ["B", "A"]
 
         expected_value = 0
+        a_occurrence = 5
+        b_occurrence = 5
 
-        return_value = consesus_core_genome.gene_co_occurrence(core_gene_dict, segment)
+        return_value, individual_occurrences = consesus_core_genome.count_gene_co_occurrence(core_gene_dict, segment)
 
         self.assertEqual(expected_value, return_value)
+        self.assertEqual(a_occurrence, individual_occurrences["A"])
+        self.assertEqual(b_occurrence, individual_occurrences["B"])
 
 
 class TestSegmentationIdentification(unittest.TestCase):
@@ -3122,6 +3131,75 @@ class TestNoAccessorySegmentIdentifcation(unittest.TestCase):
         sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
 
         self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
+
+class TestSummaryTableConstruction(unittest.TestCase):
+    def test_summary_table_calculations(self):
+        master_info = {
+            'pan_cluster_1--pan_cluster_2--genome_1': ['genome_1', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--pan_cluster_2--genome_2': ['genome_2', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--pan_cluster_2--genome_3': ['genome_3', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_2--pan_cluster_3--genome_1': ['genome_1', 'pan_cluster_2', 'pan_cluster_3', 100, 2,
+                                                       ['Acc_1', 'Acc_2'], []],
+            'pan_cluster_2--pan_cluster_4--genome_2': ['genome_2', 'pan_cluster_2', 'pan_cluster_3', 150, 1,
+                                                       ['Acc_1', ], []],
+            'pan_cluster_2--pan_cluster_3--genome_3': ['genome_3', 'pan_cluster_2', 'pan_cluster_3', 200, 0,
+                                                       [], []],
+            'pan_cluster_3--pan_cluster_4--genome_1': ['genome_1', 'pan_cluster_2', 'pan_cluster_3', -5, 0,
+                                                       [], []],
+            'pan_cluster_3--pan_cluster_4--genome_3': ['genome_3', 'pan_cluster_2', 'pan_cluster_3', -10, 0,
+                                                       [], []]
+        }
+
+        core_gene_dict = {'genome_1': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2', 'gene_3': 'pan_cluster_3', 'gene_4': 'pan_cluster_4'},
+                          'genome_2': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2', 'gene_4': 'pan_cluster_4'},
+                          'genome_3': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2', 'gene_3': 'pan_cluster_3', 'gene_4': 'pan_cluster_4'}}
+
+        expected_table = {'pan_cluster_1--pan_cluster_2': ['pan_cluster_1-pan_cluster_2', 3, 3, 3, 3, 99, 99, 99.0, 99.0, 3, 3, 3.0, 3.0],
+                          'pan_cluster_2--pan_cluster_3': ['pan_cluster_2-pan_cluster_3', 2, 3, 2, 2, 100, 200, 150.0, 150.0, 0, 2, 1.0, 1.0],
+                          'pan_cluster_2--pan_cluster_4': ['pan_cluster_2-pan_cluster_4', 1, 3, 3, 3, 150, 150, 150.0, 150.0, 1, 1, 1.0, 1.0],
+                          'pan_cluster_3--pan_cluster_4': ['pan_cluster_3-pan_cluster_4', 2, 2, 3, 2, -10, -5, -7.5, -7.5, 0, 0, 0.0, 0.0]}
+
+        return_table = summary_table.calculate_n_create_summaries(master_info, core_gene_dict)
+
+        self.assertEqual(expected_table, return_table)
+
+    def test_summary_table_calculations_w_sequence_breaks(self):
+        master_info = {
+            'pan_cluster_1--pan_cluster_2--genome_1': ['genome_1', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--Sequence_break--genome_2': ['genome_2', 'pan_cluster_1', 'Sequence_break', 100, 0,
+                                                       [], []],
+            'Sequence_break--pan_cluster_2--genome_2': ['genome_2', 'Sequence_break', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--pan_cluster_2--genome_3': ['genome_3', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_2--pan_cluster_3--genome_1': ['genome_1', 'pan_cluster_2', 'pan_cluster_3', 100, 2,
+                                                       ['Acc_1', 'Acc_2'], []],
+            'pan_cluster_2--pan_cluster_3--genome_3': ['genome_3', 'pan_cluster_2', 'pan_cluster_3', 200, 0,
+                                                       [], []],
+            'pan_cluster_3--Sequence_break--genome_1': ['genome_1', 'pan_cluster_3', 'Sequence_break', 100, 2,
+                                                       ['Acc_1', 'Acc_2'], []],
+            'pan_cluster_3--Sequence_break--genome_3': ['genome_3', 'pan_cluster_3', 'Sequence_break', 200, 0,
+                                                       [], []]
+        }
+
+        core_gene_dict = {'genome_1': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2', 'gene_3': 'pan_cluster_3'},
+                          'genome_2': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2'},
+                          'genome_3': {'gene_1': 'pan_cluster_1', 'gene_2': 'pan_cluster_2', 'gene_3': 'pan_cluster_3'}}
+
+        expected_table = {'pan_cluster_1--pan_cluster_2': ['pan_cluster_1-pan_cluster_2', 2, 3, 3, 3, 99, 99, 99.0, 99.0, 3, 3, 3.0, 3.0],
+                          'pan_cluster_1--Sequence_break': ['pan_cluster_1-Sequence_break', 1, 3, 0, 0, 100, 100, 100.0, 100.0, 0, 0, 0.0, 0.0],
+                          'Sequence_break--pan_cluster_2': ['Sequence_break-pan_cluster_2', 1, 0, 3, 0, 99, 99, 99.0, 99.0, 3, 3, 3.0, 3.0],
+                          'pan_cluster_2--pan_cluster_3': ['pan_cluster_2-pan_cluster_3', 2, 3, 2, 2, 100, 200, 150.0, 150.0, 0, 2, 1.0, 1.0],
+                          'pan_cluster_3--Sequence_break': ['pan_cluster_3-Sequence_break', 2, 2, 0, 0, 100, 200, 150.0, 150.0, 0, 2, 1.0, 1.0]}
+
+        return_table = summary_table.calculate_n_create_summaries(master_info, core_gene_dict)
+
+        self.assertEqual(expected_table, return_table)
 
 
 if __name__ == '__main__':

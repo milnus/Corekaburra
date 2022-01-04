@@ -50,6 +50,12 @@ try:
 except ModuleNotFoundError:
     from consesus_core_genome import determine_genome_segments
 
+try:
+    from Corekaburra.summary_table import calculate_n_create_summaries
+except ModuleNotFoundError:
+    from summary_table import calculate_n_create_summaries
+
+
 from argparse import ArgumentParser
 from math import floor
 import sys
@@ -242,6 +248,10 @@ def main():
                                                                        len(args.input_gffs), core_dict)
 
     # time_calculator(time_start, time.time(), "identifying segments in pan genome")
+
+    # Produce dict containing summarised information from master info.
+    master_summary_info = calculate_n_create_summaries(master_info_total)
+
 
 if __name__ == '__main__':
     main()

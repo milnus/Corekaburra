@@ -26,7 +26,7 @@ def construct_core_graph(core_neighbour_pairs):
     return G
 
 
-def gene_co_occurrence(core_gene_dict, two_gene_segment):
+def count_gene_co_occurrence(core_gene_dict, two_gene_segment):
     """
     Function to find the number of genomes in which two genes co-occur across the input genomes.
     :param core_gene_dict: Dictionary over core genes mapped from genome, to locus_tag, to pan-genome cluster
@@ -34,16 +34,24 @@ def gene_co_occurrence(core_gene_dict, two_gene_segment):
     :return: Int - number of co-occurrences for the two genes in the input two_gene_segment
     """
     co_occurrence = 0
+    gene_occurrence = dict.fromkeys(two_gene_segment, 0)
 
     # Get pan-genome clusters for all genomes in a list of lists
     core_gene_presences = [list(core_genes.values()) for core_genes in core_gene_dict.values()]
 
     # Go through all genomes and check if genes co-occur
     for core_gene_set in core_gene_presences:
+        # count the co-occurrences
         if set(two_gene_segment).issubset(core_gene_set):
             co_occurrence += 1
 
-    return co_occurrence
+        # Count the individual occurrences
+        if two_gene_segment[0] in core_gene_set:
+            gene_occurrence[two_gene_segment[0]] += 1
+        if two_gene_segment[1] in core_gene_set:
+            gene_occurrence[two_gene_segment[1]] += 1
+
+    return co_occurrence, gene_occurrence
 
 
 def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count):
@@ -175,7 +183,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                 if segment_length - 2 == two_degree_segment_length:
                     # Check if two gene segment occur in every possible genome, if not then skip
                     if segment_length == 2:
-                        if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrence(core_gene_dict, segment):
+                        gene_co_occurrences, _ = count_gene_co_occurrence(core_gene_dict, segment)
+                        if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrences:
                             continue
                         else:
                             if all([x != segment[::-1] for x in multi_edge_connect_adjust]): multi_edge_connect_adjust.append(segment)
