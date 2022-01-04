@@ -1,4 +1,5 @@
 import networkx as nx
+# pylint: disable=E1123, E1121
 
 
 def construct_core_graph(core_neighbour_pairs):
