@@ -1,2 +1,31 @@
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-empty_file	0	0	-	-	-
+usage: __main__.py [-h] -ig file_1.gff ... file_n.gff
+                   [file_1.gff ... file_n.gff ...] -ip path/to/pan_genome
+                   [-cg complete_genomes.txt] [-o path/to/output]
+                   [-p OUTPUT_PREFIX] [-a] [-c int] [-l | -q]
+
+Welcome to Corekaburra! Program to determine consensus core sequence from
+multiple genomes. Outputs consensus core gene alignment, distance between core
+genes, number of accessory genes between core genes and low frequency genes
+between core genes
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -ig file_1.gff ... file_n.gff [file_1.gff ... file_n.gff ...], --input_gffs file_1.gff ... file_n.gff [file_1.gff ... file_n.gff ...]
+                        Path to gff files used for pan-genome
+  -ip path/to/pan_genome, --input_pangenome path/to/pan_genome
+                        Path to the folder produced by Panaroo or Roary
+  -cg complete_genomes.txt, --complete_genomes complete_genomes.txt
+                        text file containing names of genomes that are to be
+                        handled as complete genomes
+  -o path/to/output, --output path/to/output
+                        Path to where output files will be placed [default:
+                        current folder]
+  -p OUTPUT_PREFIX, --prefix OUTPUT_PREFIX
+                        Prefix for output files, if any is desired
+  -a, --no_annotate_refound
+                        Flag to toggle off the creation of new gff files, with
+                        annotation of refound genes. Only done if input
+                        pangenome is detected as comming from Panaroo
+  -c int, --cpu int     Give max number of CPUs [default: 1]
+  -l, --log             Record program progress in for debugging purpose
+  -q, --quiet           Only print warnings

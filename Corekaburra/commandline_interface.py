@@ -21,8 +21,8 @@ def get_commandline_arguments(args):
     parser.add_argument('-ig',
                         '--input_gffs',
                         help='Path to gff files used for pan-genome',
-                        required=True,
                         metavar='file_1.gff ... file_n.gff',
+                        required=True,
                         dest='input_gffs',
                         nargs='+')
 

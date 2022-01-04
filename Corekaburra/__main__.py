@@ -45,6 +45,11 @@ try:
 except ModuleNotFoundError:
     from merge_dicts import merge_dicts_lists, merge_dicts_counts
 
+try:
+    from Corekaburra.consesus_core_genome import determine_genome_segments
+except ModuleNotFoundError:
+    from consesus_core_genome import determine_genome_segments
+
 from argparse import ArgumentParser
 from math import floor
 import sys
@@ -142,7 +147,7 @@ def main():
     source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan)
 
     # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
-    if args.annotate and source_program is 'Panaroo':
+    if args.annotate and source_program == 'Panaroo':
         gene_data_path = check_gene_data(args.input_pan)
     if not args.quiet:
         print(f"Pan genome determined to come from {source_program}")
@@ -221,6 +226,22 @@ def main():
             non_core_contig_info.update(core_less_contigs_return)
     #
     # time_calculator(time_start, time.time(), "searching gff files for core genes")
+
+    print(f"\n--------------Identifying segments in pan genome--------------")
+    time_start = time.time()
+    # Count number of unique accessory genes inserted into a core-core region across the genomes
+    acc_region_count = {key: len(set(core_neighbour_low_freq[key])) for key in core_neighbour_low_freq}
+    # Count number of unique low frequency genes inserted into a core-core region across the genomes
+    low_frew_region_count = {key: len(set(core_neighbour_accessory_count[key])) for key in
+                             core_neighbour_accessory_count}
+
+    # Combine the accessory and low frequency counts:
+    combined_acc_gene_count = {key: low_frew_region_count[key] + acc_region_count[key] for key in low_frew_region_count}
+
+    double_edge_segements, no_acc_segments = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
+                                                                       len(args.input_gffs), core_dict)
+
+    # time_calculator(time_start, time.time(), "identifying segments in pan genome")
 
 if __name__ == '__main__':
     main()

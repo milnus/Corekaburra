@@ -19,6 +19,7 @@ from Corekaburra import check_inputs
 from Corekaburra import parse_gene_presence_absence
 from Corekaburra import gff_parser
 from Corekaburra import merge_dicts
+from Corekaburra import consesus_core_genome
 
 
 
@@ -741,6 +742,9 @@ class TestGetContigLenth(unittest.TestCase):
 
 
 class TestRecordCoreCoreRegion(unittest.TestCase):
+    """
+    Test function that is used to record information of a region identified between two core genes.
+    """
     def test_recording_neighbouring_core_genes(self):
         core_genes = {'gff_name': {'Core_ID_1': 'pan_gene_1',
                                    'Core_ID_2': 'pan_gene_2'}}
@@ -1292,6 +1296,9 @@ class TestConnectFirstNLastGeneOnContig(unittest.TestCase):
 
 
 class TestRecordCorelessContig(unittest.TestCase):
+    """
+    Test for function that records a contig on which there is no core genes.
+    """
     def test_adding_coreless_contig(self):
         coreless_contigs = {}
         acc_genes_in_region = ['acc_1']
@@ -1321,6 +1328,9 @@ class TestRecordCorelessContig(unittest.TestCase):
 
 
 class TestSegmentingMockGffs(unittest.TestCase):
+    """
+    Tests for function that takes in a gff file and segments it into core-core regions
+    """
     def test_single_chromosome_complete(self):
         # Set up input
         gff_generator = [['gff_name_contig_1', '.', 'CDS', '90', '180', '.', '.', '.', 'acc_ID_1'],
@@ -2517,7 +2527,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
         pass
 
 
-class TestergingDicts(unittest.TestCase):
+class TestMergingDicts(unittest.TestCase):
     """ Functions to merge dictionaries and lists into dictionaries """
     # Test merge_dicts_counts
     def test_merge_dicts_counts_list_empty(self):
@@ -2647,6 +2657,470 @@ class TestergingDicts(unittest.TestCase):
 
         self.assertEqual(expected_dict, return_dict)
 
+
+class TestCoreGraphConstruction(unittest.TestCase):
+    """
+    Test the construction of a network made from core gene pairs and their number of connections.
+    """
+    def test_core_gene_graph_construction_circle_case(self):
+        expected_edges = [('pan_cluster_1', 'pan_cluster_2'), ('pan_cluster_1', 'pan_cluster_6'), ('pan_cluster_2', 'pan_cluster_3'),
+         ('pan_cluster_3', 'pan_cluster_4'), ('pan_cluster_4', 'pan_cluster_5'), ('pan_cluster_5', 'pan_cluster_6')]
+
+        expected_degrees = [('pan_cluster_1', 2), ('pan_cluster_2', 2), ('pan_cluster_3', 2), ('pan_cluster_4', 2), ('pan_cluster_5', 2), ('pan_cluster_6', 2)]
+
+        expected_edge_weights = [10, 10, 10, 10, 10, 10]
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 10,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_1--pan_cluster_6': 10}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        # Get edge weights:
+        edge_weights = [core_graph.get_edge_data(edge[0], edge[1])['weight'] for edge in list(core_graph.edges)]
+
+        # Assert outputs
+        self.assertEqual(expected_edges, list(core_graph.edges))
+        self.assertEqual(expected_degrees, list(core_graph.degree))
+        self.assertEqual(expected_edge_weights, edge_weights)
+
+    def test_core_gene_graph_construction_circle_case_with_single_break(self):
+        expected_edges = [('pan_cluster_1', 'pan_cluster_2'), ('pan_cluster_1', 'pan_cluster_6'), ('pan_cluster_2', 'pan_cluster_3'),
+         ('pan_cluster_3', 'pan_cluster_4'), ('pan_cluster_4', 'pan_cluster_5'), ('pan_cluster_5', 'pan_cluster_6')]
+
+        expected_degrees = [('pan_cluster_1', 2), ('pan_cluster_2', 2), ('pan_cluster_3', 2), ('pan_cluster_4', 2), ('pan_cluster_5', 2), ('pan_cluster_6', 2)]
+
+        expected_edge_weights = [9, 10, 9, 10, 10, 10]
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 9,
+                                'pan_cluster_1--Sequence_break': 1,
+                                'Sequence_break--pan_cluster_2': 1,
+                                'pan_cluster_2--pan_cluster_3': 9,
+                                'pan_cluster_3--pan_cluster_4': 10,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_1--pan_cluster_6': 10}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        # Get edge weights:
+        edge_weights = [core_graph.get_edge_data(edge[0], edge[1])['weight'] for edge in list(core_graph.edges)]
+
+        # Assert outputs
+        self.assertEqual(expected_edges, list(core_graph.edges))
+        self.assertEqual(expected_degrees, list(core_graph.degree))
+        self.assertEqual(expected_edge_weights, edge_weights)
+
+    def test_core_gene_graph_construction_three_degree_case(self):
+        expected_edges = [('pan_cluster_1', 'pan_cluster_2'), ('pan_cluster_1', 'pan_cluster_6'), ('pan_cluster_1', 'pan_cluster_4'), ('pan_cluster_2', 'pan_cluster_3'),
+         ('pan_cluster_3', 'pan_cluster_4'), ('pan_cluster_4', 'pan_cluster_5'), ('pan_cluster_5', 'pan_cluster_6')]
+
+        expected_degrees = [('pan_cluster_1', 3), ('pan_cluster_2', 2), ('pan_cluster_3', 2), ('pan_cluster_4', 3), ('pan_cluster_5', 2), ('pan_cluster_6', 2)]
+
+        expected_edge_weights = [10, 8, 2, 10, 8, 10, 10]
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 8,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_1--pan_cluster_6': 8,
+                                'pan_cluster_1--pan_cluster_4': 2}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        # Get edge weights:
+        edge_weights = [core_graph.get_edge_data(edge[0], edge[1])['weight'] for edge in list(core_graph.edges)]
+
+        # Assert outputs
+        self.assertEqual(expected_edges, list(core_graph.edges))
+        self.assertEqual(expected_degrees, list(core_graph.degree))
+        self.assertEqual(expected_edge_weights, edge_weights)
+
+    def test_core_gene_graph_construction_three_degree_n_sequence_breaks_case(self):
+        expected_edges = [('pan_cluster_1', 'pan_cluster_2'), ('pan_cluster_1', 'pan_cluster_6'), ('pan_cluster_1', 'pan_cluster_4'), ('pan_cluster_2', 'pan_cluster_3'),
+         ('pan_cluster_3', 'pan_cluster_4'), ('pan_cluster_4', 'pan_cluster_5'), ('pan_cluster_5', 'pan_cluster_6')]
+
+        expected_degrees = [('pan_cluster_1', 3), ('pan_cluster_2', 2), ('pan_cluster_3', 2), ('pan_cluster_4', 3), ('pan_cluster_5', 2), ('pan_cluster_6', 2)]
+
+        expected_edge_weights = [10, 8, 2, 10, 8, 10, 10]
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 8,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_1--pan_cluster_6': 8,
+                                'pan_cluster_1--pan_cluster_4': 2,
+                                'pan_cluster_3--Sequence_break': 2,
+                                'pan_cluster_6--Sequence_break': 2}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        # Get edge weights:
+        edge_weights = [core_graph.get_edge_data(edge[0], edge[1])['weight'] for edge in list(core_graph.edges)]
+
+        # Assert outputs
+        self.assertEqual(expected_edges, list(core_graph.edges))
+        self.assertEqual(expected_degrees, list(core_graph.degree))
+        self.assertEqual(expected_edge_weights, edge_weights)
+
+
+class TestGeneCoOccurrence(unittest.TestCase):
+    """
+    Test function that identifies the number of genomes in which two core genes co-occur.
+    """
+    def test_gene_co_occurrence(self):
+        core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
+                                                   'Silas_the_Salmonella_tag-1-2.1': "B",
+                                                   'Silas_the_Salmonella_tag-1-2.2': "B"},
+                          'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A",
+                                                          'Christina_the_Streptococcus_tag-2-2': "B"},
+                          'Ajwa_the_Shigella': {'Ajwa_the_Shigella_tag-3-1': "A",
+                                                'Ajwa_the_Shigella_tag-3-2': "B"},
+                          'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-1': "A",
+                                                  'Ajwa_the_Legionella_tag-4-2': "B"},
+                          'Cari_the_Listeria': {'Cari_the_Listeria_tag-5-1': "A",
+                                                'Cari_the_Listeria_tag-5-2': "B"},
+                          'Aman_the_Streptococcus': {'Aman_the_Streptococcus_tag-6-1': "A",
+                                                     'Aman_the_Streptococcus_tag-6-2': "B"},
+                          'Zion_the_Streptococcus': {'Zion_the_Streptococcus_tag-7-1': "A",
+                                                     'Zion_the_Streptococcus_tag-7-2': "B"},
+                          'Dina_the_Shigella': {'Dina_the_Shigella_tag-8-1': "A",
+                                                'Dina_the_Shigella_tag-8-2': "B"},
+                          'Silas_the_Legionella': {'Silas_the_Legionella_tag-9-1': "A",
+                                                   'Silas_the_Legionella_tag-9-2': "B"},
+                          'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-1': "A",
+                                                 'Lilly_the_Shigella_tag-10-2': "B"}}
+
+        segment = ["B", "A"]
+
+        expected_value = 10
+
+        return_value = consesus_core_genome.gene_co_occurrence(core_gene_dict, segment)
+
+        self.assertEqual(expected_value, return_value)
+
+    def test_gene_co_occurrence_no_occurence(self):
+        core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-2.1': "B",
+                                                   'Silas_the_Salmonella_tag-1-2.2': "B"},
+                          'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A"},
+                          'Ajwa_the_Shigella': {'Ajwa_the_Shigella_tag-3-2': "B"},
+                          'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-2': "B"},
+                          'Cari_the_Listeria': {'Cari_the_Listeria_tag-5-1': "A"},
+                          'Aman_the_Streptococcus': {'Aman_the_Streptococcus_tag-6-2': "B"},
+                          'Zion_the_Streptococcus': {'Zion_the_Streptococcus_tag-7-1': "A"},
+                          'Dina_the_Shigella': {'Dina_the_Shigella_tag-8-1': "A"},
+                          'Silas_the_Legionella': {'Silas_the_Legionella_tag-9-2': "B"},
+                          'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-1': "A"}}
+
+        segment = ["B", "A"]
+
+        expected_value = 0
+
+        return_value = consesus_core_genome.gene_co_occurrence(core_gene_dict, segment)
+
+        self.assertEqual(expected_value, return_value)
+
+
+class TestSegmentationIdentification(unittest.TestCase):
+    """
+    Test the function that identifies core gene segments from a pan-genome.
+    """
+    def test_double_edge_segment_identification_all_2_degree_input(self):
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 10,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_6--pan_cluster_1': 10}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        return_1, return_2, return_3 = consesus_core_genome.identify_segments(core_graph, 10, {})
+
+        self.assertEqual(None, return_1)
+        self.assertEqual(None, return_2)
+        self.assertEqual(None, return_3)
+
+    def test_double_edge_segment_identification_two_segments(self):
+        expected_segments = {'pan_cluster_1--pan_cluster_5': ['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5'], 'pan_cluster_2--pan_cluster_4': ['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 9,
+                                'pan_cluster_1--pan_cluster_4': 1,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 10,
+                                'pan_cluster_2--pan_cluster_5': 1,
+                                'pan_cluster_4--pan_cluster_5': 9,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_6--pan_cluster_1': 10}
+
+        core_gene_dict = {'genome_1': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_2': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_3': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_4': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_5': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_6': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_7': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_8': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_9': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},
+                          'genome_10': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_four_segments(self):
+        expected_segments = {'pan_cluster_1--pan_cluster_3': ['pan_cluster_1', 'pan_cluster_2', 'pan_cluster_3'],
+                             'pan_cluster_1--pan_cluster_9': ['pan_cluster_1', 'pan_cluster_10', 'pan_cluster_9'],
+                             'pan_cluster_3--pan_cluster_6': ['pan_cluster_6', 'pan_cluster_5', 'pan_cluster_4', 'pan_cluster_3'],
+                             'pan_cluster_6--pan_cluster_9': ['pan_cluster_6', 'pan_cluster_7', 'pan_cluster_8', 'pan_cluster_9']}
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 9,
+                                'pan_cluster_1--pan_cluster_6': 1,
+                                'pan_cluster_2--pan_cluster_3': 10,
+                                'pan_cluster_3--pan_cluster_4': 9,
+                                'pan_cluster_3--pan_cluster_9': 1,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_6--pan_cluster_7': 10,
+                                'pan_cluster_7--pan_cluster_8': 10,
+                                'pan_cluster_8--pan_cluster_9': 9,
+                                'pan_cluster_9--pan_cluster_10': 10,
+                                'pan_cluster_1--pan_cluster_10': 10}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_segments_node_w_four_degrees(self):
+        # expected_segments = {'pan_cluster_4--pan_cluster_6': ['pan_cluster_4', 'pan_cluster_5', 'pan_cluster_6']}
+        expected_segments = {'pan_cluster_2--pan_cluster_4': ['pan_cluster_2',
+                                                              'pan_cluster_3',
+                                                              'pan_cluster_4'],
+                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_2',
+                                                              'pan_cluster_1',
+                                                              'pan_cluster_6'],
+                             'pan_cluster_4--pan_cluster_6': ['pan_cluster_4',
+                                                              'pan_cluster_5',
+                                                              'pan_cluster_6']}
+
+        core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 9,
+                                'pan_cluster_2--pan_cluster_3': 9,
+                                'pan_cluster_2--pan_cluster_4': 1,
+                                'pan_cluster_2--pan_cluster_6': 1,
+                                'pan_cluster_3--pan_cluster_4': 9,
+                                'pan_cluster_4--pan_cluster_5': 10,
+                                'pan_cluster_5--pan_cluster_6': 10,
+                                'pan_cluster_6--pan_cluster_1': 9}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_segments_node_w_challenging_paths(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_E', 'pan_cluster_F', 'pan_cluster_G', 'pan_cluster_B']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_C': 4,
+                                'pan_cluster_A--pan_cluster_D': 4,
+                                'pan_cluster_A--pan_cluster_E': 2,
+                                'pan_cluster_B--pan_cluster_C': 5,
+                                'pan_cluster_B--pan_cluster_D': 3,
+                                'pan_cluster_B--pan_cluster_G': 2,
+                                'pan_cluster_C--pan_cluster_D': 1,
+                                'pan_cluster_E--pan_cluster_F': 2,
+                                'pan_cluster_F--pan_cluster_G': 2,
+                                }
+        core_gene_dict = {'genome_1': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_2': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_3': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_4': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_5': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
+
+        self.assertEqual(expected_segments, double_edge_segements)#TODO
+
+    def test_double_edge_segment_identification_segments_node_w_challenging_paths_2(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_F', 'pan_cluster_B'],
+                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_B', 'pan_cluster_I', 'pan_cluster_C']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_D': 2,
+                                'pan_cluster_A--pan_cluster_E': 1,
+                                'pan_cluster_A--pan_cluster_F': 7,
+                                'pan_cluster_B--pan_cluster_F': 7,
+                                'pan_cluster_B--pan_cluster_I': 8,
+                                'pan_cluster_B--pan_cluster_D': 1,
+                                'pan_cluster_C--pan_cluster_E': 1,
+                                'pan_cluster_C--pan_cluster_D': 1,
+                                'pan_cluster_C--pan_cluster_I': 8,
+                                'pan_cluster_D--pan_cluster_E': 1
+                                }
+        core_gene_dict = {'genome_1': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_2': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_3': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_4': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_5': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_6': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_7': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', },
+                          'genome_8': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_segments_node_w_all_challenging_paths(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_D': ['pan_cluster_A', 'pan_cluster_G', 'pan_cluster_F', 'pan_cluster_E', 'pan_cluster_D'],
+                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_B', 'pan_cluster_H', 'pan_cluster_I', 'pan_cluster_J', 'pan_cluster_C']}#,}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 4,
+                                'pan_cluster_A--pan_cluster_K': 4,
+                                'pan_cluster_A--pan_cluster_G': 2,
+                                'pan_cluster_B--pan_cluster_H': 2,
+                                'pan_cluster_B--pan_cluster_L': 4,
+                                'pan_cluster_C--pan_cluster_J': 2,
+                                'pan_cluster_C--pan_cluster_K': 4,
+                                'pan_cluster_D--pan_cluster_C': 4,
+                                'pan_cluster_D--pan_cluster_L': 4,
+                                'pan_cluster_D--pan_cluster_E': 2,
+                                'pan_cluster_E--pan_cluster_F': 2,
+                                'pan_cluster_F--pan_cluster_G': 2,
+                                'pan_cluster_H--pan_cluster_I': 2,
+                                'pan_cluster_I--pan_cluster_J': 2,
+                                'pan_cluster_K--pan_cluster_L': 1
+                                }
+        core_gene_dict = {'genome_1': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
+                          'genome_2': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
+                          'genome_3': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
+                          'genome_4': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
+                          'genome_5': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'}}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_segments_node_w_less_than_all_present(self):
+        expected_segments = {'pan_cluster_B--pan_cluster_D': ['pan_cluster_B', 'pan_cluster_C', 'pan_cluster_D'],
+                             'pan_cluster_F--pan_cluster_H': ['pan_cluster_H', 'pan_cluster_G', 'pan_cluster_F'],
+                             'pan_cluster_B--pan_cluster_H': ['pan_cluster_B', 'pan_cluster_A', 'pan_cluster_H'],
+                             'pan_cluster_D--pan_cluster_F': ['pan_cluster_D', 'pan_cluster_E', 'pan_cluster_F']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 9,
+                                'pan_cluster_A--pan_cluster_H': 9,
+                                'pan_cluster_B--pan_cluster_H': 1,
+                                'pan_cluster_B--pan_cluster_C': 10,
+                                'pan_cluster_C--pan_cluster_D': 10,
+                                'pan_cluster_D--pan_cluster_E': 9,
+                                'pan_cluster_D--pan_cluster_F': 1,
+                                'pan_cluster_E--pan_cluster_F': 9,
+                                'pan_cluster_F--pan_cluster_G': 10,
+                                'pan_cluster_G--pan_cluster_H': 10,
+                                'pan_cluster_H--pan_cluster_A': 9,
+                                }
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_double_edge_segment_identification_segments_node_w_two_gene_segment(self): # TODO - see TODO on line 791 in consensus_core_genome!
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_B'],
+                             'pan_cluster_A--pan_cluster_G': ['pan_cluster_A', 'pan_cluster_I', 'pan_cluster_H', 'pan_cluster_G'],
+                             'pan_cluster_B--pan_cluster_E': ['pan_cluster_B', 'pan_cluster_C', 'pan_cluster_D', 'pan_cluster_E'],
+                             'pan_cluster_E--pan_cluster_G': ['pan_cluster_G', 'pan_cluster_F', 'pan_cluster_E']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 3,
+                                'pan_cluster_A--pan_cluster_I': 2,
+                                'pan_cluster_A--pan_cluster_G': 1,
+                                'pan_cluster_B--pan_cluster_C': 2,
+                                'pan_cluster_B--pan_cluster_E': 1,
+                                'pan_cluster_C--pan_cluster_D': 3,
+                                'pan_cluster_D--pan_cluster_E': 3,
+                                'pan_cluster_E--pan_cluster_F': 2,
+                                'pan_cluster_F--pan_cluster_G': 2,
+                                'pan_cluster_G--pan_cluster_H': 3,
+                                'pan_cluster_H--pan_cluster_I': 3
+                                }
+        core_gene_dict = {'genome_1': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'},
+                          'genome_2': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'},
+                          'genome_3': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'}}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    # TODO - Chat to Andrew about this function how it works and how we can test it more - possibly just run some things to see if it breaks
+
+
+class TestNoAccessorySegmentIdentifcation(unittest.TestCase):
+    """
+    Test the function that takes in segments of core genes and divide them into sub-segments based on the accessory content between core genes in segment.
+    """
+    def test_no_accessory_genes_in_segment(self):
+        expected_sub_sgments = {'pan_cluster_1--pan_cluster_5': [['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5']],
+                                 'pan_cluster_2--pan_cluster_4': [['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']]}
+
+        double_edge_segements = {'pan_cluster_1--pan_cluster_5': ['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5'],
+                                 'pan_cluster_2--pan_cluster_4': ['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}
+        combined_acc_gene_count = {'pan_cluster_1--pan_cluster_6': 0, 'pan_cluster_5--pan_cluster_6': 0, 'pan_cluster_2--pan_cluster_3': 0, 'pan_cluster_3--pan_cluster_4': 0}
+
+        sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
+    def test_accessory_genes_in_segment_first_gene_lonely(self):
+        expected_sub_sgments = {'pan_cluster_1--pan_cluster_5': [['pan_cluster_1'], ['pan_cluster_6', 'pan_cluster_5']]}
+
+        double_edge_segements = {'pan_cluster_1--pan_cluster_5': ['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5']}
+        combined_acc_gene_count = {'pan_cluster_1--pan_cluster_6': 1, 'pan_cluster_5--pan_cluster_6': 0}
+
+        sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
+    def test_accessory_genes_in_segment_last_gene_lonely(self):
+        expected_sub_sgments = {'pan_cluster_1--pan_cluster_5': [['pan_cluster_1', 'pan_cluster_6'], ['pan_cluster_5']],
+                                'pan_cluster_2--pan_cluster_4': [['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']]}
+
+        double_edge_segements = {'pan_cluster_1--pan_cluster_5': ['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5'],
+                                 'pan_cluster_2--pan_cluster_4': ['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}
+        combined_acc_gene_count = {'pan_cluster_1--pan_cluster_6': 0, 'pan_cluster_5--pan_cluster_6': 1, 'pan_cluster_2--pan_cluster_3': 0, 'pan_cluster_3--pan_cluster_4': 0}
+
+        sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
+    def test_accessory_genes_in_segment_middle(self):
+        expected_sub_sgments = {'pan_cluster_1--pan_cluster_4': [['pan_cluster_1', 'pan_cluster_2'], ['pan_cluster_3', 'pan_cluster_4']]}
+
+        double_edge_segements = {'pan_cluster_1--pan_cluster_4': ['pan_cluster_1', 'pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}
+        combined_acc_gene_count = {'pan_cluster_1--pan_cluster_2': 0, 'pan_cluster_2--pan_cluster_3': 1, 'pan_cluster_3--pan_cluster_4': 0}
+
+        sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
+    def test_accessory_genes_in_multiple_places(self):
+        expected_sub_sgments = {'pan_cluster_1--pan_cluster_4': [['pan_cluster_1'], ['pan_cluster_2', 'pan_cluster_3'], ['pan_cluster_4']]}
+
+        double_edge_segements = {'pan_cluster_1--pan_cluster_4': ['pan_cluster_1', 'pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}
+        combined_acc_gene_count = {'pan_cluster_1--pan_cluster_2': 1, 'pan_cluster_2--pan_cluster_3': 0, 'pan_cluster_3--pan_cluster_4': 1}
+
+        sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        self.assertEqual(sub_segment_dict, expected_sub_sgments)
 
 if __name__ == '__main__':
     unittest.main()
