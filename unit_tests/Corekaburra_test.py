@@ -2927,7 +2927,8 @@ class TestSegmentationIdentification(unittest.TestCase):
         self.assertEqual(expected_segments, double_edge_segements)
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths(self):
-        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_E', 'pan_cluster_F', 'pan_cluster_G', 'pan_cluster_B']}
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_E', 'pan_cluster_F', 'pan_cluster_G', 'pan_cluster_B'],
+                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_C', 'pan_cluster_B']}
 
         core_neighbour_pairs = {'pan_cluster_A--pan_cluster_C': 4,
                                 'pan_cluster_A--pan_cluster_D': 4,
@@ -2948,7 +2949,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
 
-        self.assertEqual(expected_segments, double_edge_segements)#TODO
+        self.assertEqual(expected_segments, double_edge_segements) # TODO
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths_2(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_F', 'pan_cluster_B'],
@@ -3121,6 +3122,7 @@ class TestNoAccessorySegmentIdentifcation(unittest.TestCase):
         sub_segment_dict = consesus_core_genome.identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
 
         self.assertEqual(sub_segment_dict, expected_sub_sgments)
+
 
 if __name__ == '__main__':
     unittest.main()

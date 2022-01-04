@@ -153,12 +153,13 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
 
     # find all simple paths between nodes with >2 degrees
     double_edge_segements = {}
+    multi_edge_connect_adjust = []
 
     # Go through all source and taget nodes,
     # see if a path can be found where all nodes between them have only two degrees
     for source_node in multi_edge_nodes:
         for target_node in multi_edge_nodes:
-            if target_node != source_node: #and target_node not in connect_dict[source_node]:
+            if target_node != source_node:
                 # Get path (segment) from source to target
                 segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra') # bellman-ford or dijkstra
 
@@ -175,6 +176,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                     if segment_length == 2:
                         if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrence(core_gene_dict, segment):
                             continue
+                        else:
+                            if all([x != segment[::-1] for x in multi_edge_connect_adjust]): multi_edge_connect_adjust.append(segment)
 
                     # Construct name for path
                     source_target_name = sorted([source_node, target_node])
@@ -190,7 +193,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
     # Calculate the expected number of paths
     total_edges_from_multi_edge_nodes = sum([connections for _, connections in core_graph.degree if connections > 2])
     num_edges_between_multi_edge_nodes = sum([len(connect_dict[key]) for key in connect_dict])
-    expected_segment_number = int((total_edges_from_multi_edge_nodes / 2) - (num_edges_between_multi_edge_nodes / 2))
+    expected_segment_number = int((total_edges_from_multi_edge_nodes / 2) - (num_edges_between_multi_edge_nodes / 2)) + len(multi_edge_connect_adjust)
 
     # Check if less than the number of expected paths has been found,
     # if then try to identify missing paths
@@ -206,6 +209,11 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
             connection_nodes = connection.split('--')
             for node in connection_nodes:
                 identified_edge_num_dict[node] += 1
+
+        # Adjust for the number of segments identified between multi connected nodes
+        for segment in multi_edge_connect_adjust:
+            for node in segment:
+                identified_edge_num_dict[node] -= 1
 
         # Compare the number of connections expected to the number identified, to find nodes that are miss connections
         nodes_missing_connections = []
@@ -252,7 +260,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                                     if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0: # TODO - should this != 0 be here?
                                         double_edge_segements[suspected_pair] = path
                                         path_identified = True
-                                        continue
+                                        pass # TODO - is this correct
                                     else:
                                         # Check if path is length >2,
                                         # if then find >2 degree nodes and remove an edge to them,
