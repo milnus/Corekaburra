@@ -148,20 +148,22 @@ parse_args $@
 # 2. Change to test directory
 cd $test_data_dir
 # 2. Run tests
-# Test output for no arguments
+
 call_new_test "Test output for no arguments"
 test_stdout_exit "$test_program" no_input.expected 2
-# Test output for -help argument given
+
 call_new_test "Test output for -help argument given"
 test_stdout_exit "$test_program -help" no_input.expected 0
-# Test exit status for a bad command line invocation
+
 call_new_test "Test exit status for a bad command line invocation"
 test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1" 2
 
-# TODO - Test the exit upon a genome being provided as complete, but not being found in input gff files
+call_new_test "Test exit status for a complete genome not given as input gff file"
 test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file > /dev/null 2>&1" 1
 
 # TODO - Test exit upon unsuccessful identification of source program
+call_new_test "Test exit upon unsuccessful identification of source program"
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder > /dev/null 2>&1" 1
 
 # TODO - Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo
 
