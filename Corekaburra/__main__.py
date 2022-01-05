@@ -60,8 +60,6 @@ try:
 except ModuleNotFoundError:
     from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer
 
-from argparse import ArgumentParser
-from math import floor
 import sys
 import pkg_resources
 
@@ -141,6 +139,7 @@ def main():
     args = get_commandline_arguments(sys.argv[1:])
 
     # TODO - Add in function(s) that will check all files to not be empty. - Andrew?
+    #    * Potentially add features that check for the validity of files?
     # TODO - Make Corekaburra take gzipped inputs
 
     # Check the presence of provided complete genomes among input GFFs
@@ -166,7 +165,6 @@ def main():
 
     # TODO - Make the program work with less than all files in the pangenome. Just make sure that all gff files supplied can be found in the pan genome. This will make is possible to look at hotspots and segments in different lineages
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path)
-
 
     # Construct output folder
     try:
