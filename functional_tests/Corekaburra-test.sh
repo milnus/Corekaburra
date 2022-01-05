@@ -161,11 +161,12 @@ test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1"
 call_new_test "Test exit status for a complete genome not given as input gff file"
 test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file > /dev/null 2>&1" 1
 
-# TODO - Test exit upon unsuccessful identification of source program
 call_new_test "Test exit upon unsuccessful identification of source program"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder > /dev/null 2>&1" 1
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder" 1
 
 # TODO - Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo
+call_new_test "Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo"
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_panaroo_folder" 1
 
 # TODO - Test exit upon gff not found in pan is provided as input
 
