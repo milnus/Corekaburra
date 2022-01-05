@@ -211,8 +211,6 @@ rm -r test_out_folder
 
 # TODO - test Panaroo input w. correction
 
-# TODO - test Panaroo input with no correction
-
 # TODO - test for core genes being fragmented.
 
 # TODO - test for accessory genes being fragmented.
