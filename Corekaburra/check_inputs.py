@@ -7,6 +7,7 @@ except ModuleNotFoundError:
     from exit_with_error import exit_with_error
 EXIT_INPUT_FILE_ERROR = 1
 
+
 def define_pangenome_program(folder):
     """
     Function to examine if input pan genome folder stems from Roary or Panaroo.

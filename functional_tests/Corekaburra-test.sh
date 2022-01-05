@@ -158,6 +158,31 @@ test_stdout_exit "$test_program -help" no_input.expected 0
 call_new_test "Test exit status for a bad command line invocation"
 test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1" 2
 
+# TODO - Test the exit upon a genome being provided as complete, but not being found in input gff files
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file > /dev/null 2>&1" 1
+
+# TODO - Test exit upon unsuccessful identification of source program
+
+# TODO - Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo
+
+# TODO - Test exit upon gff not found in pan is provided as input
+
+# TODO - Test roary input
+
+# TODO - test Panaroo input
+
+# TODO - test Panaroo input w. correction
+
+# TODO - test Panaroo input with no correction
+
+# TODO - test for core genes being fragmented.
+
+# TODO - test for accessory genes being fragmented.
+
+# TODO - test complete genome with sinlge contig
+
+# TODO - test complete genome with multiple contigs (Simulate plasmids or two chromosomes)
+
 
 # 3. End of testing - check if any errors occurrred
 if [ "$num_errors" -gt 0 ]; then
