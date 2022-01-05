@@ -430,10 +430,20 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 # Set new contig
                 previous_contig = line[0]
 
-                # Check if first gene on new contig is core or not
+            # Check if fist gene is core on complete genome, if then record details.
+            if line[8] in core_genes[gff_name] and complete_genome:
+                # Set information on first core gene to be used when finishing search
+                first_core_gene_gff_line = line
 
-                # Check if first gene on new contig is a core gene, if the record it.
-            if line[8] in core_genes[gff_name]:
+                # Set information to be used with next core gene neighbour
+                previous_core_gene_end_coor = int(line[4])
+                previous_core_gene_id = line[8]
+
+                # Set that first core gene has been observed
+                first_core_gene = False
+
+            # Check if first gene on new contig is a core gene, if the record it.
+            elif line[8] in core_genes[gff_name]:
                 previous_core_gene_id = "Sequence_break"
 
                 # Get the starting position of the first core gene on contig to record the gene.
