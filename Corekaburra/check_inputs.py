@@ -55,6 +55,7 @@ def check_gff_in_pan(file_list, gene_presence_absence_path):
         pan_header_line = pan_file.readline()
         pan_header_line = pan_header_line.strip().split(',')
         genome_names = pan_header_line[14:]
+        genome_names = [name.replace('"', '') for name in genome_names]
 
     file_list = [os.path.basename(file) for file in file_list]
     file_list_no_suffix = [file.rstrip('.gff') for file in file_list]

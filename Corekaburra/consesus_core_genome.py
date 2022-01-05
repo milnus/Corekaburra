@@ -108,32 +108,6 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     return sub_segment_dict
 
 
-def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict):
-    """
-    Function to be called from main that collects the functions for determining core segments in pan-genome
-
-    :param core_neighbour_pairs: Dict of the number of times core pairs have been detected
-    :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
-    :param num_gffs: Number of inputted gff files # TODO - Should this be the minimum number determined by the input cut-off for core genes
-
-    :return double_edge_segements:
-    :return no_acc_segments:
-    """
-    # Construct a graph from core gene neighbours
-    core_graph = construct_core_graph(core_neighbour_pairs)
-
-    # Find segments in the genome between core genes with multiple neighbors
-    double_edge_segements = identify_segments(core_graph, num_gffs, core_gene_dict)
-
-    if double_edge_segements is not None:
-        # Find segments of core genes with no accessory in between
-        no_acc_segments = identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
-    else:
-        no_acc_segments = None
-
-    return double_edge_segements, no_acc_segments
-
-
 def identify_segments(core_graph, num_gffs, core_gene_dict):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
@@ -147,7 +121,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
 
     # Check if any node have multiple edges, if not then return.
     if len(multi_edge_nodes) == 0:
-        return None, None, None # TODO - log and report better that this is the outcome!
+        return None # TODO - log and report better that this is the outcome!
 
     # Dict to hold connections between >2 edge nodes
     connect_dict = {}
@@ -294,6 +268,31 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
 
     return double_edge_segements
 
+
+def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict):
+    """
+    Function to be called from main that collects the functions for determining core segments in pan-genome
+
+    :param core_neighbour_pairs: Dict of the number of times core pairs have been detected
+    :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
+    :param num_gffs: Number of inputted gff files # TODO - Should this be the minimum number determined by the input cut-off for core genes
+
+    :return double_edge_segements:
+    :return no_acc_segments:
+    """
+    # Construct a graph from core gene neighbours
+    core_graph = construct_core_graph(core_neighbour_pairs)
+
+    # Find segments in the genome between core genes with multiple neighbors
+    double_edge_segements = identify_segments(core_graph, num_gffs, core_gene_dict)
+
+    if double_edge_segements is not None:
+        # Find segments of core genes with no accessory in between
+        no_acc_segments = identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+    else:
+        no_acc_segments = None
+
+    return double_edge_segements, no_acc_segments
 
 if __name__ == '__main__':
     pass
