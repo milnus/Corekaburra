@@ -55,6 +55,10 @@ try:
 except ModuleNotFoundError:
     from summary_table import calculate_n_create_summaries
 
+try:
+    from Corekaburra.output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer
+except ModuleNotFoundError:
+    from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer
 
 from argparse import ArgumentParser
 from math import floor
