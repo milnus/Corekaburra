@@ -7,7 +7,6 @@ Usage: python -m unittest -v Corekaburra_test
 # import
 import unittest
 import os
-import io
 from shutil import copyfile
 import logging
 # pylint: disable=no-name-in-module
@@ -22,8 +21,6 @@ from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
 from Corekaburra import summary_table
 from Corekaburra import output_writer_functions
-
-
 
 # move to folder with mock files. First try Github structure, then try pulled repository structure
 try:
