@@ -209,7 +209,7 @@ test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_
 rm -r test_out_folder
 
 # TODO - test complete genome with single contig
-call_new_test "Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)"
+call_new_test "Test complete genome with single contig"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
@@ -218,7 +218,7 @@ rm -r test_out_folder
 
 # TODO - Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)
 call_new_test "Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)"
-Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip complete_double_chromoosme_run -o test_out_folder -cg Complete_double_chromosomes.txt > /dev/null 2>&1
+Corekaburra -ig complete_genome_double_chrom.gff complete_genome_double_chrom_2.gff -ip complete_double_chromoosme_run -o test_out_folder -cg Complete_double_chromosomes.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv double_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv double_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv double_comple_chromosome_expected/core_pair_summary.csv.expected
