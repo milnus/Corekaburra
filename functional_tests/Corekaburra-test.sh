@@ -196,17 +196,17 @@ test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_ge
 
 call_new_test "Test Roary input"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Roary_run_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Roary_run_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Roary_run_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - test Panaroo input
 call_new_test "Test Panaroo input"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Roary_run_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Roary_run_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Roary_run_expected/core_pair_summary.csv.expected
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder -a > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - test Panaroo input w. correction
