@@ -1,5 +1,0 @@
-Core_pair,n,occurrence_core_1,occurrence_core_2,co_occurrence,min_dist,max_dist,mean_dist,median_dist,min_acc,max_acc,mean_acc,median_acc
-A-B,2,2,2,2,9,9,9.0,9.0,0,0,0.0,0.0
-A-Sequence_break,2,2,0,0,0,0,0.0,0.0,0,0,0.0,0.0
-B-C,2,2,2,2,9,9,9.0,9.0,0,0,0.0,0.0
-C-Sequence_break,2,2,0,0,10,10,10.0,10.0,0,0,0.0,0.0
