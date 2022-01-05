@@ -208,21 +208,39 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_exp
 test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test complete genome with single contig
-call_new_test "Test complete genome with single contig"
+call_new_test "Test complete genome with single contig and single complete genome among input"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)
 call_new_test "Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)"
 Corekaburra -ig complete_genome_double_chrom.gff complete_genome_double_chrom_2.gff -ip complete_double_chromoosme_run -o test_out_folder -cg Complete_double_chromosomes.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv double_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv double_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv double_comple_chromosome_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
+
+# TODO - test with accessory genes
+call_new_test "Test with accessory genes"
+Corekaburra -ig genome_single_chrom_larger_rearrange.gff genome_single_chrom_larger.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chrom_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Accessory_chrom_run_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO - test with segments
+call_new_test "Test with segments and sub-segments"
+Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Rearrangement_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chrom_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Accessory_chrom_run_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Accessory_chrom_run_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Accessory_chrom_run_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
+
+# TODO - test with decreased core-gene cutoff
 
 # TODO - test Panaroo input w. correction
 #    TODO - Add in corrections before this!
@@ -231,11 +249,6 @@ rm -r test_out_folder
 
 # TODO - test for accessory genes being fragmented.
 
-# TODO - test with accessory genes
-
-# TODO - test with segments
-
-# TODO - test with decreased core-gene cutoff
 
 
 # 3. End of testing - check if any errors occurrred
