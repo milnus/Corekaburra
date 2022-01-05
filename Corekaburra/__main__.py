@@ -138,8 +138,6 @@ def main():
     # get arguments from the commandline
     args = get_commandline_arguments(sys.argv[1:])
 
-    # TODO - Add in function(s) that will check all files to not be empty. - Andrew?
-    #    * Potentially add features that check for the validity of files?
     # TODO - Make Corekaburra take gzipped inputs
 
     # Check the presence of provided complete genomes among input GFFs
@@ -252,7 +250,7 @@ def main():
     # time_calculator(time_start, time.time(), "identifying segments in pan genome")
 
     # Produce dict containing summarised information from master info.
-    master_summary_info = calculate_n_create_summaries(master_info_total)
+    master_summary_info = calculate_n_create_summaries(master_info_total, core_dict)
 
     ### WRITE OUTPUTS ###
     print(f"\n-----------------------Printing outputs-----------------------")
@@ -261,8 +259,9 @@ def main():
     master_info_writer(master_info_total, args.output_path, args.output_prefix, args.quiet)
     summary_info_writer(master_summary_info, args.output_path, args.output_prefix, args.quiet)
     # TODO - Contruct output for segments - parent column.
-    segment_writer(double_edge_segements, args.output_path, args.output_prefix, args.quiet)
-    no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix, args.quiet)
+    if double_edge_segements is not None:
+        segment_writer(double_edge_segements, args.output_path, args.output_prefix, args.quiet)
+        no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix, args.quiet)
     # print(non_core_contig_info) TODO - Print core less contigs.
     # TODO - Possibly output core gene graph. with segment annotations?
 

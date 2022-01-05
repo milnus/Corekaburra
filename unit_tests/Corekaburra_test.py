@@ -907,12 +907,12 @@ class TestRecordCoreCoreRegion(unittest.TestCase):
         expected_previous_core_gene_end_coor = 150
         expected_acc_genes_in_region = []
         expected_low_freq_genes_in_region = []
-        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1349}
+        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1350}
         expected_accessory_gene_content = {'pan_gene_1--Sequence_break': []}
         expected_low_freq_gene_content = {'pan_gene_1--Sequence_break': []}
         expected_core_gene_pairs = ['pan_gene_1--Sequence_break']
         expected_master_info = {'pan_gene_1--Sequence_break--gff_name': ['gff_name', 'pan_gene_1', 'Sequence_break',
-                                                                         1349, 0, [], []]}
+                                                                         1350, 0, [], []]}
 
         return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
         return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
@@ -954,12 +954,12 @@ class TestRecordCoreCoreRegion(unittest.TestCase):
         expected_previous_core_gene_end_coor = 150
         expected_acc_genes_in_region = []
         expected_low_freq_genes_in_region = []
-        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1349}
+        expected_core_gene_pair_distance = {'pan_gene_1--Sequence_break': 1350}
         expected_accessory_gene_content = {'pan_gene_1--Sequence_break': ['acc_1']}
         expected_low_freq_gene_content = {'pan_gene_1--Sequence_break': ['low_1', "low_2"]}
         expected_core_gene_pairs = ['pan_gene_1--Sequence_break']
         expected_master_info = {'pan_gene_1--Sequence_break--gff_name': ['gff_name', 'pan_gene_1', 'Sequence_break',
-                                                                         1349, 3, ['acc_1'], ['low_1', "low_2"]]}
+                                                                         1350, 3, ['acc_1'], ['low_1', "low_2"]]}
 
         return_previous_core_gene_id, return_previous_core_gene_end_coor, return_acc_genes_in_region, \
         return_low_freq_genes_in_region, return_core_gene_pair_distance, return_accessory_gene_content, \
@@ -1414,7 +1414,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299}
+                                   'pan_gene_7--Sequence_break': 300}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -1430,7 +1430,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'pan_gene_2--pan_gene_5--test_single_chromosome': ['test_single_chromosome', 'pan_gene_2', 'pan_gene_5', 359, 2, ['pan_gene_4'], ['pan_gene_3'], ],
             'pan_gene_5--pan_gene_7--test_single_chromosome': ['test_single_chromosome', 'pan_gene_5', 'pan_gene_7', 269, 1, [], ['pan_gene_6']],
             'Sequence_break--pan_gene_2--test_single_chromosome': ['test_single_chromosome', 'Sequence_break', 'pan_gene_2', 178, 1, ['pan_gene_1'], []],
-            'pan_gene_7--Sequence_break--test_single_chromosome': ['test_single_chromosome',  'pan_gene_7', 'Sequence_break', 299, 1, [], ['pan_gene_8']]}
+            'pan_gene_7--Sequence_break--test_single_chromosome': ['test_single_chromosome',  'pan_gene_7', 'Sequence_break', 300, 1, [], ['pan_gene_8']]}
 
         coreless_contigs = {}
 
@@ -1591,11 +1591,11 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299,
+                                   'pan_gene_7--Sequence_break': 300,
                                    'pan_gene_10--pan_gene_13': 359,
                                    'pan_gene_13--pan_gene_15': 269,
                                    'Sequence_break--pan_gene_10': 178,
-                                   'pan_gene_15--Sequence_break': 299}
+                                   'pan_gene_15--Sequence_break': 300}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -1623,13 +1623,13 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'pan_gene_5--pan_gene_7--test_double_chromosome': ['test_double_chromosome', 'pan_gene_5', 'pan_gene_7',
                                                                269, 1, [], ['pan_gene_6']],
             'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break', 'pan_gene_2', 178, 1, ['pan_gene_1'], []],
-            'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7', 'Sequence_break', 299, 1, [], ['pan_gene_8']],
+            'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7', 'Sequence_break', 300, 1, [], ['pan_gene_8']],
             'pan_gene_10--pan_gene_13--test_double_chromosome': ['test_double_chromosome', 'pan_gene_10', 'pan_gene_13',
                                                                  359, 2, ['pan_gene_12'], ['pan_gene_11']],
             'pan_gene_13--pan_gene_15--test_double_chromosome': ['test_double_chromosome', 'pan_gene_13', 'pan_gene_15',
                                                                  269, 1, [], ['pan_gene_14']],
             'Sequence_break--pan_gene_10--test_double_chromosome': ['test_double_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
-            'pan_gene_15--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_15', 'Sequence_break', 299, 0, [], []]
+            'pan_gene_15--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_15', 'Sequence_break', 300, 0, [], []]
 
         }
 
@@ -1688,7 +1688,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299}
+                                   'pan_gene_7--Sequence_break': 300}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -1710,7 +1710,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break',
                                                                    'pan_gene_2', 178, 1, ['pan_gene_1'], []],
             'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7',
-                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']]
+                                                                   'Sequence_break', 300, 1, [], ['pan_gene_8']]
         }
 
         coreless_contigs = {'test_double_chromosome--gff_name_contig_2': [['pan_gene_12'], ['pan_gene_11', 'pan_gene_14']]}
@@ -1843,7 +1843,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299}
+                                   'pan_gene_7--Sequence_break': 300}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -1865,7 +1865,7 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'Sequence_break--pan_gene_2--test_double_chromosome': ['test_double_chromosome', 'Sequence_break',
                                                                    'pan_gene_2', 178, 1, ['pan_gene_1'], []],
             'pan_gene_7--Sequence_break--test_double_chromosome': ['test_double_chromosome', 'pan_gene_7',
-                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']]
+                                                                   'Sequence_break', 300, 1, [], ['pan_gene_8']]
         }
 
         coreless_contigs = {
@@ -1931,10 +1931,10 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299,
+                                   'pan_gene_7--Sequence_break': 300,
                                    'Sequence_break--pan_gene_10': 178,
                                    'pan_gene_10--pan_gene_13': 359,
-                                   'pan_gene_13--Sequence_break': 619}
+                                   'pan_gene_13--Sequence_break': 620}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -1962,10 +1962,10 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'Sequence_break--pan_gene_2--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break',
                                                                    'pan_gene_2', 178, 1, ['pan_gene_1'], []],
             'pan_gene_7--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_7',
-                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']],
+                                                                   'Sequence_break', 300, 1, [], ['pan_gene_8']],
             'Sequence_break--pan_gene_10--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
             'pan_gene_10--pan_gene_13--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_10', 'pan_gene_13', 359, 0, [], []],
-            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 619, 0, [], []]
+            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 620, 0, [], []]
         }
 
         coreless_contigs = {
@@ -2402,10 +2402,10 @@ class TestSegmentingMockGffs(unittest.TestCase):
         core_gene_pair_distance = {'pan_gene_2--pan_gene_5': 359,
                                    'pan_gene_5--pan_gene_7': 269,
                                    'Sequence_break--pan_gene_2': 178,
-                                   'pan_gene_7--Sequence_break': 299,
+                                   'pan_gene_7--Sequence_break': 300,
                                    'Sequence_break--pan_gene_10': 178,
                                    'pan_gene_10--pan_gene_13': 359,
-                                   'pan_gene_13--Sequence_break': 619}
+                                   'pan_gene_13--Sequence_break': 620}
 
         accessory_gene_content = {'pan_gene_2--pan_gene_5': ['pan_gene_4'],
                                   'pan_gene_5--pan_gene_7': [],
@@ -2433,10 +2433,10 @@ class TestSegmentingMockGffs(unittest.TestCase):
             'Sequence_break--pan_gene_2--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break',
                                                                    'pan_gene_2', 178, 1, ['pan_gene_1'], []],
             'pan_gene_7--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_7',
-                                                                   'Sequence_break', 299, 1, [], ['pan_gene_8']],
+                                                                   'Sequence_break', 300, 1, [], ['pan_gene_8']],
             'Sequence_break--pan_gene_10--test_triple_chromosome': ['test_triple_chromosome', 'Sequence_break', 'pan_gene_10', 178, 0, [], []],
             'pan_gene_10--pan_gene_13--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_10', 'pan_gene_13', 359, 0, [], []],
-            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 619, 0, [], []]
+            'pan_gene_13--Sequence_break--test_triple_chromosome': ['test_triple_chromosome', 'pan_gene_13', 'Sequence_break', 620, 0, [], []]
         }
 
         coreless_contigs = {
@@ -2847,11 +2847,9 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        return_1, return_2, return_3 = consesus_core_genome.identify_segments(core_graph, 10, {})
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {})
 
         self.assertEqual(None, return_1)
-        self.assertEqual(None, return_2)
-        self.assertEqual(None, return_3)
 
     def test_double_edge_segment_identification_two_segments(self):
         expected_segments = {'pan_cluster_1--pan_cluster_5': ['pan_cluster_1', 'pan_cluster_6', 'pan_cluster_5'], 'pan_cluster_2--pan_cluster_4': ['pan_cluster_2', 'pan_cluster_3', 'pan_cluster_4']}

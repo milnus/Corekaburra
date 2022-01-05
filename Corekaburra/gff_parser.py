@@ -135,7 +135,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, contig_end, previous
             if core_core_distance < 0:
                 core_core_distance = 0
         elif current_core_gene_cluster == 'Sequence_break':
-            core_core_distance = abs(contig_end - previous_core_gene_end_coor - 1)
+            core_core_distance = abs(contig_end - previous_core_gene_end_coor)
         else:
             NotImplementedError(
                 'An error occured when measuring the distance between core gene and contig end. Something went wrong!')

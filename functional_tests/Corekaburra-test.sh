@@ -115,6 +115,30 @@ function test_stdout_exit {
     fi 
 }
 
+# Run a command and check that the output file is
+# exactly equal the contents of a specified file
+# ARG1: A file returned from program after running
+# ARG2: a file path containing the expected output
+function test_output_file {
+    let num_tests+=1
+    output=$1
+    expected_output_file=$2
+    verbose_message "Testing output file: $1"
+    verbose_message "Expected file path: $2"
+    difference=$(diff $output $expected_output_file) || let num_errors+=1
+    if [ -n "$difference" ]; then
+        let num_errors+=1
+        echo "Test output failed: $1"
+        echo "Actual output:"
+        cat $output
+        expected_output=$(cat $expected_output_file)
+        echo "Expected output:"
+        echo "$expected_output"
+        echo "Difference:"
+        echo "$difference"
+    fi
+}
+
 # Run a command and check that the exit status is 
 # equal to an expected value
 # exactly equal the contents of a specified file 
@@ -167,11 +191,16 @@ test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_p
 call_new_test "Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo"
 test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_panaroo_folder > /dev/null 2>&1" 1
 
-# TODO - Test exit upon gff not found in pan is provided as input
 call_new_test "Test exit upon gff not found in pan is provided as input"
 test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Crash_gff_folder > /dev/null 2>&1" 1
 
 # TODO - Test roary input
+call_new_test "Test roary input"
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Roary_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Roary_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Roary_run_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
 
 # TODO - test Panaroo input
 
@@ -186,6 +215,12 @@ test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_ge
 # TODO - test complete genome with sinlge contig
 
 # TODO - test complete genome with multiple contigs (Simulate plasmids or two chromosomes)
+
+# TODO - test with accessory genes
+
+# TODO - test with segments
+
+# TODO - test with decreased core-gene cutoff
 
 
 # 3. End of testing - check if any errors occurrred
