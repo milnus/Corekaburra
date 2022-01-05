@@ -224,7 +224,7 @@ rm -r test_out_folder
 
 # TODO - test with accessory genes
 call_new_test "Test with accessory genes"
-Corekaburra -ig genome_single_chrom_larger_rearrange.gff genome_single_chrom_larger.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
+Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chrom_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv Accessory_chrom_run_expected/core_pair_summary.csv.expected
@@ -233,11 +233,11 @@ rm -r test_out_folder
 # TODO - test with segments
 call_new_test "Test with segments and sub-segments"
 Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Rearrangement_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chrom_run_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Accessory_chrom_run_expected/core_pair_summary.csv.expected
-test_output_file test_out_folder/core_segments.csv Accessory_chrom_run_expected/core_segments.csv.expected
-test_output_file test_out_folder/no_accessory_core_segments.csv Accessory_chrom_run_expected/no_accessory_core_segments.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Rearrangement_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Rearrangement_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Rearrangement_run_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Rearrangement_run_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Rearrangement_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
 # TODO - test with decreased core-gene cutoff
