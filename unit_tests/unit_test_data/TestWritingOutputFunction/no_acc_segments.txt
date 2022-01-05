@@ -1,0 +1,10 @@
+Parent_segment_name,Sub_segment_name,Parent_segment_position,Sub_segment_position,Core_gene
+pan_cluster_2-pan_cluster_4,pan_cluster_2-pan_cluster_2,1,1,pan_cluster_2
+pan_cluster_2-pan_cluster_4,pan_cluster_3-pan_cluster_4,2,1,pan_cluster_3
+pan_cluster_2-pan_cluster_4,pan_cluster_3-pan_cluster_4,2,2,pan_cluster_4
+pan_cluster_2-pan_cluster_6,pan_cluster_2-pan_cluster_2,1,1,pan_cluster_2
+pan_cluster_2-pan_cluster_6,pan_cluster_1-pan_cluster_1,2,1,pan_cluster_1
+pan_cluster_2-pan_cluster_6,pan_cluster_6-pan_cluster_6,3,1,pan_cluster_6
+pan_cluster_4-pan_cluster_6,pan_cluster_4-pan_cluster_5,1,1,pan_cluster_4
+pan_cluster_4-pan_cluster_6,pan_cluster_4-pan_cluster_5,1,2,pan_cluster_5
+pan_cluster_4-pan_cluster_6,pan_cluster_6-pan_cluster_6,2,1,pan_cluster_6

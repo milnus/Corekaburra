@@ -7,7 +7,7 @@ Usage: python -m unittest -v Corekaburra_test
 # import
 import unittest
 import os
-import json
+import io
 from shutil import copyfile
 import logging
 # pylint: disable=no-name-in-module
@@ -21,6 +21,7 @@ from Corekaburra import gff_parser
 from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
 from Corekaburra import summary_table
+from Corekaburra import output_writer_functions
 
 
 
@@ -3200,6 +3201,120 @@ class TestSummaryTableConstruction(unittest.TestCase):
         return_table = summary_table.calculate_n_create_summaries(master_info, core_gene_dict)
 
         self.assertEqual(expected_table, return_table)
+
+
+class TestWritingOutputFunction(unittest.TestCase):
+    """
+    Function to test the creation of output files
+    """
+    def tearDown(self):
+        """ Class to remove created database files of gff files in tmp-folder"""
+        for file in os.listdir('TestWritingOutputFunction'):
+            if "sv" in file:
+                db_path = os.path.join('TestWritingOutputFunction', file)
+                os.remove(db_path)
+
+    def test_master_info_writer(self):
+        master_info = {
+            'pan_cluster_1--pan_cluster_2--genome_1': ['genome_1', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--pan_cluster_2--genome_2': ['genome_2', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_1--pan_cluster_2--genome_3': ['genome_3', 'pan_cluster_1', 'pan_cluster_2', 99, 3,
+                                                       ['Acc_1', 'Acc_2'], ['low_1']],
+            'pan_cluster_2--pan_cluster_3--genome_1': ['genome_1', 'pan_cluster_2', 'pan_cluster_3', 100, 2,
+                                                       ['Acc_1', 'Acc_2'], []],
+            'pan_cluster_2--pan_cluster_4--genome_2': ['genome_2', 'pan_cluster_2', 'pan_cluster_4', 150, 1,
+                                                       ['Acc_1', ], []],
+            'pan_cluster_2--pan_cluster_3--genome_3': ['genome_3', 'pan_cluster_2', 'pan_cluster_3', 200, 0,
+                                                       [], []],
+            'pan_cluster_3--pan_cluster_4--genome_1': ['genome_1', 'pan_cluster_3', 'pan_cluster_4', -5, 0,
+                                                       [], []],
+            'pan_cluster_3--pan_cluster_4--genome_3': ['genome_3', 'pan_cluster_3', 'pan_cluster_4', -10, 0,
+                                                       [], []]
+        }
+        out_path = 'TestWritingOutputFunction'
+        prefix = 'test'
+
+        expected_low_freq = 'TestWritingOutputFunction/low_freq.txt'
+        expected_gene_content = 'TestWritingOutputFunction/gene_content.txt'
+
+        output_writer_functions.master_info_writer(master_info, out_path, prefix, True)
+
+        with open(expected_low_freq, 'r') as expected:
+            with open('TestWritingOutputFunction/test_low_frequency_gene_placement.tsv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
+
+        with open(expected_gene_content, 'r') as expected:
+            with open('TestWritingOutputFunction/test_core_core_accessory_gene_content.tsv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
+
+    def test_summary_info_writer(self):
+
+        input_dict = {
+            'pan_cluster_1--pan_cluster_2': ['pan_cluster_1-pan_cluster_2', 3, 3, 3, 3, 99, 99, 99.0, 99.0, 3, 3, 3.0,
+                                             3.0],
+            'pan_cluster_2--pan_cluster_3': ['pan_cluster_2-pan_cluster_3', 2, 3, 2, 2, 100, 200, 150.0, 150.0, 0, 2,
+                                             1.0, 1.0],
+            'pan_cluster_2--pan_cluster_4': ['pan_cluster_2-pan_cluster_4', 1, 3, 3, 3, 150, 150, 150.0, 150.0, 1, 1,
+                                             1.0, 1.0],
+            'pan_cluster_3--pan_cluster_4': ['pan_cluster_3-pan_cluster_4', 2, 2, 3, 2, -10, -5, -7.5, -7.5, 0, 0, 0.0,
+                                             0.0]}
+
+        out_path = 'TestWritingOutputFunction'
+        prefix = 'test'
+
+        expected_summary_table = 'TestWritingOutputFunction/summary_table.txt'
+
+        output_writer_functions.summary_info_writer(input_dict, out_path, prefix, True)
+
+        with open(expected_summary_table, 'r') as expected:
+            with open('TestWritingOutputFunction/test_core_pair_summary.csv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
+
+    def test_segment_writer(self):
+        input_segments = {'pan_cluster_2--pan_cluster_4': ['pan_cluster_2',
+                                                              'pan_cluster_3',
+                                                              'pan_cluster_4'],
+                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_2',
+                                                              'pan_cluster_1',
+                                                              'pan_cluster_6'],
+                             'pan_cluster_4--pan_cluster_6': ['pan_cluster_4',
+                                                              'pan_cluster_5',
+                                                              'pan_cluster_6']}
+
+        out_path = 'TestWritingOutputFunction'
+        prefix = 'test'
+
+        expected_summary_table = 'TestWritingOutputFunction/core_segments.txt'
+
+        output_writer_functions.segment_writer(input_segments, out_path, prefix, True)
+
+        with open(expected_summary_table, 'r') as expected:
+            with open('TestWritingOutputFunction/test_core_segments.csv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
+
+    def test_no_acc_segment_writer(self):
+        input_segments = {'pan_cluster_2--pan_cluster_4': [['pan_cluster_2'],
+                                                           ['pan_cluster_3',
+                                                           'pan_cluster_4']],
+                          'pan_cluster_2--pan_cluster_6': [['pan_cluster_2'],
+                                                           ['pan_cluster_1'],
+                                                           ['pan_cluster_6']],
+                          'pan_cluster_4--pan_cluster_6': [['pan_cluster_4',
+                                                           'pan_cluster_5'],
+                                                           ['pan_cluster_6']]}
+
+        out_path = 'TestWritingOutputFunction'
+        prefix = 'test'
+
+        expected_summary_table = 'TestWritingOutputFunction/no_acc_segments.txt'
+
+        output_writer_functions.no_acc_segment_writer(input_segments, out_path, prefix, True)
+
+        with open(expected_summary_table, 'r') as expected:
+            with open('TestWritingOutputFunction/test_no_accessory_core_segments.csv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
 
 
 if __name__ == '__main__':

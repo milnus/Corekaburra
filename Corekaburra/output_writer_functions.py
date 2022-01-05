@@ -4,13 +4,21 @@ import time
 
 
 def master_info_writer(master_info, out_path, prefix, quiet):
+    """
+    Function to write two output .tsv files related to regions content and size for each genome
+    :param master_info: Dict of info for each core gene pair across all genomes
+    :param out_path: Path to the output folder
+    :param prefix: A possible prefix for the output files.
+    :param quiet:
+    :return: Nothing
+    """
     if not quiet:
         print("Printing master output")
 
     # Write general content
     out_file_name = 'low_frequency_gene_placement.tsv'
     if prefix is not None:
-        out_file_name = prefix + '_' + out_file_name
+        out_file_name = f'{prefix}_{out_file_name}'
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
         writer = csv.writer(out_file, delimiter="\t")
 
@@ -24,12 +32,11 @@ def master_info_writer(master_info, out_path, prefix, quiet):
             info = master_info[key][0:5]
 
             writer.writerow(info)
-    out_file.close()
 
     # Write gene content in long format
     out_file_name = 'core_core_accessory_gene_content.tsv'
     if prefix is not None:
-        out_file_name = prefix + '_' + out_file_name
+        out_file_name = f'{prefix}_{out_file_name}'
 
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
         writer = csv.writer(out_file, delimiter="\t")
@@ -59,10 +66,16 @@ def master_info_writer(master_info, out_path, prefix, quiet):
                            'intermediate_frequency']
                     writer.writerow(row)
 
-    out_file.close()
-
 
 def summary_info_writer(master_summary_info, out_path, prefix, quiet):
+    """
+    Function for writing the summary table for regions identified across genomes
+    :param master_summary_info: Dict holding summary statistics for core pair region identified
+    :param out_path: Path to the output folder
+    :param prefix: Prefix for any output files
+    :param quiet: # TODO - log instead
+    :return: Nothing
+    """
     if not quiet:
         print("Printing master output")
 
@@ -77,6 +90,7 @@ def summary_info_writer(master_summary_info, out_path, prefix, quiet):
 
         # Create header
         header = ['Core_pair', 'n',
+                  'occurrence_core_1', 'occurrence_core_2', 'co_occurrence',
                   'min_dist', 'max_dist', 'mean_dist', 'median_dist',
                   'min_acc', 'max_acc', 'mean_acc', 'median_acc']
         writer.writerow(header)
@@ -86,9 +100,17 @@ def summary_info_writer(master_summary_info, out_path, prefix, quiet):
             info = master_summary_info[key]
 
             writer.writerow(info)
-    out_file.close()
+
 
 def segment_writer(segments, out_path, prefix, quiet):
+    """
+    Function to write segments of core genes identified across the pan-genome
+    :param segments: Dict of segments (lists) in values, under name of segments as keys.
+    :param out_path: Path to output folder
+    :param prefix: Prefix for any output files
+    :param quiet: # TODO - logger
+    :return: Nothing
+    """
     if not quiet:
         print("Printing core segments")
 
@@ -102,19 +124,26 @@ def segment_writer(segments, out_path, prefix, quiet):
         writer = csv.writer(out_file)
 
         # Create header
-        header = ['Segment_name', 'segment_position', 'core_gene']
+        header = ['Segment_name', 'Segment_position', 'Core_gene']
         writer.writerow(header)
 
         # Write remaining rows:
         for key in sorted(segments.keys()):
             for index, gene in enumerate(segments[key]):
-                info = [key, index+1, gene]
+                info = [key.replace('--', '-'), index+1, gene]
 
                 writer.writerow(info)
-    out_file.close()
 
 
 def no_acc_segment_writer(no_acc_segments, out_path, prefix, quiet):
+    """
+    Function for writing segments of core genes with no accessory between them.
+    :param no_acc_segments: Dict of segments with (lists) in values with sub-lists being segments with no accessory genes between them, under name of segments as keys.
+    :param out_path: Path to output folder
+    :param prefix: Prefix for any output files
+    :param quiet: # TODO - logger
+    :return: Nothing
+    """
     if not quiet:
         print("Printing core segments without accessory content")
 
@@ -128,72 +157,18 @@ def no_acc_segment_writer(no_acc_segments, out_path, prefix, quiet):
         writer = csv.writer(out_file)
 
         # Create header
-        header = ['Parent_Segment_name', 'Sub_segment_name', 'Parent_segment_position', 'Sub_segment_position', 'core_gene']
+        header = ['Parent_segment_name', 'Sub_segment_name', 'Parent_segment_position', 'Sub_segment_position', 'Core_gene']
         writer.writerow(header)
 
         # Write remaining rows:
         for key in sorted(no_acc_segments.keys()):
             for sub_index, subsegment in enumerate(no_acc_segments[key]):
-                sub_name = f'{subsegment[0]}--{subsegment[-1]}'
+                sub_name = f'{subsegment[0]}-{subsegment[-1]}'
                 for index, gene in enumerate(subsegment):
-                    info = [key, sub_name, sub_index + 1, index + 1, gene]
+                    info = [key.replace('--', '-'), sub_name, sub_index + 1, index + 1, gene]
 
                     writer.writerow(info)
-    out_file.close()
 
 
-
-
-def write_consensus_core_gene_synteny(core_gene_synteny):
-    with open('consensus_core_gene_synteny.txt', 'w', newline='', encoding='utf-8') as out_file:
-        for gene in core_gene_synteny:
-            out_file.write(f'{gene}\n')
-    out_file.close()
-
-
-def write_core_gene_coverage(core_path_coverage):
-    """ Function to write """
-    with open('core_gene_coverage.tsv', 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.writer(out_file, delimiter='\t')
-
-        header = ['Core_gene_1', 'Core_gene_2', 'Connections']
-        writer.writerow(header)
-
-        for connection in core_path_coverage:
-            writer.writerow(connection)
-    out_file.close()
-
-
-def write_alternative_core_gene_counts(alternative_core_gene_counts):
-    with open('alternative_core_pairs_count.tsv', 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.writer(out_file, delimiter='\t')
-
-        header = ['Core_gene_1', 'Core_gene_2', 'Num._connections']
-        writer.writerow(header)
-
-        for key in alternative_core_gene_counts.keys():
-            split_key = key.split('--')
-
-            row_info = [split_key[0].strip(), split_key[1].strip(), alternative_core_gene_counts[key]]
-
-            writer.writerow(row_info)
-    out_file.close()
-
-
-def write_core_gene_types(core_genome_types, alt_core_pair_matrix):
-    with open('core_genome_synteny_types.csv', 'w', newline='', encoding='utf-8') as out_file:
-        header = ['Genome', 'Type']
-
-        writer = csv.writer(out_file, delimiter=',')
-        writer.writerow(header)
-        for key in core_genome_types:
-            writer.writerow([key, core_genome_types[key]])
-
-        out_file.close()
-
-    with open('core_pair_matrix.csv', 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.DictWriter(out_file, fieldnames=alt_core_pair_matrix[1])
-        writer.writeheader()
-        writer.writerows(alt_core_pair_matrix[0])
-
-
+if __name__ == "__main__":
+    pass
