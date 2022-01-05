@@ -252,6 +252,29 @@ def main():
     # Produce dict containing summarised information from master info.
     master_summary_info = calculate_n_create_summaries(master_info_total)
 
+    ### WRITE OUTPUTS ###
+    print(f"\n-----------------------Printing outputs-----------------------")
+    # Write master information to output file
+    time_start = time.time()
+    master_info_writer(master_info_total, args.output_path, args.output_prefix, args.quiet)
+    summary_info_writer(master_summary_info, args.output_path, args.output_prefix, args.quiet)
+    # TODO - Contruct output for segments - parent column.
+    segment_writer(double_edge_segements, args.output_path, args.output_prefix, args.quiet)
+    no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix, args.quiet)
+    # print(non_core_contig_info) TODO - Print core less contigs.
+    # TODO - Possibly output core gene graph. with segment annotations?
+
+    # time_calculator(time_start, time.time(), "writing output files")
+
+    # Finish up running
+    # time_calculator(total_time_start, time.time(), "running the entire program")
+
+    # Remove temporary database holding gff databases
+    # TODO - Implement a nice crash function where the temporary folder is removed not to cause unessecary frustration for the user when trying to rerun the program. - do so in nice exit function
+    # print(isdir(temp_folder_path))
+    # if isdir(temp_folder_path):
+    #     rmdir(temp_folder_path)
+
 
 if __name__ == '__main__':
     main()
