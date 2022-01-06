@@ -1,0 +1,4 @@
+Gff	Core_gene_1	Core_gene_2	gene	type
+genome_single_chrom_larger	C	E	D	low_frequency
+genome_single_chrom_larger	E	Sequence_break	F	low_frequency
+genome_single_chrom_larger	E	Sequence_break	G	low_frequency

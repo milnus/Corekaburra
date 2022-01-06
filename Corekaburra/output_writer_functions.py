@@ -54,7 +54,7 @@ def master_info_writer(master_info, out_path, prefix, quiet):
                            core_core_region[1],
                            core_core_region[2],
                            gene,
-                           'low_frequency']
+                           'intermediate_frequency']
                     writer.writerow(row)
 
             if len(core_core_region[6]):
@@ -63,7 +63,7 @@ def master_info_writer(master_info, out_path, prefix, quiet):
                            core_core_region[1],
                            core_core_region[2],
                            gene,
-                           'intermediate_frequency']
+                           'low_frequency']
                     writer.writerow(row)
 
 

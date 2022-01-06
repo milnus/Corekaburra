@@ -1,5 +1,5 @@
 Gff	Core_gene_1	Core_gene_2	gene	type
-genome_single_chrom_larger	A	C	B_1	intermediate_frequency
-genome_single_chrom_larger	C	E	D_2	intermediate_frequency
-genome_single_chrom_larger_rearrange	A	C	D_1	intermediate_frequency
-genome_single_chrom_larger_rearrange	C	E	B_2	intermediate_frequency
+genome_single_chrom_larger	A	C	B_1	low_frequency
+genome_single_chrom_larger	C	E	D_2	low_frequency
+genome_single_chrom_larger_rearrange	A	C	D_1	low_frequency
+genome_single_chrom_larger_rearrange	C	E	B_2	low_frequency
