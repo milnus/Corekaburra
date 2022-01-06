@@ -28,7 +28,7 @@ def master_info_writer(master_info, out_path, prefix, quiet):
         writer.writerow(header)
 
         # Write remaining rows:
-        for key in master_info.keys():
+        for key in sorted(master_info.keys()):
             info = master_info[key][0:5]
 
             writer.writerow(info)
@@ -46,7 +46,7 @@ def master_info_writer(master_info, out_path, prefix, quiet):
         writer.writerow(header)
 
         # Write remaining rows:
-        for key in master_info.keys():
+        for key in sorted(master_info.keys()):
             core_core_region = master_info[key]
             if len(core_core_region[5]):
                 for gene in core_core_region[5]:
