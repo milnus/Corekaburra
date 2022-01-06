@@ -16,57 +16,81 @@ def get_commandline_arguments(args):
                                                  'Program to determine consensus core sequence from multiple genomes.\n'
                                                  'Outputs consensus core gene alignment, distance between core genes, '
                                                  'number of accessory genes between core genes and low frequency genes '
-                                                 'between core genes') #TODO - Change
+                                                 'between core genes',
+                                     add_help=False) #TODO - Change
 
-    parser.add_argument('-ig',
-                        '--input_gffs',
-                        help='Path to gff files used for pan-genome',
-                        metavar='file_1.gff ... file_n.gff',
-                        required=True,
-                        dest='input_gffs',
-                        nargs='+')
+    required = parser.add_argument_group('Required arguments')
+    run_mods = parser.add_argument_group('Analysis modifiers')
+    output_control = parser.add_argument_group('Output control')
+    rem_args = parser.add_argument_group('Other arguments')
 
-    parser.add_argument('-ip',
-                        '--input_pangenome',
-                        help='Path to the folder produced by Panaroo or Roary',
-                        metavar='path/to/pan_genome',
-                        required=True,
-                        dest='input_pan')
+    required.add_argument('-ig',
+                          '--input_gffs',
+                          help='Path to gff files used for pan-genome',
+                          metavar='file.gff',
+                          required=True,
+                          dest='input_gffs',
+                          nargs='+')
 
-    parser.add_argument('-cg',
-                        '--complete_genomes',
-                        help='text file containing names of genomes that are to be handled as complete genomes',
-                        required=False,
-                        metavar='complete_genomes.txt',
-                        default=None,
-                        dest='comp_genomes')
+    required.add_argument('-ip',
+                          '--input_pangenome',
+                          help='Path to the folder produced by Panaroo or Roary',
+                          metavar='path/to/pan_genome',
+                          required=True,
+                          dest='input_pan')
 
-    parser.add_argument('-o',
-                        '--output',
-                        help='Path to where output files will be placed [default: current folder]',
-                        required=False,
-                        type=str,
-                        metavar='path/to/output',
-                        default='.',
-                        dest='output_path')
+    run_mods.add_argument('-cg',
+                          '--complete_genomes',
+                          help='text file containing names of genomes that are to be handled as complete genomes',
+                          required=False,
+                          metavar='complete_genomes.txt',
+                          default=None,
+                          dest='comp_genomes')
 
-    parser.add_argument('-p',
-                        '--prefix',
-                        help='Prefix for output files, if any is desired',
-                        required=False,
-                        default=None,
-                        dest='output_prefix')
+    run_mods.add_argument('-a',
+                          '--no_annotate_refound',
+                          help='Flag to toggle off the creation of new gff files, with annotation of refound genes.\n'
+                               'Only done if input pangenome is detected as coming from Panaroo',
+                          required=False,
+                          default=True,
+                          action='store_false',
+                          dest='annotate')
 
-    parser.add_argument('-a',
-                        '--no_annotate_refound',
-                        help='Flag to toggle off the creation of new gff files, with annotation of refound genes.\n'
-                             'Only done if input pangenome is detected as comming from Panaroo',
-                        required=False,
-                        default=True,
-                        action='store_false',
-                        dest='annotate')
+    run_mods.add_argument('-cc',
+                          '--core_cutoff',
+                          help='Percentage of isolates in which a core gene must be present [default: 1.0]',
+                          required=False,
+                          metavar='1.0',
+                          type=float,
+                          default=1.0,
+                          dest='core_cutoff')
 
-    parser.add_argument('-c',
+    run_mods.add_argument('-lc',
+                          '--low_cutoff',
+                          help='Percentage of isolates where genes found in less than these are seen as low-frequency genes [default: 0.05]',
+                          required=False,
+                          metavar='0.05',
+                          type=float,
+                          default=0.05,
+                          dest='low_cutoff')
+
+    output_control.add_argument('-o',
+                                '--output',
+                                help='Path to where output files will be placed [default: current folder]',
+                                required=False,
+                                type=str,
+                                metavar='path/to/output',
+                                default='.',
+                                dest='output_path')
+
+    output_control.add_argument('-p',
+                                '--prefix',
+                                help='Prefix for output files, if any is desired',
+                                required=False,
+                                default=None,
+                                dest='output_prefix')
+
+    rem_args.add_argument('-c',
                         '--cpu',
                         help='Give max number of CPUs [default: 1]',
                         required=False,
@@ -75,7 +99,7 @@ def get_commandline_arguments(args):
                         type=int,
                         dest='cpu')
 
-    logger_level = parser.add_mutually_exclusive_group()
+    logger_level = rem_args.add_mutually_exclusive_group()
     logger_level.add_argument('-l',
                               '--log',
                               help='Record program progress in for debugging purpose',
@@ -89,6 +113,13 @@ def get_commandline_arguments(args):
                               action='store_true',
                               default=False,
                               required=False)
+
+    rem_args.add_argument('-h',
+                          '--help',
+                          action='help',
+                          help='Show help function')
+
+
 
     # Check if any thing is given as input otherwise warn and print help
     if len(args) < 1:
