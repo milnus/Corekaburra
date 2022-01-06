@@ -1,7 +1,7 @@
 Gff	Core_gene_1	Core_gene_2	Core_region_size	Core_region_accessory_count
 genome_single_chrom_larger	A	C	109	1
-genome_single_chrom_larger	C	E	109	1
-genome_single_chrom_larger	A	E	10	0
 genome_single_chrom_larger_rearrange	A	C	109	1
-genome_single_chrom_larger_rearrange	C	E	109	1
+genome_single_chrom_larger	A	E	10	0
 genome_single_chrom_larger_rearrange	A	E	10	0
+genome_single_chrom_larger	C	E	109	1
+genome_single_chrom_larger_rearrange	C	E	109	1
