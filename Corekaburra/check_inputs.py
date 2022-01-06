@@ -6,7 +6,17 @@ try:
 except ModuleNotFoundError:
     from exit_with_error import exit_with_error
 EXIT_INPUT_FILE_ERROR = 1
+EXIT_COMMAND_LINE_ERROR = 2
 
+
+def check_cutoffs(low_cutoff, core_cutoff):
+    if (low_cutoff == 0 or 0 < low_cutoff < core_cutoff) and core_cutoff < 1:
+        return
+    else:
+        exit_with_error('Something is wrong with cutoffs for core and low-frequency genes!\n'
+                        'Make sure the cutoff for core genes is larger than for low-frequency, and is >0 but <1.\n'
+                        'Also make sure that the low-frequency gene cutoff is either equal to 0 or <1',
+                        EXIT_COMMAND_LINE_ERROR)
 
 def define_pangenome_program(folder):
     """

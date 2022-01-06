@@ -26,9 +26,9 @@ except ModuleNotFoundError:
     from read_complete_genome_file import parse_complete_genome_file
 
 try:
-    from Corekaburra.check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan
+    from Corekaburra.check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan, check_cutoffs
 except ModuleNotFoundError:
-    from check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan
+    from check_inputs import define_pangenome_program, check_gene_data, check_gff_in_pan, check_cutoffs
 
 try:
     from Corekaburra.parse_gene_presence_absence import read_gene_presence_absence
@@ -138,7 +138,11 @@ def main():
     # get arguments from the commandline
     args = get_commandline_arguments(sys.argv[1:])
 
+    # Check that low-frequency cutoff and core cutoff are as expected
+    check_cutoffs(args.low_cutoff, args.core_cutoff)
+
     # TODO - Make Corekaburra take gzipped inputs
+    # TODO - Add so that a single gff file can only be given as input once and not multiple times?
 
     # Check the presence of provided complete genomes among input GFFs
     if args.comp_genomes is not None:
@@ -181,8 +185,12 @@ def main():
     ## Read in gene presence absence file
     time_start = time.time()
     # TODO - Add the user specified thresholds for core and low frequency genes.
+    # TODO - ATM the column with presence of gene in genomes is used to define what is core and not. Is it better to use the number of input gffs instead?
+    #   - There are upsides to the current. You can use the same genome to find segments for two different populations with in the dataset using the same reference of core-genes
+    #   - Making it depend on the input is not viable for comparing runs, even within the same pan-genome, when using different sets of gff files.
+    # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
     core_dict, low_freq_dict, acc_gene_dict, attribute_dict = read_gene_presence_absence(input_pres_abs_file_path,
-                                                                                         1, 0.05, source_program,
+                                                                                         args.core_cutoff, args.low_cutoff, source_program,
                                                                                          args.input_gffs,
                                                                                          tmp_folder_path)
 
@@ -272,9 +280,8 @@ def main():
 
     # Remove temporary database holding gff databases
     # TODO - Implement a nice crash function where the temporary folder is removed not to cause unessecary frustration for the user when trying to rerun the program. - do so in nice exit function
-    # print(isdir(temp_folder_path))
-    # if isdir(temp_folder_path):
-    #     rmdir(temp_folder_path)
+    if os.path.isdir(tmp_folder_path):
+        os.rmdir(tmp_folder_path)
 
 
 if __name__ == '__main__':

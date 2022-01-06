@@ -49,6 +49,20 @@ class TestExitWithError(unittest.TestCase):
         os.rename(tmp_folder_copy, tmp_folder)
 
 
+class TestCutOffViolations(unittest.TestCase):
+    def test_low_below_range(self):
+        with self.assertRaises(SystemExit):
+            check_inputs.check_cutoffs(-0.1, 1)
+
+    def test_core_above_range(self):
+        with self.assertRaises(SystemExit):
+            check_inputs.check_cutoffs(0.05, 1.1)
+
+    def test_low_larger_than_core(self):
+        with self.assertRaises(SystemExit):
+            check_inputs.check_cutoffs(0.6, 0.4)
+
+
 class TestParsingCompleteGenomes(unittest.TestCase):
     """ Test for the passing of input file containing names of complete genome and checking their presence in the pan-genome """
     def test_all_files_found(self):

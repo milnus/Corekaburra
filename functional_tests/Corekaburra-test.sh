@@ -182,6 +182,15 @@ test_stdout_exit "$test_program -help" no_input.expected 0
 call_new_test "Test exit status for a bad command line invocation"
 test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1" 2
 
+call_new_test "Test exit status for a bad cutoffs provided - core lower than low-frequency"
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 0.1 -lc 0.2 > /dev/null 2>&1" 2
+
+call_new_test "Test exit status for a bad cutoffs provided - core above range"
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1.1 -lc 0.2 > /dev/null 2>&1" 2
+
+call_new_test "Test exit status for a bad cutoffs provided - low-frequency below range"
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1 -lc -0.2 > /dev/null 2>&1" 2
+
 call_new_test "Test exit status for a complete genome not given as input gff file"
 test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file > /dev/null 2>&1" 1
 
@@ -222,7 +231,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv double_comple_
 test_output_file test_out_folder/core_pair_summary.csv double_comple_chromosome_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test with accessory genes
 call_new_test "Test with accessory genes"
 Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
@@ -230,7 +238,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chro
 test_output_file test_out_folder/core_pair_summary.csv Accessory_chrom_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test with segments
 call_new_test "Test with segments and sub-segments"
 Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Rearrangement_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Rearrangement_run_expected/core_core_accessory_gene_content.tsv.expected
