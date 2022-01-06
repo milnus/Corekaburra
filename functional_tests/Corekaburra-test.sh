@@ -258,17 +258,17 @@ rm -r test_out_folder
 # TODO - test with increase low cutoff
 call_new_test "Test with increase low cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0.4 > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Increase_low_cutoff/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Increase_low_cutoff/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Increase_low_cutoff/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Increase_low_cutoff_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Increase_low_cutoff_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Increase_low_cutoff_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - test with zero low cutoff
 call_new_test "Test with zero low cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0 > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv low_freq_cutoff_0/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv low_freq_cutoff_0/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv low_freq_cutoff_0/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv low_freq_cutoff_0_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv low_freq_cutoff_0_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv low_freq_cutoff_0_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - test Panaroo input w. correction
