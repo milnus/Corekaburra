@@ -247,7 +247,6 @@ test_output_file test_out_folder/core_segments.csv Rearrangement_run_expected/co
 test_output_file test_out_folder/no_accessory_core_segments.csv Rearrangement_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
-# TODO - test with decreased core-gene cutoff
 call_new_test "Test with decreased core-gene cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv core_90_cutoff_expected/core_core_accessory_gene_content.tsv.expected
@@ -255,7 +254,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv core_90_cutoff
 test_output_file test_out_folder/core_pair_summary.csv core_90_cutoff_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test with increase low cutoff
 call_new_test "Test with increase low cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0.4 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Increase_low_cutoff_expected/core_core_accessory_gene_content.tsv.expected
@@ -263,12 +261,21 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Increase_low_c
 test_output_file test_out_folder/core_pair_summary.csv Increase_low_cutoff_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test with zero low cutoff
 call_new_test "Test with zero low cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv low_freq_cutoff_0_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv low_freq_cutoff_0_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv low_freq_cutoff_0_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO - Test with less than all gffs from pan-genome provided
+call_new_test "Test with less than all gffs from pan-genome provided"
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Less_than_all_gffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_gffs_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_gffs_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Less_than_all_gffs_run_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_run_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
 # TODO - test Panaroo input w. correction
