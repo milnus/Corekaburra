@@ -24,6 +24,7 @@ def exit_with_error(message, exit_status, tmp_folder=None):
             pass
     except FileNotFoundError:
         pass
+    # TODO - Implement a nice crash function where the temporary folder is removed not to cause unessecary frustration for the user when trying to rerun the program. - do so in nice exit function
 
     logging.error(message)
     print(f"Corekaburra ERROR: {message}, exiting", file=sys.stderr)

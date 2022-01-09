@@ -88,14 +88,22 @@ def get_commandline_arguments(args):
                                 default=None,
                                 dest='output_prefix')
 
+    output_control.add_argument('-d',
+                                '--discard_corrected',
+                                help='Discard gff files corrected with refound genes identified by Panaroo - Only compativle if pan-genome comes from Panaroo [Default: Corrected files are kept]',
+                                required=False,
+                                default=False,
+                                action='store_true',
+                                dest='discard_gffs')
+
     rem_args.add_argument('-c',
-                        '--cpu',
-                        help='Give max number of CPUs [default: 1]',
-                        required=False,
-                        metavar='int',
-                        default=1,
-                        type=int,
-                        dest='cpu')
+                          '--cpu',
+                          help='Give max number of CPUs [default: 1]',
+                          required=False,
+                          metavar='int',
+                          default=1,
+                          type=int,
+                          dest='cpu')
 
     logger_level = rem_args.add_mutually_exclusive_group()
     logger_level.add_argument('-l',
@@ -126,8 +134,6 @@ def get_commandline_arguments(args):
     elif '-help' in args:
         parser.print_help()
         sys.exit(0)
-    if '--check' in args:
-        sys.exit(1) #TODO write script that checks for dependencies!
 
     args = parser.parse_args(args)
 

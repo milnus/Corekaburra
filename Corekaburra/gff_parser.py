@@ -1,5 +1,9 @@
-import numpy as np
 import os
+
+try:
+    from Corekaburra.correct_gffs import annotate_refound_genes
+except ModuleNotFoundError:
+    from correct_gffs import annotate_refound_genes
 
 
 def parse_gff(input_file):
@@ -20,6 +24,8 @@ def parse_gff(input_file):
                 # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
                 if "old_locus_tag=" in line[8]:
                     gene_id = line[8][line[8].find('old_locus_tag'):]
+                    if ';' in gene_id:
+                        gene_id = gene_id[:gene_id.find(';')]
                 else:
                     gene_id = line[8][line[8].find('ID'):line[8].find(';')]
 
@@ -27,6 +33,7 @@ def parse_gff(input_file):
                 gene_id = gene_id[gene_id.find('=') + 1:]
                 line[8] = gene_id
                 yield line
+
 
 def get_contig_lengths(input_file):
     """
@@ -247,7 +254,7 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
                                                               last_first_low_freq_count]
 
     previous_core_gene_id = ""
-    previous_core_gene_end_coor = int(first_core_gene_gff_line[4]) # TODO - should this be the end or just some random large number?
+    previous_core_gene_end_coor = int(first_core_gene_gff_line[4])
     acc_genes_in_region = []
     low_freq_genes_in_region = []
 
@@ -382,7 +389,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
             # Check if there is a core gene on traversed contig or if a core gene is present on the first contig -
             # if then record it, if not record the accessory and low frequency genes found on contig and reset.
             if previous_core_gene_id != "Sequence_break" and previous_core_gene_id != "":
-                if complete_genome: # TODO - Write a unit check for this good danm thing! - May be wrap in function to be used further down too, when last line in file has been read? ***
+                if complete_genome:
                     (previous_core_gene_id,
                      previous_core_gene_end_coor,
                      acc_genes_in_region,
@@ -447,7 +454,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 previous_core_gene_id = "Sequence_break"
 
                 # Get the starting position of the first core gene on contig to record the gene.
-                # Make it negative to fit the calculation of the distance between genes. # TODO - Do we need to add one to further adjust
+                # Make it negative to fit the calculation of the distance between genes.
                 cur_core_gene_start = -int(line[3])
 
                 (previous_core_gene_id,
@@ -462,7 +469,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                                                         cur_core_gene_start, acc_genes_in_region,
                                                         low_freq_genes_in_region, core_gene_pair_distance,
                                                         accessory_gene_content, low_freq_gene_content,
-                                                        core_gene_pairs, master_info) # TODO - Why zero here?
+                                                        core_gene_pairs, master_info)
 
             # Add as accessory - if first gene is not core
             else:
@@ -552,7 +559,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
            low_freq_gene_content, master_info, coreless_contigs
 
 
-def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, i, complete_genomes):
+def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes, source_program,
+                           annotate, gene_data_dict, corrected_dict, tmp_folder_path, discard_corrected):
     """
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
@@ -569,8 +577,13 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     :return i: The index of the gff in the larger scheme of the analysis
     :return complete_genomes: List of genomes given as complete by the user.
     """
-    if (i+1) % 25 == 0 or i == 0:
-        print(f"Determining core-core synteny for GFF file #{i+1}") # TODO - look what have been done for Magphi in recording progress!
+
+    # Correct input gff file
+    # Add in the refound genes into the gff files and print the corrected GFF files.
+    if source_program == "Panaroo" and annotate:
+        # check if not already corrected file and if any gene is to be inserted at all
+        if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
+            input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dict)
 
     # TODO - likely check if genome should be corrected at this point in the process. - Would require more inputs.
 
@@ -581,5 +594,10 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
                                       low_freq_genes=low_freq_genes,
                                       acc_genes=acc_gene_dict,
                                       complete_genomes=complete_genomes)
+
+    # TODO - Add in an if statement that checks if the corrected files should be kept!
+    #   - If not then delete them and add an if statment that will delete the folder in the main script
+    if "_corrected" in input_gff_file and discard_corrected:
+        os.remove(input_gff_file)
 
     return return_data
