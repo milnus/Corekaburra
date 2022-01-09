@@ -1,7 +1,7 @@
 usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
                    [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
-                   [-o path/to/output] [-p OUTPUT_PREFIX] [-c int] [-l | -q]
-                   [-h]
+                   [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
+                   [-l | -q] [-h]
 
 Welcome to Corekaburra! Program to determine consensus core sequence from
 multiple genomes. Outputs consensus core gene alignment, distance between core
@@ -35,6 +35,10 @@ Output control:
                         current folder]
   -p OUTPUT_PREFIX, --prefix OUTPUT_PREFIX
                         Prefix for output files, if any is desired
+  -d, --discard_corrected
+                        Discard gff files corrected with refound genes
+                        identified by Panaroo - Only compativle if pan-genome
+                        comes from Panaroo [Default: Corrected files are kept]
 
 Other arguments:
   -c int, --cpu int     Give max number of CPUs [default: 1]
