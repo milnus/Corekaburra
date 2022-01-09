@@ -10,6 +10,12 @@ EXIT_COMMAND_LINE_ERROR = 2
 
 
 def check_cutoffs(low_cutoff, core_cutoff):
+    """
+    Function to check the given cutoffs are legal, otherwise provide more info.
+    :param low_cutoff: Cutoff for low-frequency genes
+    :param core_cutoff: Cutoff for core genes
+    :return: Nothing
+    """
     if 0 <= low_cutoff < core_cutoff <= 1:
         return
     else:
@@ -17,6 +23,7 @@ def check_cutoffs(low_cutoff, core_cutoff):
                         'Make sure the cutoff for core genes is larger than for low-frequency, and is >0 or =1.\n'
                         'Also make sure that the low-frequency gene cutoff is either equal to 0 or <1',
                         EXIT_COMMAND_LINE_ERROR)
+
 
 def define_pangenome_program(folder):
     """

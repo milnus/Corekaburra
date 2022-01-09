@@ -136,27 +136,18 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
         if verbose:
             print(f"\n------------Opening the gene presence/absence file------------\n")
             print(f"Core genes must be found in {core_gene_isolate_presence} or more isolates")
-            print(f"Low frequency genes must be found in {low_freq_gene_isolate_presence} or fewer isolates\n")
+            print(f"Low frequency genes must be found in less than {low_freq_gene_isolate_presence} isolates\n")
 
         # initialise dict of dicts to hold genes from each gffs and to be returned
         core_gene_dict = {item: {} for item in gff_file_names[14:]}
         low_freq_gene_dict = {item: {} for item in gff_file_names[14:]}
         acc_gene_dict = {item: {} for item in gff_file_names[14:]}
 
-        # Initialise dict that contain annotations
-        annotation_dict = {}
-
         # Read lines from file and determine if core, low frequency or 'regular' accessory and record annotations
         for line in reader:
             # Remove quotes if Roary
             if source_program == 'Roary':
                 line = [element.replace('"', '') for element in line]
-
-            # Record annotations of refound genes
-            if any(['refound' in gene for gene in line[14:]]):
-                refound_genes = [gene for gene in line[14:] if 'refound' in gene]
-                for gene in refound_genes:
-                    annotation_dict[gene] = line[2]
 
             # Get number of genes in line and average presence of genes in genomes
             gene_isolate_presence = int(line[3])
@@ -234,7 +225,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
     gff_dbs = [file for file in files_in_tmp if '_db' in file]
     [os.remove(os.path.join(tmp_folder_path, db)) for db in gff_dbs]
 
-    return core_gene_dict, low_freq_gene_dict, acc_gene_dict, annotation_dict
+    return core_gene_dict, low_freq_gene_dict, acc_gene_dict
 
 
 if __name__ == '__main__':

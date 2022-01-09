@@ -1,0 +1,6 @@
+gff_file,scaffold_name,clustering_id,annotation_id,prot_sequence,dna_sequence,gene_name,description
+complete_genome_single_chrom_2,,single_comp_2_A,single_comp_2_A,,NNNNNN,gene_name,gene_function
+complete_genome_single_chrom_2,,0_refound_0,0_refound_0,,TATA,gene_name,gene_function
+complete_genome_single_chrom,,0_refound_0,0_refound_0,,ATAT,gene_name,
+genome_single_chrom_larger_rearrange,,2_refound_0,2_refound_0,,TTTTTTTTTTTTTTTTTTTTTTTTTAAAAATTTTTTTTTTTTT,,gene_function
+complete_genome_single_chrom,,single_comp_C,single_comp_C,,NNNNNN,gene_name,gene_function

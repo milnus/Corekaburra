@@ -21,6 +21,7 @@ from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
 from Corekaburra import summary_table
 from Corekaburra import output_writer_functions
+from Corekaburra import correct_gffs
 
 # move to folder with mock files. First try Github structure, then try pulled repository structure
 try:
@@ -389,10 +390,9 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                                                            "Silas_the_Legionella_tag-9-4": "D",
                                                            "Silas_the_Legionella_tag-9-5": "E"},
                                   'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-5': "E"}}
-        expected_annotation_dict = {}  # None - Should be done and holds refounds! - TODO Make test for this
 
         core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict, annotation_dict = \
+        acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
             file_name, core_gene_presence,
             low_freq_gene, source_program,
@@ -422,7 +422,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
 
 
         core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict, annotation_dict = \
+        acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
@@ -512,7 +512,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
 
         core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict, annotation_dict = \
+        acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
@@ -602,7 +602,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
 
         core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict, annotation_dict = \
+        acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
@@ -673,6 +673,279 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
+
+
+class TestReadGeneData(unittest.TestCase):
+    """ Function to test the passing of gene_data.csv file from Panaroo """
+    def test_read_file(self):
+        expected_dict = {'PY_40': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
+                                   '0_refound_100': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
+                                   '0_refound_10': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function']},
+                         'PY_41': {'0_refound_1': ['ATGTTGTAGGAAAATACTTGGAAGAATACGTTGACAGGGGTATTTTTGATAAGGAGCCGTTCCAGACCTTTGATCAGAAAGGGATTGGCCGTCTCTTTAGCCCGTTCGGTTAAGCCTGAGTTGAAACTTGGTATTTGTGGGGAACATGGTGGCGATCCTGCTTCCATTGACTTTTACCACAGCCAAGGCCTGACCTACGTTTCTTGTTCGCCATTTAGAGTGCCGCTTACTCGCTTGGCGGCTGCTCAGGCTGCCATCAAAGCTTCAGGCCACAGTCTTACCCAAGACAAATAG', 'gene_name', 'gene_function']},
+                         'PY_42': {'0_refound_2': ['ATGTCACTACTGCATATTCATCACAATAAAAAAAAGACAATAGCCCTAATCGTGCTATTGTCTCAAAATCATTTATTTACTTGAAACTTTATCGTGTTACACCAACAGTTTAA', 'gene_name', 'gene_function']},
+                         'PY_43': {'0_refound_4': ['ATGAAACGCTATCAACAAGATGCCCTGCTTTTCAAAAAAAATAGATAAAGAAAAGGCTGCGACAGTATCTGCAAGCAGGGCAAAAGAACTAGAAGATAGGCTCAGTCATCAGCCATTAATTGATGATTATCGAGAAAAGATGCAAGATGCAAGATGCAAGTGATGTGACTCAGTATATCACCAAACGTATAGAAGATCAGTTAAACAAGGAGTTAACAAATGGCAAAAACTAA', 'gene_name', 'gene_function']}}
+
+        return_dict = correct_gffs.read_gene_data('TestReadGeneData/Mock_gene_data.csv')
+
+        self.assertEqual(expected_dict, return_dict)
+
+
+class TestPrepairForReannotation(unittest.TestCase):
+    """ Test for pre-pairing a folder for corrected genomes, and testing if any are present from previous runs """
+    def tearDown(self):
+        try:
+            """ Class to remove created corrected output folder"""
+            os.rmdir('TestPrepairForReannotation/Corrected_gff_files')
+        except FileNotFoundError:
+            pass
+
+    def test_no_files_annotated(self):
+        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
+        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation('TestPrepairForReannotation/Mock_gene_data.csv',
+                                                                                             'TestPrepairForReannotation/',
+                                                                                             input_gffs)
+
+        self.assertTrue(os.path.isdir('TestPrepairForReannotation/Corrected_gff_files'))
+        self.assertEqual(input_gffs, corrected_files_return)
+
+    def test_some_files_annotated(self):
+        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
+        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
+            'TestPrepairForReannotation/Mock_gene_data.csv',
+            'TestPrepairForReannotation/Some_genomes',
+            input_gffs)
+
+        expected_gffs = ['Mock_2.gff', 'Mock_1_corrected.gff']
+
+        self.assertEqual(expected_gffs, corrected_files_return)
+
+    def test_all_files_annotated(self):
+        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
+        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
+            'TestPrepairForReannotation/Mock_gene_data.csv',
+            'TestPrepairForReannotation/All_genomes',
+            input_gffs)
+
+        expected_gffs = ['Mock_1_corrected.gff', 'Mock_2_corrected.gff']
+
+        self.assertEqual(expected_gffs, corrected_files_return)
+
+
+class TestAddGeneToGff(unittest.TestCase):
+    """
+    Test of the function used to add a gene annotation (line) to a gff file
+    """
+    # Make a setup and a teardown that copies and renames the mock file
+    def setUp(self):
+        """ Class to copy the mock gff before modifying"""
+        copyfile('TestAddGeneToGff/mocky_test_gff.gff', 'TestAddGeneToGff/mocky_test_gff.gff_copy')
+
+    def tearDown(self):
+        """ Class to remove modified gff and rename the original"""
+        os.remove('TestAddGeneToGff/mocky_test_gff.gff')
+        os.rename('TestAddGeneToGff/mocky_test_gff.gff_copy', 'TestAddGeneToGff/mocky_test_gff.gff')
+
+    def test_adding_a_gene_no_info(self):
+        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
+        gene_oi = ['TATA', '', '']
+        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
+        contig = 'test_contig_1'
+        strand = '+'
+        refound_gene_tag = '0_refound_0'
+        largest_locus_tag = 'fer_1432'
+
+        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0\n']
+
+        with open(tmp_gff_file, 'a') as tmp_gff:
+            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
+
+        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+    def test_adding_a_gene_name(self):
+        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
+        gene_oi = ['TATA', 'Gene_name', '']
+        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
+        contig = 'test_contig_1'
+        strand = '+'
+        refound_gene_tag = '0_refound_0'
+        largest_locus_tag = 'fer_1432'
+
+        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;name=Gene_name\n']
+
+        with open(tmp_gff_file, 'a') as tmp_gff:
+            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
+
+        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+    def test_adding_a_gene_annotation(self):
+        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
+        gene_oi = ['TATA', '', 'Gene_annotation']
+        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
+        contig = 'test_contig_1'
+        strand = '+'
+        refound_gene_tag = '0_refound_0'
+        largest_locus_tag = 'fer_1432'
+
+        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;annotation=Gene_annotation\n']
+
+        with open(tmp_gff_file, 'a') as tmp_gff:
+            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
+
+        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+    def test_adding_a_gene_name_and_annotation(self):
+        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
+        gene_oi = ['TATA', 'Gene_name', 'Gene_annotation']
+        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
+        contig = 'test_contig_1'
+        strand = '+'
+        refound_gene_tag = '0_refound_0'
+        largest_locus_tag = 'fer_1432'
+
+        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;name=Gene_name;annotation=Gene_annotation\n']
+
+        with open(tmp_gff_file, 'a') as tmp_gff:
+            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
+
+        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+
+class TestWriteContig(unittest.TestCase):
+    """
+    Test of the function used to write a contig in a gff file.
+    """
+    # Make a setup and a teardown that copies and renames the mock file
+    def setUp(self):
+        """ Class to copy the mock gff before modifying"""
+        copyfile('TestWriteContig/mocky_test_gff.gff', 'TestWriteContig/mocky_test_gff.gff_copy')
+
+    def tearDown(self):
+        """ Class to remove modified gff and rename the original"""
+        os.remove('TestWriteContig/mocky_test_gff.gff')
+        os.rename('TestWriteContig/mocky_test_gff.gff_copy', 'TestWriteContig/mocky_test_gff.gff')
+
+    def test_writing_a_contig(self):
+        file_path = 'TestWriteContig/mocky_test_gff.gff'
+        contig_name = 'Test_contig_name space'
+        sequence = 'AAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGC'
+
+        expected_lines = ['##gff-version 3\n', '#test comment line\n', '>Test_contig_name space\n',
+                          'AAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGC\n',
+                          'GGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGC\n']
+
+        with open(file_path, 'a') as file:
+            correct_gffs.write_contig(file, contig_name, sequence)
+
+        with open('TestWriteContig/mocky_test_gff.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+
+class TestAnnotateRefoundGenomes(unittest.TestCase):
+    """
+    Test of the function used to reannotate refound genes identified by panaroo in a gff file.
+    """
+    def tearDown(self):
+        """ Class to remove modified gff and rename the original"""
+        try:
+            os.remove('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff')
+        except FileNotFoundError:
+            os.remove('TestAnnotateRefoundGenomes/reannotate_gff_tmp.gff')
+            os.remove('TestAnnotateRefoundGenomes/reannotate_gff.gff_db')
+
+    def test_annotation_of_pos_stand_gene(self):
+        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
+        gene_data_dict = {'reannotate_gff': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
+                                   '0_refound_100': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', '', 'gene_function'],
+                                   '0_refound_10': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', '']}}
+        tmp_folder_path = 'TestAnnotateRefoundGenomes'
+        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
+
+        expected_lines = \
+            ['##gff-version 3\n',
+             '#test comment line\n',
+             'test_contig\tProkka\tCDS\t1\t10\t.\t+\t0\tlocus_tag=locus_tag_0097\n',
+             'test_contig\tPanaroo\tCDS\t16\t158\t.\t+\t0\tID=locus_tag_0099;locus_tag=locus_tag_0099;old_locus_tag=0_refound_0;name=gene_name;annotation=gene_function\n',
+             'test_contig\tPanaroo\tCDS\t174\t316\t.\t+\t0\tID=locus_tag_0100;locus_tag=locus_tag_0100;old_locus_tag=0_refound_100;annotation=gene_function\n',
+             'test_contig\tPanaroo\tCDS\t332\t469\t.\t+\t0\tID=locus_tag_0101;locus_tag=locus_tag_0101;old_locus_tag=0_refound_10;name=gene_name\n',
+             'test_contig\tProkka\tCDS\t474\t484\t.\t+\t0\tlocus_tag=locus_tag_0098\n',
+             '##FASTA\n',
+             '>test_contig\n',
+             'TTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTG\n',
+             'GCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAG\n',
+             'GACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCC\n',
+             'GATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCT\n',
+             'GATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTAT\n',
+             'TTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGA\n',
+             'ATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTT\n',
+             'TGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTT\n',
+             'TTTT\n'
+             ]
+
+        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+
+        with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+    def test_annotation_of_neg_stand_gene(self):
+        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
+        gene_data_dict = {'reannotate_gff': {'0_refound_0': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAATAAAAACAGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', 'gene_name', 'gene_function'],
+                                             '0_refound_100': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAAAAAAAAAAGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', '', 'gene_function'],
+                                             '0_refound_10': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAAGGCGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', 'gene_name', '']}}
+        tmp_folder_path = 'TestAnnotateRefoundGenomes'
+        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
+        expected_lines = ['##gff-version 3\n',
+                          '#test comment line\n',
+                          'test_contig\tProkka\tCDS\t1\t10\t.\t+\t0\tlocus_tag=locus_tag_0097\n',
+                          'test_contig\tPanaroo\tCDS\t16\t158\t.\t-\t0\tID=locus_tag_0099;locus_tag=locus_tag_0099;old_locus_tag=0_refound_0;name=gene_name;annotation=gene_function\n',
+                          'test_contig\tPanaroo\tCDS\t174\t316\t.\t-\t0\tID=locus_tag_0100;locus_tag=locus_tag_0100;old_locus_tag=0_refound_100;annotation=gene_function\n',
+                          'test_contig\tPanaroo\tCDS\t332\t469\t.\t-\t0\tID=locus_tag_0101;locus_tag=locus_tag_0101;old_locus_tag=0_refound_10;name=gene_name\n',
+                          'test_contig\tProkka\tCDS\t474\t484\t.\t+\t0\tlocus_tag=locus_tag_0098\n',
+                          '##FASTA\n',
+                          '>test_contig\n',
+                          'TTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTG\n',
+                          'GCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAG\n',
+                          'GACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCC\n',
+                          'GATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCT\n',
+                          'GATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTAT\n',
+                          'TTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGA\n',
+                          'ATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTT\n',
+                          'TGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTT\n',
+                          'TTTT\n']
+
+        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+
+        with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
+            self.assertEqual(expected_lines, added_gff.readlines())
+
+    def test_gene_not_found(self):
+        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
+        gene_data_dict = {'reannotate_gff': {'0_refound_0': [
+            'CCCCCCCCCCCCGGGGGGGGGGGGGGGCGGCGCGCGCGCGCGCGGCGCGCGCGGCGCGC',
+            'gene_name', 'gene_function']}}
+
+        tmp_folder_path = 'TestAnnotateRefoundGenomes'
+        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
+
+        with self.assertRaises(SystemExit):
+            correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+
+    # TODO - Add test for annotating of second contig
+
+class TestExtractGenomeFasta(unittest.TestCase):
+    def test_extract_genome_fasta(self):
+        genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
+        largest_locus_tag_expected = 'fer_006'
+        header_lines_expected = ['##gff-version3\n', '#test-line\n']
+
+        genome_fasta_dict, largest_locus_tag, header_lines = correct_gffs.extract_genome_fasta('TestExtractGenomeFasta/Mock_gff.gff')
+
+        self.assertEqual(genome_fasta_dict_expected, genome_fasta_dict)
+        self.assertEqual(largest_locus_tag_expected, largest_locus_tag)
+        self.assertEqual(header_lines_expected, header_lines)
 
 
 class TestParsingGffFile(unittest.TestCase):

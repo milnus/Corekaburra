@@ -268,7 +268,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv low_freq_cutof
 test_output_file test_out_folder/core_pair_summary.csv low_freq_cutoff_0_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - Test with less than all gffs from pan-genome provided
 call_new_test "Test with less than all gffs from pan-genome provided"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Less_than_all_gffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_gffs_run_expected/core_core_accessory_gene_content.tsv.expected
@@ -278,8 +277,20 @@ test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_run_expect
 test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
+# TODO - Test unsuccessful reannotation of Panaroo
+call_new_test "Test exit status for a bad command line invocation"
+test_exit_status "$test_program -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_fail -o test_out_folder > /dev/null 2>&1" 3
+
 # TODO - test Panaroo input w. correction
-#    TODO - Add in corrections before this!
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_succes/ -o test_out_folder/
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Reannotation_sucessful_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Reannotation_sucessful_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Reannotation_sucessful_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Reannotation_sucessful_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Reannotation_sucessful_expected/no_accessory_core_segments.csv.expected
+test_output_file test_out_folder/complete_genome_single_chrom_2_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_2_corrected.gff.expected
+test_output_file test_out_folder/complete_genome_single_chrom_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_corrected.gff.expected
+test_output_file test_out_folder/genome_single_chrom_larger_rearrange_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff.expected
 
 # TODO - test for core genes being fragmented.
 

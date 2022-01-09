@@ -62,6 +62,7 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     :param combined_acc_gene_count: Dict of the number of accessory genes (value) identified between a set core genes (Key)
     :return: Dict of subsegments. Same keys as for the segment dict, but keys are a list of lists. Each sub-list is a subsegment.
     """
+    # TODO - ATM this does not occur if every core gene only has two connections. Should is still occur to let a complete static genome synteny be divided into no-accessory segments?
     # Create dict of subsegments of the larger segments
     sub_segment_dict = {key: [] for key in double_edge_segements}
 
@@ -244,7 +245,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                                     if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0: # TODO - should this != 0 be here?
                                         double_edge_segements[suspected_pair] = path
                                         path_identified = True
-                                        pass # TODO - is this correct
+                                        continue
                                     else:
                                         # Check if path is length >2,
                                         # if then find >2 degree nodes and remove an edge to them,
@@ -293,6 +294,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
         no_acc_segments = None
 
     return double_edge_segements, no_acc_segments
+
 
 if __name__ == '__main__':
     pass

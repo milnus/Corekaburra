@@ -36,6 +36,11 @@ except ModuleNotFoundError:
     from parse_gene_presence_absence import read_gene_presence_absence
 
 try:
+    from Corekaburra.correct_gffs import prepair_for_reannotation
+except ModuleNotFoundError:
+    from correct_gffs import prepair_for_reannotation
+
+try:
     from Corekaburra.gff_parser import segment_genome_content
 except ModuleNotFoundError:
     from gff_parser import segment_genome_content
@@ -65,7 +70,7 @@ import pkg_resources
 
 EXIT_INPUT_FILE_ERROR = 1
 EXIT_COMMAND_LINE_ERROR = 2
-EXIT_FASTA_FILE_ERROR = 3
+EXIT_GFF_REANNOTATION_ERROR = 3
 DEFAULT_MIN_LEN = 0
 DEFAULT_VERBOSE = False
 PROGRAM_NAME = "Corekaburra"
@@ -160,6 +165,9 @@ def main():
     # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
     if args.annotate and source_program == 'Panaroo':
         gene_data_path = check_gene_data(args.input_pan)
+    else:
+        gene_data_path = None
+
     if not args.quiet:
         print(f"Pan genome determined to come from {source_program}")
         print("All files found, let's move on!\n")
@@ -184,15 +192,20 @@ def main():
 
     ## Read in gene presence absence file
     time_start = time.time()
-    # TODO - Add the user specified thresholds for core and low frequency genes.
     # TODO - ATM the column with presence of gene in genomes is used to define what is core and not. Is it better to use the number of input gffs instead?
     #   - There are upsides to the current. You can use the same genome to find segments for two different populations with in the dataset using the same reference of core-genes
     #   - Making it depend on the input is not viable for comparing runs, even within the same pan-genome, when using different sets of gff files.
     # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
-    core_dict, low_freq_dict, acc_gene_dict, attribute_dict = read_gene_presence_absence(input_pres_abs_file_path,
+    core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path,
                                                                                          args.core_cutoff, args.low_cutoff, source_program,
                                                                                          args.input_gffs,
                                                                                          tmp_folder_path)
+
+    if source_program == "Panaroo" and args.annotate:
+        gene_data_dict, corrected_dict, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path, args.input_gffs)
+    else:
+        gene_data_dict = None
+        corrected_dict = None
 
     # TODO - Add this into the multiprocessing loop to not doubble files
     # TODO - Add a user command to keep and discard the corrected files (But still using them - Make mutually exclusive with -a option)
@@ -218,14 +231,26 @@ def main():
     master_info_total = {}
     non_core_contig_info = {}
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=15) as executor: # TODO - change the max workers to the user specified number
+    progress_counter = 0
+    if len(args.input_gffs) > 10:
+        progress_update = len(args.input_gffs) / 10
+    else:
+        progress_update = 1
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu) as executor:
         print(f"\n------Start core region identification of given gff files-----")
         print(f'{len(args.input_gffs)} GFF files to process')
 
-        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, i, comp_genomes)
-                   for i, gff in enumerate(args.input_gffs)]
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes,
+                                   source_program, args.annotate, gene_data_dict, corrected_dict, tmp_folder_path, args.discard_gffs)
+                   for gff in args.input_gffs]
 
         for output in concurrent.futures.as_completed(results):
+            progress_counter += 1
+            if progress_counter % progress_update == 0 or progress_counter == 1:
+                print(
+                    f"GFF file #{progress_counter} has been processed")
+
             # Split the outputs
             core_pairs, distance, acc_count, \
             low_freq, master_info_return, \
@@ -266,11 +291,9 @@ def main():
     time_start = time.time()
     master_info_writer(master_info_total, args.output_path, args.output_prefix, args.quiet)
     summary_info_writer(master_summary_info, args.output_path, args.output_prefix, args.quiet)
-    # TODO - Contruct output for segments - parent column.
     if double_edge_segements is not None:
         segment_writer(double_edge_segements, args.output_path, args.output_prefix, args.quiet)
         no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix, args.quiet)
-    # print(non_core_contig_info) TODO - Print core less contigs.
     # TODO - Possibly output core gene graph. with segment annotations?
 
     # time_calculator(time_start, time.time(), "writing output files")
@@ -279,9 +302,10 @@ def main():
     # time_calculator(total_time_start, time.time(), "running the entire program")
 
     # Remove temporary database holding gff databases
-    # TODO - Implement a nice crash function where the temporary folder is removed not to cause unessecary frustration for the user when trying to rerun the program. - do so in nice exit function
     if os.path.isdir(tmp_folder_path):
         os.rmdir(tmp_folder_path)
+    if args.discard_gffs:
+        os.rmdir(os.path.join(args.output_path, 'Corrected_gff_files'))
 
 
 if __name__ == '__main__':
