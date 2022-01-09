@@ -309,7 +309,7 @@ rm -r test_out_folder
 
 # TODO - test for core genes being fragmented.
 call_new_test "Test for core genes being fragmented"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/  > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger_2.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_core_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv Fragmented_core_run_expected/core_pair_summary.csv.expected
