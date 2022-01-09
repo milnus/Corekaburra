@@ -13,7 +13,6 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     :param genome: The name of the genome in question
     :return: returns the dict to be used further
     """
-
     if ';' in gene:
         for gene_part in gene.split(';'):  # TODO - NOTE! HERE BOTH GENES IN A PAIR IS ADDED as separate key/value-pairs
             main_dict[genome][gene_part] = pan_gene_name
@@ -23,25 +22,25 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     return main_dict
 
 
-def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
+def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path):
     """
     Function that check for that placement of fragmented gene parts, to determine if they are neighbouring or have some genomic feature between them
-    :param fragments_in_line: List of genes that are found to be fragmented, one composite of fragments for each index
+    :param fragment_info: List of genes that are found to be fragmented, one composite of fragments for each index
     :param input_gffs: A list of file-paths to the gff files given as input
     :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
     :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
     """
     return_list = []
-    for fragment in fragments_in_line:
+    for fragment in fragment_info:
         # split the two fragments
-        fragments = fragment.split(';')
+        fragment_pieces = fragment[0].split(';')
 
         # Get the name of the genome
-        genome = fragments[0].rsplit("_", 1)[0]
+        genome = fragment[1]
 
         # Get the gff and its path
         try:
-            gff_file = [file for file in input_gffs if f'{genome}.gff' in file][0]
+            gff_file = [file for file in input_gffs if f'{genome}.gff' in file][0] # TODO - fix that using a locus_tag it is not possible to identify genes. How do we make it so that we can?
         except IndexError:
             raise NotImplementedError(f'No gff match was found when searching fragments for genome: {genome}')
 
@@ -54,12 +53,12 @@ def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
         gff_database = gffutils.FeatureDB(db_name)
 
         # Check that all fragments are on the same contig.
-        first_fragment_contig = gff_database[fragments[0]][0]
-        frag_same_contig = all([first_fragment_contig == gff_database[fragment][0] for fragment in fragments])
+        first_fragment_contig = gff_database[fragment_pieces[0]][0]
+        frag_same_contig = all([first_fragment_contig == gff_database[fragment][0] for fragment in fragment_pieces])
         if frag_same_contig:
             # Get all coordinates
             frag_coors = []
-            for frag in fragments:
+            for frag in fragment_pieces:
                 frag_coors.append(gff_database[frag][3])
                 frag_coors.append(gff_database[frag][4])
 
@@ -73,7 +72,7 @@ def check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path):
 
             # find all genes that are not part of the fragmented gene
             region_locus_tags = set([feature[8]['locus_tag'][0] for feature in region_features])
-            excess_genes = region_locus_tags.difference(fragments)
+            excess_genes = region_locus_tags.difference(fragment_pieces)
 
             # check the number of excess genes, if any then False to being core
             if len(excess_genes) > 0:
@@ -154,28 +153,27 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
             no_seq_presence = int(line[4])
 
             # Check if core gene, if then add annotations to genomes
-            # TODO - Handle genes that have a paralog and are concatenated by ';', and check if neighbours
             # Check if gene is present in all genomes and no one gene is fragmented
             if core_gene_isolate_presence <= gene_isolate_presence == no_seq_presence:
                 # Add gene cluster to genomes
-                for genome in core_gene_dict.keys(): # TODO - Change this to go through genomes with something in them - so that core threshold can be lower
+                for genome in core_gene_dict.keys():
                     # Check if there is an annotation for the given genome
                     if len(line[14 + gff_file_dict[genome]]) > 0:
                         core_gene_dict[genome][line[14+gff_file_dict[genome]]] = line[0]
                 core_gene_number += 1
 
-            # Check if gene is present in all genomes, but more than one copy is pressent
+            # Check if gene is present in all genomes, but more than one copy is present
             elif core_gene_isolate_presence <= gene_isolate_presence:
                 # Identify annotations for genomes that are fragmented genes
-                fragments_in_line = [genes for genes in line[14:] if ';' in genes]
+                fragment_info = [[genes, gff] for genes, gff in zip(line[14:], gff_file_names[14:]) if ';' in genes]
 
                 # Check that each annotation is neighboring the other annotation.
-                return_list = check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+                return_list = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path) # TODO - If a core gene is found to be made up of fragments not places close enough (With something in between) should this then not be subtracted from the core gene count? - How would this be handled if there is a gff that is not given as input?
 
                 # Check if gene was found to be a core gene
                 if all(return_list):
                     # Add the gene to the annotation dict
-                    for genome in core_gene_dict.keys():
+                    for genome in core_gene_dict.keys(): # TODO - Check if .keys can be omitted
                         # Get the annoations for a specific genome
                         genes_in_genome = line[14 + gff_file_dict[genome]]
                         # If there is an annotation add id

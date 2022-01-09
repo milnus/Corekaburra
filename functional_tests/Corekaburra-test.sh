@@ -277,12 +277,10 @@ test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_run_expect
 test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
-# TODO - Test unsuccessful reannotation of Panaroo
 call_new_test "Test unsuccessful reannotation of Panaroo"
 test_exit_status "$test_program -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_fail -o test_out_folder > /dev/null 2>&1" 3
 rm -r test_out_folder
 
-# TODO - test Panaroo input w. correction
 call_new_test "Test Panaroo input with correction of gff files"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_succes/ -o test_out_folder/  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Reannotation_sucessful_expected/core_core_accessory_gene_content.tsv.expected
@@ -293,11 +291,45 @@ test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chro
 test_output_file test_out_folder/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff.expected
 rm -r test_out_folder
 
+# TODO - Set up test with a single core gene on a contig that is not complete
+call_new_test "Test Panaroo input with correction of gff files"
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_contig_draft_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv single_core_contig_draft_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO - Set up test with a single core gene on a contig that is complete
+call_new_test "Test Panaroo input with correction of gff files"
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ -cg complete_genomes_file > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_complete_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_contig_complete_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv single_core_contig_complete_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
 # TODO - test for core genes being fragmented.
+call_new_test "Test Panaroo input with correction of gff files"
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_core_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Fragmented_core_run_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO Test a fragmented core gene not accepted as core
+#Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_break_run/ -o test_out_folder/
+# TODO - run the test check results and transfer to expected folder
+#rm -r test_out_folder
 
 # TODO - test for accessory genes being fragmented.
+call_new_test "Test Panaroo input with correction of gff files"
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_accessory_gene_run/ -o test_out_folder/  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_accessory_gene_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_accessory_gene_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Fragmented_accessory_gene_run_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
 
 
+# TODO - set up a test with a core-less contig.
 
 # 3. End of testing - check if any errors occurrred
 if [ "$num_errors" -gt 0 ]; then

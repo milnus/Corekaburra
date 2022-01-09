@@ -1,10 +1,10 @@
 ##gff-version3
-contig_1	.	CDS	1	90	.	.	.	ID=dub_chrom_A;Other_info
-contig_1	.	CDS	100	190	.	.	.	ID=dub_chrom_B;Other_info
-contig_1	.	CDS	200	290	.	.	.	ID=dub_chrom_C;Other_info
-contig_2	.	CDS	1	90	.	.	.	ID=dub_chrom_D;Other_info
-contig_2	.	CDS	100	190	.	.	.	ID=dub_chrom_E;Other_info
-contig_2	.	CDS	200	290	.	.	.	ID=dub_chrom_F;Other_info
+contig_1	.	CDS	1	90	.	.	.	ID=dub_chrom_A;Other_info;locus_tag=locus_tag=0001
+contig_1	.	CDS	100	190	.	.	.	ID=dub_chrom_B;Other_info;locus_tag=locus_tag=0002
+contig_1	.	CDS	200	290	.	.	.	ID=dub_chrom_C;Other_info;locus_tag=locus_tag=0003
+contig_2	.	CDS	1	90	.	.	.	ID=dub_chrom_D;Other_info;locus_tag=locus_tag=0004
+contig_2	.	CDS	100	190	.	.	.	ID=dub_chrom_E;Other_info;locus_tag=locus_tag=0005
+contig_2	.	CDS	200	290	.	.	.	ID=dub_chrom_F;Other_info;locus_tag=locus_tag=0006
 ##FASTA
 >contig_1
 NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
