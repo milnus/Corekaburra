@@ -228,7 +228,7 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
     def test_fragmented_gene_true(self):
         """ Gene is fragmented but found next to each other with nothing in between """
-        fragments_in_line = ['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2']
+        fragments_info = [['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella']]
         input_gffs =['TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella.gff',
                       'TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
                       'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
@@ -243,13 +243,13 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         expected_return = [True]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
 
         self.assertEqual(expected_return, return_bool)
 
     def test_fragmented_gene_fasle(self):
         """ Gene is fragmented but found next to each other with another gene in between """
-        fragments_in_line = ['Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2']
+        fragments_info = [['Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2', 'Silas_the_Salmonella']]
         input_gffs = ['TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella.gff',
                       'TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
                       'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
@@ -264,13 +264,14 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         expected_return = [False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
 
         self.assertEqual(expected_return, return_bool)
 
     def test_fragmented_gene_mutiple_genes_fasle(self):
         """ Two genes fragmented with one having nothing and the other having something in between fragments """
-        fragments_in_line = ['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2']
+        fragment_info = [['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella'],
+                         ['Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2', 'Silas_the_Salmonella']]
         input_gffs = ['TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella.gff',
                       'TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
                       'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
@@ -285,14 +286,14 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         expected_return = [True, False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path)
 
         self.assertEqual(expected_return, return_bool)
 
     def test_fragments_on_separate_contigs(self):
         """ One gene fragmented with parts on separate contigs """
-        fragments_in_line = ['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2',
-                             'Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2']
+        fragments_info = [['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella'],
+                             ['Silas_the_Salmonella_tag-1-5.1;Silas_the_Salmonella_tag-1-5.2', 'Silas_the_Salmonella']]
         input_gffs = ['TestCheckingFragmentedGenes/Silas_the_Salmonella.gff',
                       'TestCheckingFragmentedGenes/Zion_the_Streptococcus.gff',
                       'TestCheckingFragmentedGenes/Silas_the_Legionella.gff',
@@ -301,7 +302,7 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         expected_return = [False, False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_in_line, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -934,6 +935,7 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
             correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
 
     # TODO - Add test for annotating of second contig
+
 
 class TestExtractGenomeFasta(unittest.TestCase):
     def test_extract_genome_fasta(self):

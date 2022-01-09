@@ -1,0 +1,3 @@
+Gff	Core_gene_1	Core_gene_2	gene	type
+complete_genome_double_chrom	B	Sequence_break	C	low_frequency
+complete_genome_double_chrom	E	Sequence_break	F	low_frequency
