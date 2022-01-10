@@ -61,9 +61,9 @@ except ModuleNotFoundError:
     from summary_table import calculate_n_create_summaries
 
 try:
-    from Corekaburra.output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer
+    from Corekaburra.output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer, non_core_contig_writer
 except ModuleNotFoundError:
-    from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer
+    from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer, non_core_contig_writer
 
 import sys
 import pkg_resources
@@ -295,6 +295,11 @@ def main():
         segment_writer(double_edge_segements, args.output_path, args.output_prefix, args.quiet)
         no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix, args.quiet)
     # TODO - Possibly output core gene graph. with segment annotations?
+    #  - Print summary number of genes and names
+    #  - Should we print a low-freq, placement?
+    if len(non_core_contig_info)> 0:
+        non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
+    print(f'{non_core_contig_info = }')
 
     # time_calculator(time_start, time.time(), "writing output files")
 
