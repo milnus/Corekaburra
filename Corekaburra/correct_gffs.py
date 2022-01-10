@@ -44,17 +44,21 @@ def read_gene_data(gene_data_file):
     return gene_data_dict
 
 
-def prepair_for_reannotation(gene_data_path, output_folder, gffs):
+def prepair_for_reannotation(gene_data_path, output_folder, gffs, logger):
     """
     Function for creating an output folder for corrected genomes, check if any are present, and if then which.
     :param gene_data_path: Path to the gene_data.csv file from Panaroo
     :param output_folder: Folder designated as the output folder for Corekaburra
     :param gffs: List of file-paths to gff files.
+    :param logger: Program logger
 
     :return gene_data_dict: Dict containing the information expected from the gene_data.csv file
     :return corrected_gff_out_dir: File path to the created or identified directory of corrected gff files
     :return gffs: List of gff files, some may be altered to be the corrected verison from prior runs/
     """
+
+    logger.debug('Initialise structures for reannotating genes found by Panaroo')
+
     # Read Gene_data.csv file into dict with a dict of refound genes for each genome
     gene_data_dict = read_gene_data(gene_data_path)
 
@@ -213,13 +217,14 @@ def write_contig(file, contig_name, sequence):
     file.write(sequence[len(sequence) - remainder:genome_length+1] + '\n')
 
 
-def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir):
+def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, logger):
     """
     Function to add back in genes that are refound by Panaroo into gff files.
     :param gff_name: File path of gff to be corrected
     :param gene_data_dict: Dict of refound genes identified from gene_presence_absence.csv file
     :param tmp_folder_path: File path to the temporary folder
     :param corrected_gff_out_dir: File path to the folder where corrected genomes should be place
+    :param logger: Program logger
     :return: Nothing.
     """
     """ Function to annotate the genes refound by Panaroo in a gff3 file"""
@@ -262,7 +267,7 @@ def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_
 
                 else:
                     # get reverse complement of the gene
-                    gene_oi = Seq.reverse_complement(gene_oi) # TODO - Should evaluate if this is correct! Make test that test search for both forward and backward genes on first and second contig!
+                    gene_oi = Seq.reverse_complement(gene_oi)
                     if gene_oi in genome_oi:
                         strand = '-'
 
@@ -274,7 +279,7 @@ def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_
                                                     refound_gene, gene_data_dict[genome_name][refound_gene][1:], largest_locus_tag)
             else:
                 exit_with_error(f"When correcting gff {gff_name}, the gene: {refound_gene} "
-                                 f"did not have any hit in the genome!", EXIT_GFF_REANNOTATION_ERROR)
+                                 f"did not have any hit in the genome!", EXIT_GFF_REANNOTATION_ERROR, logger)
 
     # Construct a database from the temporary gff that contain the added annotations
     path_tmp_gff_db = os.path.join(tmp_folder_path, f'{gff_file_name}_tmp_db')

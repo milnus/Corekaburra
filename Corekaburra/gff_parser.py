@@ -220,8 +220,6 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
     last_core_gene_cluster = core_genes[gff_name][previous_core_gene_id]
     first_core_gene_cluster = core_genes[gff_name][first_core_gene_gff_line[8]]
 
-    if first_core_gene_cluster == last_core_gene_cluster:
-        print('Same gene') # TODO - Log this? report or what?
 
     # Add core neighbours
     core_gene_neighbours = sorted([last_core_gene_cluster, first_core_gene_cluster])
@@ -378,6 +376,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 if line[8] in low_freq_genes[gff_name]:
                     low_freq_genes_in_region.append(low_freq_genes[gff_name][line[8]])
                 else:
+                    # acc_genes_in_region.append(acc_genes[gff_name][line[8]])
                     try:
                         acc_genes_in_region.append(acc_genes[gff_name][line[8]])
                     except KeyError: # TODO - WHAT DOES THIS DO? - Likely search for fragment within composite, as fragments were previously storred in their composit strings.
@@ -560,15 +559,21 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
 
 
 def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes, source_program,
-                           annotate, gene_data_dict, corrected_dict, tmp_folder_path, discard_corrected):
+                           annotate, gene_data_dict, corrected_dir, tmp_folder_path, discard_corrected, logger):
     """
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
     :param core_genes: Dictionary over core genes
     :param low_freq_genes: Dictionary over low-frequency genes
     :param acc_gene_dict: Dictionary over accessory genes
-    :param i: The index of which this process is in loop
     :param complete_genomes: Bool indicating if this genome should be considered as a complete genome
+    :param source_program: String indicating if program comes from Roary or Panaroo.
+    :param annotate: Bool to indicate if refound genes should be annotated
+    :param gene_data_dict: Dict of genes, annotations, names, and sequences found in the gene_data.csv file from Panaroo
+    :param corrected_dir: File path to directory where corrected Gff files are to be stored.
+    :param tmp_folder_path: Path to the temporary working folder.
+    :param discard_corrected: Bool indicating if corrected Gff files should be preserved as an output
+    :param logger: Progran logger
 
     :return input_gff_file: File path to the gff being searched
     :return core_genes: Dict of core genes passed to genomes and the pan-genome clusters.
@@ -583,9 +588,7 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     if source_program == "Panaroo" and annotate:
         # check if not already corrected file and if any gene is to be inserted at all
         if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
-            input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dict)
-
-    # TODO - likely check if genome should be corrected at this point in the process. - Would require more inputs.
+            input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
 
     gff_generator = parse_gff(input_gff_file)
     return_data = segment_gff_content(gff_generator=gff_generator,
@@ -595,8 +598,6 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
                                       acc_genes=acc_gene_dict,
                                       complete_genomes=complete_genomes)
 
-    # TODO - Add in an if statement that checks if the corrected files should be kept!
-    #   - If not then delete them and add an if statment that will delete the folder in the main script
     if "_corrected" in input_gff_file and discard_corrected:
         os.remove(input_gff_file)
 
