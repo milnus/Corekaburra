@@ -299,7 +299,6 @@ def main():
     #  - Should we print a low-freq, placement?
     if len(non_core_contig_info)> 0:
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
-    print(f'{non_core_contig_info = }')
 
     # time_calculator(time_start, time.time(), "writing output files")
 
