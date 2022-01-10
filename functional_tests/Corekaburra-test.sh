@@ -329,7 +329,22 @@ test_output_file test_out_folder/core_pair_summary.csv Fragmented_accessory_gene
 rm -r test_out_folder
 
 
-# TODO - set up a test with a core-less contig.
+# TODO - set up a test with a core-less contig draft.
+# TODO - implement coreless contig output!
+Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_accessory_gene_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_accessory_gene_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Fragmented_accessory_gene_run_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO - set up a test with a core-less contig complete.
+Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ -cg Complete_double_chromosomes.txt
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Coreless_contig_complete_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Coreless_contig_complete_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Coreless_contig_complete_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv Coreless_contig_complete_expected/coreless_contig_accessory_gene_content.tsv.expected
+rm -r test_out_folder
+
 
 # 3. End of testing - check if any errors occurrred
 if [ "$num_errors" -gt 0 ]; then

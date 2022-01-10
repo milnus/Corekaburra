@@ -170,5 +170,40 @@ def no_acc_segment_writer(no_acc_segments, out_path, prefix, quiet):
                     writer.writerow(info)
 
 
+def non_core_contig_writer(non_core_contigs, out_path, prefix,):
+    """
+    Function to write output for contigs with no core gene, but with accessory genes
+    :param non_core_contigs: Dict of info for each contig with no core genes, values are list of lists with intermediate and low-frequency genes
+    :param out_path: Path to the output folder
+    :param prefix: A possible prefix for the output files.
+    :return: Nothing
+    """
+    # if not quiet: # TODO - log
+    #     print("Printing master output")
+
+    # Write gene content in long format
+    out_file_name = 'coreless_contig_accessory_gene_content.tsv'
+    if prefix is not None:
+        out_file_name = f'{prefix}_{out_file_name}'
+
+    with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
+        writer = csv.writer(out_file, delimiter="\t")
+
+        # Create header
+        header = ['Gff', 'Contig', 'Accessory_count', 'Intermediate_cunt', 'low_frequency_count']
+        writer.writerow(header)
+
+        # Write remaining rows:
+        for key in sorted(non_core_contigs):
+            genome, contig = key.split('--')
+            num_intermidiate = len(non_core_contigs[key][0])
+            num_low = len(non_core_contigs[key][1])
+            num_accessory = num_intermidiate + num_low
+
+            info = [genome, contig, num_accessory, num_intermidiate, num_low]
+
+            writer.writerow(info)
+
+
 if __name__ == "__main__":
     pass

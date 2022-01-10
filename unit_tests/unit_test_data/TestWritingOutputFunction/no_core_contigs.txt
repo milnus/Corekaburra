@@ -1,0 +1,4 @@
+Gff	Contig	Accessory_count	Intermediate_cunt	low_frequency_count
+gff_1	contig_x	2	1	1
+gff_1	contig_y	1	1	0
+gff_1	contig_z	1	0	1

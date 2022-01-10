@@ -3600,6 +3600,22 @@ class TestWritingOutputFunction(unittest.TestCase):
             with open('TestWritingOutputFunction/test_no_accessory_core_segments.csv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
+    def test_coreless_contig_writer(self):
+        coreless_contigs = {'gff_1--contig_x': [['pan_cluster_2'], ['pan_cluster_3']],
+                            'gff_1--contig_y': [['pan_cluster_2'], []],
+                            'gff_1--contig_z': [[], ['pan_cluster_6']]}
+
+        out_path = 'TestWritingOutputFunction'
+        prefix = 'test'
+
+        expected_summary_table = 'TestWritingOutputFunction/no_core_contigs.txt'
+
+        output_writer_functions.non_core_contig_writer(coreless_contigs, out_path, prefix)
+
+        with open(expected_summary_table, 'r') as expected:
+            with open('TestWritingOutputFunction/test_coreless_contig_accessory_gene_content.tsv', 'r') as result:
+                self.assertEqual(expected.readlines(), result.readlines())
+
 
 if __name__ == '__main__':
     unittest.main()
