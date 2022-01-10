@@ -332,9 +332,10 @@ rm -r test_out_folder
 # TODO - set up a test with a core-less contig draft.
 # TODO - implement coreless contig output!
 Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_accessory_gene_run_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_accessory_gene_run_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Fragmented_accessory_gene_run_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv coreless_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv coreless_contig_draft_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv coreless_contig_draft_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv coreless_contig_draft_expected/coreless_contig_accessory_gene_content.tsv.expected
 rm -r test_out_folder
 
 # TODO - set up a test with a core-less contig complete.
