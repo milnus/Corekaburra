@@ -40,7 +40,7 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path):
 
         # Get the gff and its path
         try:
-            gff_file = [file for file in input_gffs if f'{genome}.gff' in file][0] # TODO - fix that using a locus_tag it is not possible to identify genes. How do we make it so that we can?
+            gff_file = [file for file in input_gffs if f'{genome}.gff' in file][0]
         except IndexError:
             raise NotImplementedError(f'No gff match was found when searching fragments for genome: {genome}')
 
@@ -84,10 +84,9 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path):
 
     return return_list
     # TODO - find out what the non-closed file problem is here! Can be seen when running unit-tests.
-    # TODO - Find out how the gff parser handles this? Does there need to be a check if a gene cluster is being paired to it self and if then drop it and change the end coordinates.
 
 
-def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, verbose=True):
+def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, logger):
     """
     Function that pass a Roary style gene presence/absence file.
     :param pres_abs_file: File path to the gene presence/absence file identified
@@ -96,7 +95,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
     :param source_program: The program from which the pan-genome was produced
     :param input_gffs: A list of file-paths to the gff files given as input
     :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
-    :param verbose: Indeicater on verbosety level # TODO - Likely change to logger!
+    :param logger: Program logger
     :return: Directories of directories of core and low frequency genes, and a directory of pan genome clusters and their annotation.
     """
 
@@ -132,10 +131,9 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
         core_gene_isolate_presence = floor(len(gff_file_dict.keys()) * core_gene_presence)
         low_freq_gene_isolate_presence = ceil(len(gff_file_dict.keys()) * low_freq_gene)
 
-        if verbose:
-            print(f"\n------------Opening the gene presence/absence file------------\n")
-            print(f"Core genes must be found in {core_gene_isolate_presence} or more isolates")
-            print(f"Low frequency genes must be found in less than {low_freq_gene_isolate_presence} isolates\n")
+        logger.info(f"------------Opening the gene presence/absence file------------\n"
+                    f"Core genes must be found in {core_gene_isolate_presence} or more genomes\n"
+                    f"Low frequency genes must be found in less than {low_freq_gene_isolate_presence} genomes\n")
 
         # initialise dict of dicts to hold genes from each gffs and to be returned
         core_gene_dict = {item: {} for item in gff_file_names[14:]}
@@ -173,7 +171,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 # Check if gene was found to be a core gene
                 if all(return_list):
                     # Add the gene to the annotation dict
-                    for genome in core_gene_dict.keys(): # TODO - Check if .keys can be omitted
+                    for genome in core_gene_dict:
                         # Get the annoations for a specific genome
                         genes_in_genome = line[14 + gff_file_dict[genome]]
                         # If there is an annotation add id
@@ -186,7 +184,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
 
                 else:
                     # Check if low frequency, if then add else then add as normal accessory
-                    if low_freq_gene_isolate_presence >= gene_isolate_presence == no_seq_presence:  # TODO - review this == statement, should it be there?
+                    if low_freq_gene_isolate_presence >= gene_isolate_presence == no_seq_presence:
                         for genome in low_freq_gene_dict.keys():
                             if len(line[14 + gff_file_dict[genome]]) > 0:
                                 add_gene_to_dict(low_freq_gene_dict, line[14 + gff_file_dict[genome]], line[0], genome)
@@ -198,7 +196,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                         acc_gene_number += 1
 
             # Check if accessory if then add annotation to genomes
-            elif low_freq_gene_isolate_presence >= gene_isolate_presence == no_seq_presence: # TODO - review this == statement, should it be there?
+            elif low_freq_gene_isolate_presence >= gene_isolate_presence == no_seq_presence:
                 for genome in low_freq_gene_dict.keys():
                     if len(line[14+gff_file_dict[genome]]) > 0:
                         add_gene_to_dict(low_freq_gene_dict, line[14 + gff_file_dict[genome]], line[0], genome)
@@ -211,12 +209,10 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                         add_gene_to_dict(acc_gene_dict, line[14 + gff_file_dict[genome]], line[0], genome)
                 acc_gene_number += 1
 
-    if verbose:
-        print("A total of:")
-        print(f"{core_gene_number} core gene clusters were identified")
-        print(f"{low_freq_gene_number} low frequency gene clusters were identified")
-        print(f"{acc_gene_number} intermediate accessory gene clusters were identified\n")
-
+    logger.info("A total of:\n"
+                f"{core_gene_number} core gene clusters were identified\n"
+                f"{low_freq_gene_number} low frequency gene clusters were identified\n"
+                f"{acc_gene_number} intermediate accessory gene clusters were identified\n")
 
     # Remove gff databases
     files_in_tmp = os.listdir(tmp_folder_path)

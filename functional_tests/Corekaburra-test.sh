@@ -291,7 +291,6 @@ test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chro
 test_output_file test_out_folder/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff.expected
 rm -r test_out_folder
 
-# TODO - Set up test with a single core gene on a contig that is not complete
 call_new_test "Test with a single core gene on a contig that is not complete"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
@@ -299,7 +298,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_co
 test_output_file test_out_folder/core_pair_summary.csv single_core_contig_draft_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - Set up test with a single core gene on a contig that is complete
 call_new_test "Test with a single core gene on a contig that is complete"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ -cg complete_genomes_file > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_complete_expected/core_core_accessory_gene_content.tsv.expected
@@ -307,7 +305,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_co
 test_output_file test_out_folder/core_pair_summary.csv single_core_contig_complete_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO - test for core genes being fragmented.
 call_new_test "Test for core genes being fragmented"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger_2.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_run_expected/core_core_accessory_gene_content.tsv.expected
@@ -320,7 +317,6 @@ rm -r test_out_folder
 # TODO - run the test check results and transfer to expected folder
 #rm -r test_out_folder
 
-# TODO - test for accessory genes being fragmented.
 call_new_test "Test for accessory genes being fragmented"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_accessory_gene_run/ -o test_out_folder/  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_accessory_gene_run_expected/core_core_accessory_gene_content.tsv.expected
@@ -329,7 +325,6 @@ test_output_file test_out_folder/core_pair_summary.csv Fragmented_accessory_gene
 rm -r test_out_folder
 
 
-# TODO - set up a test with a core-less contig draft.
 call_new_test "Test with a core-less contig draft"
 Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv coreless_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
@@ -338,7 +333,6 @@ test_output_file test_out_folder/core_pair_summary.csv coreless_contig_draft_exp
 test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv coreless_contig_draft_expected/coreless_contig_accessory_gene_content.tsv.expected
 rm -r test_out_folder
 
-# TODO - set up a test with a core-less contig complete.
 call_new_test "Test with a core-less contig complete"
 Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ -cg Complete_double_chromosomes.txt
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Coreless_contig_complete_expected/core_core_accessory_gene_content.tsv.expected

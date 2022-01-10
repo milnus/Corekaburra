@@ -3,17 +3,14 @@ import os
 import time
 
 
-def master_info_writer(master_info, out_path, prefix, quiet):
+def master_info_writer(master_info, out_path, prefix):
     """
     Function to write two output .tsv files related to regions content and size for each genome
     :param master_info: Dict of info for each core gene pair across all genomes
     :param out_path: Path to the output folder
     :param prefix: A possible prefix for the output files.
-    :param quiet:
     :return: Nothing
     """
-    if not quiet:
-        print("Printing master output")
 
     # Write general content
     out_file_name = 'low_frequency_gene_placement.tsv'
@@ -67,18 +64,14 @@ def master_info_writer(master_info, out_path, prefix, quiet):
                     writer.writerow(row)
 
 
-def summary_info_writer(master_summary_info, out_path, prefix, quiet):
+def summary_info_writer(master_summary_info, out_path, prefix):
     """
     Function for writing the summary table for regions identified across genomes
     :param master_summary_info: Dict holding summary statistics for core pair region identified
     :param out_path: Path to the output folder
     :param prefix: Prefix for any output files
-    :param quiet: # TODO - log instead
     :return: Nothing
     """
-    if not quiet:
-        print("Printing master output")
-
     # Generate file name
     out_file_name = 'core_pair_summary.csv'
     if prefix is not None:
@@ -102,17 +95,14 @@ def summary_info_writer(master_summary_info, out_path, prefix, quiet):
             writer.writerow(info)
 
 
-def segment_writer(segments, out_path, prefix, quiet):
+def segment_writer(segments, out_path, prefix):
     """
     Function to write segments of core genes identified across the pan-genome
     :param segments: Dict of segments (lists) in values, under name of segments as keys.
     :param out_path: Path to output folder
     :param prefix: Prefix for any output files
-    :param quiet: # TODO - logger
     :return: Nothing
     """
-    if not quiet:
-        print("Printing core segments")
 
     # Generate file name
     out_file_name = 'core_segments.csv'
@@ -135,17 +125,14 @@ def segment_writer(segments, out_path, prefix, quiet):
                 writer.writerow(info)
 
 
-def no_acc_segment_writer(no_acc_segments, out_path, prefix, quiet):
+def no_acc_segment_writer(no_acc_segments, out_path, prefix):
     """
     Function for writing segments of core genes with no accessory between them.
     :param no_acc_segments: Dict of segments with (lists) in values with sub-lists being segments with no accessory genes between them, under name of segments as keys.
     :param out_path: Path to output folder
     :param prefix: Prefix for any output files
-    :param quiet: # TODO - logger
     :return: Nothing
     """
-    if not quiet:
-        print("Printing core segments without accessory content")
 
     # Generate file name
     out_file_name = 'no_accessory_core_segments.csv'
@@ -178,9 +165,6 @@ def non_core_contig_writer(non_core_contigs, out_path, prefix,):
     :param prefix: A possible prefix for the output files.
     :return: Nothing
     """
-    # if not quiet: # TODO - log
-    #     print("Printing master output")
-
     # Write gene content in long format
     out_file_name = 'coreless_contig_accessory_gene_content.tsv'
     if prefix is not None:

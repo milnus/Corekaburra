@@ -32,6 +32,11 @@ except FileNotFoundError:
 
 class TestExitWithError(unittest.TestCase):
     """ Test for the function carrying out a nice exit """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_exit_w_tmp_folder_deletion(self):
         ''' Test the exit function is able to remove the temporary folder '''
 
@@ -45,27 +50,38 @@ class TestExitWithError(unittest.TestCase):
             copyfile(os.path.join(tmp_folder, file), os.path.join(tmp_folder_copy, file))
 
         with self.assertRaises(SystemExit):
-            exit_with_error.exit_with_error(exit_status=2, message='test msg', tmp_folder=tmp_folder)
+            exit_with_error.exit_with_error(exit_status=2, message='test msg', logger=self.logger, tmp_folder=tmp_folder)
 
         os.rename(tmp_folder_copy, tmp_folder)
 
 
 class TestCutOffViolations(unittest.TestCase):
+    """ Test for the function that examines the cutoffs given for core and low-frequency genes"""
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_low_below_range(self):
         with self.assertRaises(SystemExit):
-            check_inputs.check_cutoffs(-0.1, 1)
+            check_inputs.check_cutoffs(-0.1, 1, self.logger)
 
     def test_core_above_range(self):
         with self.assertRaises(SystemExit):
-            check_inputs.check_cutoffs(0.05, 1.1)
+            check_inputs.check_cutoffs(0.05, 1.1, self.logger)
 
     def test_low_larger_than_core(self):
         with self.assertRaises(SystemExit):
-            check_inputs.check_cutoffs(0.6, 0.4)
+            check_inputs.check_cutoffs(0.6, 0.4, self.logger)
 
 
 class TestParsingCompleteGenomes(unittest.TestCase):
     """ Test for the passing of input file containing names of complete genome and checking their presence in the pan-genome """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_all_files_found(self):
         gff_files = ['/path/to/complete_genome_1.gff',
                      '/path/complete_genome_2.gff.gz',
@@ -81,7 +97,7 @@ class TestParsingCompleteGenomes(unittest.TestCase):
                            'complete_genome_3',
                            'complete_genome_4']
 
-        return_object = read_complete_genome_file.parse_complete_genome_file(complete_genome_file, gff_files)
+        return_object = read_complete_genome_file.parse_complete_genome_file(complete_genome_file, gff_files, self.logger)
 
         self.assertEqual(return_object, expected_return)
 
@@ -96,15 +112,20 @@ class TestParsingCompleteGenomes(unittest.TestCase):
 
         with self.assertRaises(SystemExit):
             read_complete_genome_file.parse_complete_genome_file(complete_genome_file,
-                                                                 gff_files)
+                                                                 gff_files, self.logger)
 
 
 class TestPangenomeSourceProgram(unittest.TestCase):
     """ Test of the function that determines the program from which the pan-genome originated """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_roary_input(self):
         input_folder_path = 'TestPangenomeSourceProgram/Mock_roary'
 
-        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path)
+        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path, self.logger)
 
         self.assertEqual("Roary", return_program)
         self.assertEqual(input_folder_path + '/gene_presence_absence.csv', return_path)
@@ -112,7 +133,7 @@ class TestPangenomeSourceProgram(unittest.TestCase):
     def test_panaroo_input(self):
         input_folder_path = 'TestPangenomeSourceProgram/Mock_panaroo'
 
-        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path)
+        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path, self.logger)
 
         self.assertEqual("Panaroo", return_program)
         self.assertEqual(input_folder_path + '/gene_presence_absence_roary.csv', return_path)
@@ -129,14 +150,19 @@ class TestPangenomeSourceProgram(unittest.TestCase):
         input_folder_path = 'TestPangenomeSourceProgram/Mock_unknwon'
 
         with self.assertRaises(SystemExit):
-            check_inputs.define_pangenome_program(input_folder_path)
+            check_inputs.define_pangenome_program(input_folder_path, self.logger)
 
 
 class TestPresenceOfGenedataFile(unittest.TestCase):
     """ Test the function that ensures the presence of the Gene_data.csv file produced by Panaroo """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_Genedata_File_present(self):
         input_folder_path = 'TestPresenceOfGenedataFile/present'
-        return_path = check_inputs.check_gene_data(input_folder_path)
+        return_path = check_inputs.check_gene_data(input_folder_path, self.logger)
 
         self.assertEqual(return_path, input_folder_path +'/gene_data.csv')
 
@@ -144,17 +170,22 @@ class TestPresenceOfGenedataFile(unittest.TestCase):
         input_folder_path = 'TestPresenceOfGenedataFile/absent'
 
         with self.assertRaises(SystemExit):
-            check_inputs.check_gene_data(input_folder_path)
+            check_inputs.check_gene_data(input_folder_path, self.logger)
 
 
 class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     """ Test the function that ensures all gffs given as input are included in the pan-genome provided """
     # Test pairing of all files in pan genome
     def test_input_gff_pres_abs_pairing_all_gffs(self):
         input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
         input_file_list = ['Silas_the_Salmonella', 'Christina_the_Streptococcus', 'Ajwa_the_Shigella']
 
-        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
         self.assertEqual(return_bool, True)
 
@@ -163,8 +194,7 @@ class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
         input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
         input_file_list = ['Silas_the_Salmonella.gff', 'Christina_the_Streptococcus.gff']
 
-        with self.assertWarns(Warning):
-            return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
         self.assertEqual(return_bool, True)
 
@@ -174,14 +204,14 @@ class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
         input_file_list = ['not_found.gff', 'Silas_the_Salmonella.gff', 'Christina_the_Streptococcus.gff']
 
         with self.assertRaises(SystemExit):
-            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
     def test_input_gff_pres_abs_some_file_not_in_pan(self):
         input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
         input_file_list = ['not_found.gff', 'also_not_found.gff', 'definitely_not_found.gff']
 
         with self.assertRaises(SystemExit):
-            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs)
+            check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
 
 class TestAddingGeneToDict(unittest.TestCase):
@@ -306,13 +336,16 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         self.assertEqual(expected_return, return_bool)
 
-    # TODO - Can a fragmented gene be recognised, if spanning contigs?
-
 
 class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
     """
     Tests for the function that passes the gene presence absence table from pan-genome program
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_parsing_w_100_presence(self):
         file_name = 'TestParsingGenePresenceAbsenceFile/gene_presence_absence_roary.csv'
         core_gene_presence = 1
@@ -397,7 +430,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
             file_name, core_gene_presence,
             low_freq_gene, source_program,
-            input_gffs, tmp_folder_path)
+            input_gffs, tmp_folder_path, self.logger)
 
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
@@ -427,7 +460,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -517,7 +550,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -607,7 +640,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -693,6 +726,11 @@ class TestReadGeneData(unittest.TestCase):
 
 class TestPrepairForReannotation(unittest.TestCase):
     """ Test for pre-pairing a folder for corrected genomes, and testing if any are present from previous runs """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def tearDown(self):
         try:
             """ Class to remove created corrected output folder"""
@@ -702,9 +740,11 @@ class TestPrepairForReannotation(unittest.TestCase):
 
     def test_no_files_annotated(self):
         input_gffs = ['Mock_1.gff', 'Mock_2.gff']
-        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation('TestPrepairForReannotation/Mock_gene_data.csv',
-                                                                                             'TestPrepairForReannotation/',
-                                                                                             input_gffs)
+        gene_data_dict_return, \
+        corrected_gff_out_dir_return, \
+        corrected_files_return = correct_gffs.prepair_for_reannotation('TestPrepairForReannotation/Mock_gene_data.csv',
+                                                                       'TestPrepairForReannotation/',
+                                                                       input_gffs, self.logger)
 
         self.assertTrue(os.path.isdir('TestPrepairForReannotation/Corrected_gff_files'))
         self.assertEqual(input_gffs, corrected_files_return)
@@ -714,7 +754,7 @@ class TestPrepairForReannotation(unittest.TestCase):
         gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
             'TestPrepairForReannotation/Mock_gene_data.csv',
             'TestPrepairForReannotation/Some_genomes',
-            input_gffs)
+            input_gffs, self.logger)
 
         expected_gffs = ['Mock_2.gff', 'Mock_1_corrected.gff']
 
@@ -725,7 +765,7 @@ class TestPrepairForReannotation(unittest.TestCase):
         gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
             'TestPrepairForReannotation/Mock_gene_data.csv',
             'TestPrepairForReannotation/All_genomes',
-            input_gffs)
+            input_gffs, self.logger)
 
         expected_gffs = ['Mock_1_corrected.gff', 'Mock_2_corrected.gff']
 
@@ -849,6 +889,11 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
     """
     Test of the function used to reannotate refound genes identified by panaroo in a gff file.
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def tearDown(self):
         """ Class to remove modified gff and rename the original"""
         try:
@@ -886,7 +931,7 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
              'TTTT\n'
              ]
 
-        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
         with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
             self.assertEqual(expected_lines, added_gff.readlines())
@@ -917,7 +962,7 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
                           'TGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTT\n',
                           'TTTT\n']
 
-        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
         with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
             self.assertEqual(expected_lines, added_gff.readlines())
@@ -932,7 +977,7 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
         corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
 
         with self.assertRaises(SystemExit):
-            correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir)
+            correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
     # TODO - Add test for annotating of second contig
 
@@ -3243,7 +3288,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
 
-        self.assertEqual(expected_segments, double_edge_segements) # TODO
+        self.assertEqual(expected_segments, double_edge_segements)
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths_2(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_F', 'pan_cluster_B'],
@@ -3329,7 +3374,7 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         self.assertEqual(expected_segments, double_edge_segements)
 
-    def test_double_edge_segment_identification_segments_node_w_two_gene_segment(self): # TODO - see TODO on line 791 in consensus_core_genome!
+    def test_double_edge_segment_identification_segments_node_w_two_gene_segment(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_B'],
                              'pan_cluster_A--pan_cluster_G': ['pan_cluster_A', 'pan_cluster_I', 'pan_cluster_H', 'pan_cluster_G'],
                              'pan_cluster_B--pan_cluster_E': ['pan_cluster_B', 'pan_cluster_C', 'pan_cluster_D', 'pan_cluster_E'],
@@ -3523,7 +3568,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         expected_low_freq = 'TestWritingOutputFunction/low_freq.txt'
         expected_gene_content = 'TestWritingOutputFunction/gene_content.txt'
 
-        output_writer_functions.master_info_writer(master_info, out_path, prefix, True)
+        output_writer_functions.master_info_writer(master_info, out_path, prefix)
 
         with open(expected_low_freq, 'r') as expected:
             with open('TestWritingOutputFunction/test_low_frequency_gene_placement.tsv', 'r') as result:
@@ -3550,7 +3595,7 @@ class TestWritingOutputFunction(unittest.TestCase):
 
         expected_summary_table = 'TestWritingOutputFunction/summary_table.txt'
 
-        output_writer_functions.summary_info_writer(input_dict, out_path, prefix, True)
+        output_writer_functions.summary_info_writer(input_dict, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
             with open('TestWritingOutputFunction/test_core_pair_summary.csv', 'r') as result:
@@ -3572,7 +3617,7 @@ class TestWritingOutputFunction(unittest.TestCase):
 
         expected_summary_table = 'TestWritingOutputFunction/core_segments.txt'
 
-        output_writer_functions.segment_writer(input_segments, out_path, prefix, True)
+        output_writer_functions.segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
             with open('TestWritingOutputFunction/test_core_segments.csv', 'r') as result:
@@ -3594,7 +3639,7 @@ class TestWritingOutputFunction(unittest.TestCase):
 
         expected_summary_table = 'TestWritingOutputFunction/no_acc_segments.txt'
 
-        output_writer_functions.no_acc_segment_writer(input_segments, out_path, prefix, True)
+        output_writer_functions.no_acc_segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
             with open('TestWritingOutputFunction/test_no_accessory_core_segments.csv', 'r') as result:

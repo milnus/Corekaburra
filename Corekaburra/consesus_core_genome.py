@@ -1,4 +1,10 @@
 import networkx as nx
+try:
+    from Corekaburra.exit_with_error import exit_with_error
+except ModuleNotFoundError:
+    from exit_with_error import exit_with_error
+EXIT_SEGMENT_IDENTIFICATION_ERROR = 4
+
 # pylint: disable=E1123, E1121
 
 
@@ -122,7 +128,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
 
     # Check if any node have multiple edges, if not then return.
     if len(multi_edge_nodes) == 0:
-        return None # TODO - log and report better that this is the outcome!
+        return None
 
     # Dict to hold connections between >2 edge nodes
     connect_dict = {}
@@ -173,7 +179,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                         double_edge_segements[source_target_name] = segment
                     else:
                         if double_edge_segements[source_target_name] != segment[::-1]:
-                            raise NotImplementedError("Path from one node to another was found, but did not match previously found path!") # TODO log and nice exit!
+                            exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
+                                            f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!")
 
     # Calculate the expected number of paths
     total_edges_from_multi_edge_nodes = sum([connections for _, connections in core_graph.degree if connections > 2])
@@ -242,7 +249,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                                     # Check that the path does not contain nodes with >2 degrees outside of source and target,
                                     # if then add path,
                                     # else then find nodes that has >2 edges and remove an edge that leads to the node, to break the path for next run through loop
-                                    if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0: # TODO - should this != 0 be here?
+                                    if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0:
                                         double_edge_segements[suspected_pair] = path
                                         path_identified = True
                                         continue
@@ -270,17 +277,21 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
     return double_edge_segements
 
 
-def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict):
+def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict, logger):
     """
     Function to be called from main that collects the functions for determining core segments in pan-genome
 
     :param core_neighbour_pairs: Dict of the number of times core pairs have been detected
     :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
     :param num_gffs: Number of inputted gff files # TODO - Should this be the minimum number determined by the input cut-off for core genes
+    :param logger: Program logger
 
     :return double_edge_segements:
     :return no_acc_segments:
     """
+
+    logger.debug(f"--------------Searching for segments in pan genome--------------")
+
     # Construct a graph from core gene neighbours
     core_graph = construct_core_graph(core_neighbour_pairs)
 
@@ -288,9 +299,17 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     double_edge_segements = identify_segments(core_graph, num_gffs, core_gene_dict)
 
     if double_edge_segements is not None:
+        logger.debug(f'A total of {len(double_edge_segements)} core genes were identified to have multiple neighbours.')
+        logger.debug(f'Genes with multiple neighbours: {double_edge_segements}')
+
+        logger.debug('Search for Segments with no accessory genes starts now')
+
         # Find segments of core genes with no accessory in between
         no_acc_segments = identify_no_accessory_segments(double_edge_segements, combined_acc_gene_count)
+
+        logger.debug('Segments with no accessory genes is done')
     else:
+        logger.debug(f'No segments can be identified in given pan-genome\n')
         no_acc_segments = None
 
     return double_edge_segements, no_acc_segments
