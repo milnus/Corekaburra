@@ -1,0 +1,8 @@
+"","","","","","","","","","","","","","","genome_single_chrom_larger","complete_genome_single_chrom_2","complete_genome_single_chrom","genome_single_chrom_larger_rearrange"
+"A","","","4","4","1","","","","","","","","","single_comp_A","single_comp_2_A","single_comp_A","single_comp_2_A"
+"B","","","3","3","1","","","","","","","","","single_comp_B","","single_comp_B","single_comp_2_B"
+"C","","","4","4","1","","","","","","","","","single_comp_C","single_comp_2_C","single_comp_C","single_comp_2_C"
+"D","","","2","2","1","","","","","","","","","","","","single_comp_2_D"
+"E","","","3","4","1.33","","","","","","","","","single_comp_E;single_comp_D","single_comp_2_B","","single_comp_2_E"
+"F","","","2","2","1","","","","","","","","","single_comp_F","","","single_comp_2_F"
+"G","","","1","1","1","","","","","","","","","single_comp_G","","",""

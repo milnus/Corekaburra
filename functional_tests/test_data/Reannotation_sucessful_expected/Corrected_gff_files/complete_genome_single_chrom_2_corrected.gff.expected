@@ -1,0 +1,14 @@
+##gff-version3
+contig_1	.	CDS	1	90	.	.	.	ID=single_comp_2_A;Other_info;locus_tag=locus_tag_0001
+contig_1	Panaroo	CDS	76	79	.	-	0	ID=locus_tag_0005;locus_tag=locus_tag_0005;old_locus_tag=0_refound_1
+contig_1	.	CDS	100	190	.	.	.	ID=single_comp_2_B;Other_info;locus_tag=locus_tag_0002
+contig_1	.	CDS	200	290	.	.	.	ID=single_comp_2_C;Other_info;locus_tag=locus_tag_0003
+contig_1	Panaroo	CDS	296	300	.	-	0	ID=locus_tag_0004;locus_tag=locus_tag_0004;old_locus_tag=0_refound_0;name=gene_name;annotation=gene_function
+##FASTA
+>contig_1
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNCCCCNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTCATA
+

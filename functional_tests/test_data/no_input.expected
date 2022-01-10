@@ -1,0 +1,47 @@
+usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
+                   [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
+                   [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
+                   [-l | -q] [-h]
+
+Welcome to Corekaburra! Program to determine consensus core sequence from
+multiple genomes. Outputs consensus core gene alignment, distance between core
+genes, number of accessory genes between core genes and low frequency genes
+between core genes
+
+Required arguments:
+  -ig file.gff [file.gff ...], --input_gffs file.gff [file.gff ...]
+                        Path to gff files used for pan-genome
+  -ip path/to/pan_genome, --input_pangenome path/to/pan_genome
+                        Path to the folder produced by Panaroo or Roary
+
+Analysis modifiers:
+  -cg complete_genomes.txt, --complete_genomes complete_genomes.txt
+                        text file containing names of genomes that are to be
+                        handled as complete genomes
+  -a, --no_annotate_refound
+                        Flag to toggle off the creation of new gff files, with
+                        annotation of refound genes. Only done if input
+                        pangenome is detected as coming from Panaroo
+  -cc 1.0, --core_cutoff 1.0
+                        Percentage of isolates in which a core gene must be
+                        present [default: 1.0]
+  -lc 0.05, --low_cutoff 0.05
+                        Percentage of isolates where genes found in less than
+                        these are seen as low-frequency genes [default: 0.05]
+
+Output control:
+  -o path/to/output, --output path/to/output
+                        Path to where output files will be placed [default:
+                        current folder]
+  -p OUTPUT_PREFIX, --prefix OUTPUT_PREFIX
+                        Prefix for output files, if any is desired
+  -d, --discard_corrected
+                        Discard gff files corrected with refound genes
+                        identified by Panaroo - Only compativle if pan-genome
+                        comes from Panaroo [Default: Corrected files are kept]
+
+Other arguments:
+  -c int, --cpu int     Give max number of CPUs [default: 1]
+  -l, --log             Record program progress in for debugging purpose
+  -q, --quiet           Only print warnings
+  -h, --help            Show help function

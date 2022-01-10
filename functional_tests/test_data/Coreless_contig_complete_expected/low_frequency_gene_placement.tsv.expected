@@ -1,0 +1,7 @@
+Gff	Core_gene_1	Core_gene_2	Core_region_size	Core_region_accessory_count
+complete_genome_double_chrom	A	B	9	0
+complete_genome_double_chrom_2	A	B	9	0
+complete_genome_double_chrom	A	C	10	0
+complete_genome_double_chrom_2	A	C	10	0
+complete_genome_double_chrom	B	C	9	0
+complete_genome_double_chrom_2	B	C	9	0

@@ -1,0 +1,13 @@
+Gff	Core_gene_1	Core_gene_2	gene	type
+genome_1	pan_cluster_1	pan_cluster_2	Acc_1	intermediate_frequency
+genome_1	pan_cluster_1	pan_cluster_2	Acc_2	intermediate_frequency
+genome_1	pan_cluster_1	pan_cluster_2	low_1	low_frequency
+genome_2	pan_cluster_1	pan_cluster_2	Acc_1	intermediate_frequency
+genome_2	pan_cluster_1	pan_cluster_2	Acc_2	intermediate_frequency
+genome_2	pan_cluster_1	pan_cluster_2	low_1	low_frequency
+genome_3	pan_cluster_1	pan_cluster_2	Acc_1	intermediate_frequency
+genome_3	pan_cluster_1	pan_cluster_2	Acc_2	intermediate_frequency
+genome_3	pan_cluster_1	pan_cluster_2	low_1	low_frequency
+genome_1	pan_cluster_2	pan_cluster_3	Acc_1	intermediate_frequency
+genome_1	pan_cluster_2	pan_cluster_3	Acc_2	intermediate_frequency
+genome_2	pan_cluster_2	pan_cluster_4	Acc_1	intermediate_frequency

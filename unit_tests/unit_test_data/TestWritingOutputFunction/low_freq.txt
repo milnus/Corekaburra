@@ -1,0 +1,9 @@
+Gff	Core_gene_1	Core_gene_2	Core_region_size	Core_region_accessory_count
+genome_1	pan_cluster_1	pan_cluster_2	99	3
+genome_2	pan_cluster_1	pan_cluster_2	99	3
+genome_3	pan_cluster_1	pan_cluster_2	99	3
+genome_1	pan_cluster_2	pan_cluster_3	100	2
+genome_3	pan_cluster_2	pan_cluster_3	200	0
+genome_2	pan_cluster_2	pan_cluster_4	150	1
+genome_1	pan_cluster_3	pan_cluster_4	-5	0
+genome_3	pan_cluster_3	pan_cluster_4	-10	0

@@ -13,17 +13,17 @@ and is an ideal starting place for new projects.'''
 
 setup(
     name='Corekaburra',
-    version='0.1.0.0',
+    version='0.0.1',
     author='Magnus Ganer Jespersen',
     author_email='magnus.ganer.j@gmail.com',
     packages=['Corekaburra'],
     package_dir={'Corekaburra': 'Corekaburra'},
     entry_points={
-        'console_scripts': ['Corekaburra = Corekaburra.Corekaburra:main']
+        'console_scripts': ['Corekaburra = Corekaburra.__main__:main']
     },
     url='https://github.com/milnus/Corekaburra',
     license='LICENSE',
     description=('A prototypical bioinformatics command line tool'),
     long_description=(LONG_DESCRIPTION),
-    install_requires=["biopython", "networkx", "gffutils"],
+    install_requires=["biopython", "networkx", "gffutils", "numpy"],
 )
