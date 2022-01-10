@@ -6,8 +6,11 @@ License     : MIT
 Maintainer  : magnus.ganer.j@gmail.com 
 Portability : POSIX
 
-The program reads one or more input FASTA files. For each file it computes a
-variety of statistics, and then prints a summary of the statistics as output. # TODO - Change description
+Corekaburra looks at the gene synteny across genomes used to build a pan-genome. Using syntenic information Corekaburra
+identifies regions between core gene clusters. Regions are described in terms of their content of accessory gene clusters
+and distance between core genes. Information from neighboring core genes is further used to identify stretches of core
+gene clusters throughout the pan-genome that appear in all genomes given as input. Corekaburra is compatible with outputs
+from standard pan-genome pipelines: Roary and Panaroo.
 '''
 
 import os
@@ -321,6 +324,7 @@ def main():
         os.rmdir(tmp_folder_path)
     if args.discard_gffs:
         os.rmdir(os.path.join(args.output_path, 'Corrected_gff_files'))
+
 
 if __name__ == '__main__':
     main()

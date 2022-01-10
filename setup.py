@@ -3,12 +3,11 @@
 from distutils.core import setup
 
 LONG_DESCRIPTION = \
-'''The program reads one or more input FASTA files.
-For each file it computes a variety of statistics, and then
-prints a summary of the statistics as output.
-
-The goal is to provide a solid foundation for new bioinformatics command line tools,
-and is an ideal starting place for new projects.'''
+'''Corekaburra looks at the gene synteny across genomes used to build a pan-genome. Using syntenic information Corekaburra 
+identifies regions between core gene clusters. Regions are described in terms of their content of accessory gene clusters 
+and distance between core genes. Information from neighboring core genes is further used to identify stretches of core  
+gene clusters throughout the pan-genome that appear in all genomes given as input. Corekaburra is compatible with outputs 
+from standard pan-genome pipelines: Roary and Panaroo.'''
 
 
 setup(
