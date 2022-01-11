@@ -2,3 +2,4 @@ complete_genome_1.gff
 /test/path/complete_genome_2.gff
 complete_genome_3.gff.gz
 /test/path/complete_genome_4.gff.gz
+complete_genome_5

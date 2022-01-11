@@ -87,6 +87,7 @@ class TestParsingCompleteGenomes(unittest.TestCase):
                      '/path/complete_genome_2.gff.gz',
                      'complete_genome_3.gff.gz',
                      'complete_genome_4.gff',
+                     'complete_genome_5',
                      'dummy_index_1',
                      'dummy_index_2']
 
@@ -95,7 +96,8 @@ class TestParsingCompleteGenomes(unittest.TestCase):
         expected_return = ['complete_genome_1',
                            'complete_genome_2',
                            'complete_genome_3',
-                           'complete_genome_4']
+                           'complete_genome_4',
+                           'complete_genome_5']
 
         return_object = read_complete_genome_file.parse_complete_genome_file(complete_genome_file, gff_files, self.logger)
 
@@ -105,6 +107,7 @@ class TestParsingCompleteGenomes(unittest.TestCase):
         gff_files = ['/path/complete_genome_2.gff.gz',
                      'complete_genome_3.gff.gz',
                      'complete_genome_4.gff',
+                     'complete_genome_5',
                      'dummy_index_1',
                      'dummy_index_2']
 
@@ -132,6 +135,14 @@ class TestPangenomeSourceProgram(unittest.TestCase):
 
     def test_panaroo_input(self):
         input_folder_path = 'TestPangenomeSourceProgram/Mock_panaroo'
+
+        return_program, return_path = check_inputs.define_pangenome_program(input_folder_path, self.logger)
+
+        self.assertEqual("Panaroo", return_program)
+        self.assertEqual(input_folder_path + '/gene_presence_absence_roary.csv', return_path)
+
+    def test_minimal_panaroo_input(self):
+        input_folder_path = 'TestPangenomeSourceProgram/Mock_minimal_panaroo'
 
         return_program, return_path = check_inputs.define_pangenome_program(input_folder_path, self.logger)
 

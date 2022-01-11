@@ -1,12 +1,11 @@
-usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
+usage: __main__.py -ig file.gff [file.gff ...] -ip path/to/pan_genome
                    [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
                    [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
                    [-l | -q] [-h]
 
-Welcome to Corekaburra! Program to determine consensus core sequence from
-multiple genomes. Outputs consensus core gene alignment, distance between core
-genes, number of accessory genes between core genes and low frequency genes
-between core genes
+Welcome to Corekaburra!An extension to pan-genome analyses that summarise
+genomic regions between core genes and segments of neighbouring core genes
+using gene synteny from a set of input genomes and a pan-genome folder.
 
 Required arguments:
   -ig file.gff [file.gff ...], --input_gffs file.gff [file.gff ...]
