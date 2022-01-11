@@ -13,7 +13,7 @@ def master_info_writer(master_info, out_path, prefix):
     """
 
     # Write general content
-    out_file_name = 'low_frequency_gene_placement.tsv'
+    out_file_name = 'low_frequency_gene_placement.tsv' # Previously 'low_frequency_gene_placement.tsv' - Proposed name: core_region_content.tsv
     if prefix is not None:
         out_file_name = f'{prefix}_{out_file_name}'
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
@@ -31,7 +31,7 @@ def master_info_writer(master_info, out_path, prefix):
             writer.writerow(info)
 
     # Write gene content in long format
-    out_file_name = 'core_core_accessory_gene_content.tsv'
+    out_file_name = 'core_core_accessory_gene_content.tsv' # Previously core_core_accessory_gene_content.tsv - Proposed name: accessory_gene_placement.tsv
     if prefix is not None:
         out_file_name = f'{prefix}_{out_file_name}'
 
@@ -73,7 +73,7 @@ def summary_info_writer(master_summary_info, out_path, prefix):
     :return: Nothing
     """
     # Generate file name
-    out_file_name = 'core_pair_summary.csv'
+    out_file_name = 'core_pair_summary.csv' # Previously: core_pair_summary.csv - proposed name: core_region_summary.csv
     if prefix is not None:
         out_file_name = prefix + '_' + out_file_name
 

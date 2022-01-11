@@ -12,12 +12,11 @@ def get_commandline_arguments(args):
     :return: matched argument object for passing in main function.
     """
     # Set up parser
-    parser = argparse.ArgumentParser(description='Welcome to Corekaburra!\n '
-                                                 'Program to determine consensus core sequence from multiple genomes.\n'
-                                                 'Outputs consensus core gene alignment, distance between core genes, '
-                                                 'number of accessory genes between core genes and low frequency genes '
-                                                 'between core genes',
-                                     add_help=False) #TODO - Change
+    parser = argparse.ArgumentParser(description='Welcome to Corekaburra!'
+                                                 'An extension to pan-genome analyses that summarise genomic regions '
+                                                 'between core genes and segments of neighbouring core genes using '
+                                                 'gene synteny from a set of input genomes and a pan-genome folder.',
+                                     add_help=False)
 
     required = parser.add_argument_group('Required arguments')
     run_mods = parser.add_argument_group('Analysis modifiers')
