@@ -247,6 +247,8 @@ test_output_file test_out_folder/core_segments.csv Rearrangement_run_expected/co
 test_output_file test_out_folder/no_accessory_core_segments.csv Rearrangement_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
+# TODO - Test that segmnets can be identified with a core-cutoff that is less than all genomes.
+
 call_new_test "Test with decreased core-gene cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv core_90_cutoff_expected/core_core_accessory_gene_content.tsv.expected

@@ -1,280 +1,124 @@
-[![Build Status](https://app.travis-ci.com/milnus/Corekaburra.svg?token=28TZmx3MewJSs5GVS7VU&branch=main)](https://app.travis-ci.com/milnus/Corekaburra)
+[![Test](https://github.com/milnus/Corekaburra/actions/workflows/Test.yml/badge.svg)](https://github.com/milnus/Corekaburra/actions/workflows/Test.yml)
 
 # Overview 
+Corekaburra looks at the gene synteny across genomes used to build a pan-genome. Using syntenic information Corekaburra 
+identifies regions between core gene clusters. Regions are described in terms of their content of accessory gene clusters 
+and distance between core genes. Information from neighboring core genes is further used to identify stretches of core 
+gene clusters throughout the pan-genome that appear in all genomes given as input. Corekaburra is compatible with outputs 
+from standard pan-genome pipelines: [Roary](academic.oup.com/bioinformatics/article/31/22/3691/240757) and [Panaroo](genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02090-4).
 
-This program reads one or more input FASTA files. For each file it computes a variety of statistics, and then prints a summary of the statistics as output.
+# When to use
+Corekaburra fits into the existing frameworks of bioinformatics pipelines for pan-genomes. It does not reinvent a new pan-genome pipeline, but leverages the existing ones. Because of this, Corekaburra is build to be a natural extension to the analysis of pan-genomes by summarising information and inferring relationships in the pan-genome otherwise not easily accessible via pan-genome graphs. Other tools provide similar outputs or information, but in their own standalone pan-genome analysis framework or pipeline. Such frameworks/pipelines are [PPanGGolin](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007732) and [Panakeia](https://www.biorxiv.org/content/biorxiv/early/2021/03/02/2021.03.02.433540.full.pdf). By building on top of existing tools Corekaburra frees users from potentially cross referencing beteween pan-genomes, which in itself is a challenging task. Corekaburra's workflow also allows it to be extended to any pan-genome tool, with an output similar to the gene_presence_absence.csv produced by Roary, making Corekaburra versatile for future implementations.
 
-In the examples below, `$` indicates the command line prompt.
+# Why use Corekaburra?
 
-# Licence
 
-This program is released as open source software under the terms of [MIT License](https://raw.githubusercontent.com/milnus/Corekaburra/master/LICENSE).
+# Installation
+Corekaburra can be installed via pip and conda. A Docker container is also available.
+## pip
+```Comming soon```
 
-# Installing
+## Conda
+```Comming```
 
-You can install Corekaburra directly from the source code or build and run it from within Docker container.
+## Docker
+See the Wiki for more information (*** Link to wiki's Docker page ***)[]
 
-## Installing directly from source code
-
-Clone this repository: 
+# Help
 ```
-$ git clone https://github.com/milnus/Corekaburra
-```
+usage: Corekabura -ig file.gff [file.gff ...] -ip path/to/pan_genome [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05] [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int] [-l | -q] [-h]
 
-Move into the repository directory:
-```
-$ cd Corekaburra
-```
+Welcome to Corekaburra! An extension to pan-genome analyses that summarise genomic regions between core genes and segments of neighbouring core genes using gene synteny from a set of input genomes and a pan-genome folder.
 
-Python 3 is required for this software.
+Required arguments:
+  -ig file.gff [file.gff ...], --input_gffs file.gff [file.gff ...]
+                        Path to gff files used for pan-genome
+  -ip path/to/pan_genome, --input_pangenome path/to/pan_genome
+                        Path to the folder produced by Panaroo or Roary
 
-Corekaburra can be installed using `pip` in a variety of ways (`$` indicates the command line prompt):
+Analysis modifiers:
+  -cg complete_genomes.txt, --complete_genomes complete_genomes.txt
+                        text file containing names of genomes that are to be handled as complete genomes
+  -a, --no_annotate_refound
+                        Flag to toggle off the creation of new gff files, with annotation of refound genes. Only done if input pangenome is detected as coming from Panaroo
+  -cc 1.0, --core_cutoff 1.0
+                        Percentage of isolates in which a core gene must be present [default: 1.0]
+  -lc 0.05, --low_cutoff 0.05
+                        Percentage of isolates where genes found in less than these are seen as low-frequency genes [default: 0.05]
 
-1. Inside a virtual environment:
-```
-$ python3 -m venv Corekaburra_dev
-$ source Corekaburra_dev/bin/activate
-$ pip install -U /path/to/Corekaburra
-```
-2. Into the global package database for all users:
-```
-$ pip install -U /path/to/Corekaburra
-```
-3. Into the user package database (for the current user only):
-```
-$ pip install -U --user /path/to/Corekaburra
-```
+Output control:
+  -o path/to/output, --output path/to/output
+                        Path to where output files will be placed [default: current folder]
+  -p OUTPUT_PREFIX, --prefix OUTPUT_PREFIX
+                        Prefix for output files, if any is desired
+  -d, --discard_corrected
+                        Discard gff files corrected with refound genes identified by Panaroo - Only compativle if pan-genome comes from Panaroo [Default: Corrected files are kept]
 
-
-## Building the Docker container 
-
-The file `Dockerfile` contains instructions for building a Docker container for Corekaburra.
-
-If you have Docker installed on your computer you can build the container like so:
-```
-$ docker build -t Corekaburra .
-```
-See below for information about running Corekaburra within the Docker container.
-
-# General behaviour
-
-Corekaburra accepts zero or more FASTA filenames on the command line. If zero filenames are specified it reads a single FASTA file from the standard input device (stdin). Otherwise it reads each named FASTA file in the order specified on the command line. Corekaburra reads each input FASTA file, computes various statistics about the contents of the file, and then displays a tab-delimited summary of the statistics as output. Each input file produces at most one output line of statistics. Each line of output is prefixed by the input filename or by the text "`stdin`" if the standard input device was used.
-
-Corekaburra processes each FASTA file one sequence at a time. Therefore the memory usage is proportional to the longest sequence in the file.
-
-An optional command line argument `--minlen` can be supplied. Sequences with length strictly less than the given value will be ignored by Corekaburra and do not contribute to the computed statistics. By default `--minlen` is set to zero.
-
-These are the statistics computed by Corekaburra, for all sequences with length greater-than-or-equal-to `--minlen`:
-
-* *NUMSEQ*: the number of sequences in the file satisfying the minimum length requirement.
-* *TOTAL*: the total length of all the counted sequences.
-* *MIN*: the minimum length of the counted sequences.
-* *AVERAGE*: the average length of the counted sequences rounded down to an integer.
-* *MAX*: the maximum length of the counted sequences.
-
-If there are zero sequences counted in a file, the values of MIN, AVERAGE and MAX cannot be computed. In that case Corekaburra will print a dash (`-`) in the place of the numerical value. Note that when `--minlen` is set to a value greater than zero it is possible that an input FASTA file does not contain any sequences with length greater-than-or-equal-to the specified value. If this situation arises Corekaburra acts in the same way as if there are no sequences in the file.
-
-## Help message
-
-Corekaburra can display usage information on the command line via the `-h` or `--help` argument:
-
-```
-$ Corekaburra -h
-usage: Corekaburra [-h] [--minlen N] [--version] [--log LOG_FILE]
-                  [FASTA_FILE [FASTA_FILE ...]]
-
-Print fasta stats
-
-positional arguments:
-  FASTA_FILE      Input FASTA files
-
-optional arguments:
-  -h, --help      show this help message and exit
-  --minlen N      Minimum length sequence to include in stats (default 0)
-  --version       show program's version number and exit
-  --log LOG_FILE  record program progress in LOG_FILE
+Other arguments:
+  -c int, --cpu int     Give max number of CPUs [default: 1]
+  -l, --log             Record program progress in for debugging purpose
+  -q, --quiet           Only print warnings
+  -h, --help            Show help function
 ```
 
-## Reading FASTA files named on the command line
+# Inputs
+## Gff files
+Input Gff files must be included in the pan-genome gene_presence_absence.csv-style file.  
+The Gffs are also required to contain a ```##FASTA``` dividing the file into annotations at the top and the Fasta genome in the bottom of the file.  
+All coding sequences (CDS) annotated in the GFF must also carry an ```ID``` and a ```locus_tag```.  
+*** Input Gffs can be gzipped ***
 
-Corekaburra accepts zero or more named FASTA files on the command line. These must be specified following all other command line arguments. If zero files are named, Corekaburra will read a single FASTA file from the standard input device (stdin).
+## Pan-genome folder
+This is the output folder from a Roary or Panaroo run, or a folder that at minimum contains the gene_presence_absence.csv from Roary or the gene_presence_absence_roary.csv from Panaroo.
 
-There are no restrictions on the name of the FASTA files. Often FASTA filenames end in `.fa` or `.fasta`, but that is merely a convention, which is not enforced by Corekaburra. 
-
-The example below illustrates Corekaburra applied to a single named FASTA file called `file1.fa`:
+## Complete genomes
+If some input Gff are to processed as complete or closed genomes, a plain text file can be provided with the filename of these.  
+example:
 ```
-$ Corekaburra file1.fa
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-file1.fa	5264	3801855	31	722	53540
+complete_genome.gff
+complete_genome.gff.gz
+/paths/are/allowed/complete_genome.gff
+complete_genome
 ```
+All files given in the plain text file of complete genomes must be found in a given gene presence/absence file, but are not required to be among the input gffs, meaning that a single plain text file of complete genomes can be used for analysing subsets of genomes in the pan-genome.
 
-The example below illustrates Corekaburra applied to three FASTA files called `file1.fa`, `file2.fa` and `file3.fa`:
-```
-$ Corekaburra file1.fa file2.fa file3.fa
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-file1.fa	5264	3801855	31	722	53540
-file2.fa	1245	982374	8	393	928402
-file3.fa	64	8376	102	123	212	
-```
+## Adjusting cutoffs
+To comply with common practice when handling pan-genomes, the cutoff for when a pan-genome cluster (gene) is perceived as core can be changed using the ```-cc``` arguments with a ratio of gene presence required. By default, this is set to a conservative 100% presence of core gene clusters.  
+A second argument dividing accessory genes into two groups (Low frequency and Intermediate frequency) can be controlled using the ```-lc``` argument, with the ratio indicating the maximum presence of a gene cluster to be identified as having a low frequency in the pan-genome. This division of low- and intermediate frequency can be disabled by ```-lc 0```, resulting in all genes being considered as intermediate.
 
-## Reading a single FASTA file from standard input 
+# Outputs
+Corekaburra outputs multiple files ranging from summaries to more fine grained outputs. This is aimed at giving the user easy access to information, but still allowing for tailored or deep exploration. 
 
-The example below illustrates Corekaburra reading a FASTA file from standard input. In this example we have redirected the contents of a file called `file1.fa` into the standard input using the shell redirection operator `<`:
+## Core regions
+A Core region is defined by two core gene clusters flanking a stretch of the genome in at least one input genome (Gff). A core region can be described by a distance between the flanking core gene clusters, positive if nucleotides can be found between then, and negative if the two clusters overlap). A region can also be described by the number of encoded accessory genes, low- and intermediate frequency. Using core gene clusters as a reference for a region it is possible to compare the same region across genomes, and in the larger framework of the pan-genome. Additionally, with either or both the distance and number of encoded accessory genes in a region it is possible to identify regions of variability, due to horizontal genetic transfer, deletion or other genomic processes.
 
-```
-$ Corekaburra < file1.fa
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-stdin	5264	3801855	31	722	53540
-```
+```core_pair_summary.csv``` is a file that summarises the identified core regions identified across the input genomes (Gffs). Here information about occurrence and co-occurnece of each core gene pair, and individual core gene occurrences can be found. as well as, distance and accessory gene summary statistics (minimum, maximum, mean, and median).  
+This file is a good entery point to the results in most analysis, and should give a good indication of which core regions that could be of interest.
 
-Equivalently, you could achieve the same result by piping a FASTA file into Corekaburra:
+```core_core_accessory_gene_content.tsv``` gives the placement of each accessory genes identified in a core region across all genomes (Gff). It is also given if the accessory gene is identified as a low- or intermediate frequency gene.
 
-```
-$ cat file1.fa | Corekaburra
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-stdin	5264	3801855	31	722	53540
-```
+```low_frequency_gene_placement.tsv``` summarises each core region across all genomes (Gff) with the distance between core gene clusters, and the number of accessory genes found between them.
 
-## Filtering sequences by length 
+## Core segments
+The two following files are only given if any core gene is found to have more than two different core gene clusters as neighbours across all input genomes (Gff).
 
-Corekaburra provides an optional command line argument `--minlen` which causes it to ignore (not count) any sequences in the input FASTA files with length strictly less than the supplied value. 
+The file ```core_segments.csv``` containg all segments of minimum two core genes identified in a pan-genome, where the start and end of a segments is defined by core gene clusters with more than two neighbours, meaning they could be a potential breakpoint of a genomic rearrangements in at least a single input genome (Gff), or be a misassembly.    
 
-The example below illustrates Corekaburra applied to a single FASTA file called `file`.fa` with a `--minlen` filter of 1000.
-```
-$ Corekaburra --minlen 1000 file.fa
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-file1.fa	4711	2801855	1021	929	53540
-```
+```no_accessory_core_segments.csv``` divides the segments identified in ```core_segments.csv``` into potential smaller segments where core gene clusters must form regions with no accessory genes between them across all genomes. These segments could indicate potential operon structures or other stable genomic feature, that could be disturbed by insertion of accessory genes.
 
-## Logging
+## Core-less contigs
+```core_segments.csv``` gives all contigs identified in genomes (Gff) that does not contain a core gene cluster, but only accessory genes. Each contig is given by contig name, its Gff file, and number of low- and intermediate frequency genes found on the contig. 
 
-If the ``--log FILE`` command line argument is specified, Corekaburra will output a log file containing information about program progress. The log file includes the command line used to execute the program, and a note indicating which files have been processes so far. Events in the log file are annotated with their date and time of occurrence. 
+## Corrected Gffs
+A folder containing Gff files that have been corrected by annotating the genes refound by Panaroo. This folder is only expected when a pan-genome from Panaroo is provided, and the ```-a``` or ```-d``` arguments are not given as inputs.  
+**Notice this will duplicate your Gff files, meaning that ```-a``` or ```-d``` arguments should be used to avoid this, when dealing with memory issues or large datasets**
 
-```
-$ Corekaburra --log bt.log file1.fasta file2.fasta 
-```
-```
-$ cat bt.log
-2016-12-04T19:14:47 program started
-2016-12-04T19:14:47 command line: /usr/local/bin/Corekaburra --log bt.log file1.fasta file2.fasta
-2016-12-04T19:14:47 Processing FASTA file from file1.fasta
-2016-12-04T19:14:47 Processing FASTA file from file2.fasta
-```
+# For more info
+For more into on Corekaburra, its workings, inputs, outputs and more see the (wiki)[*** Wiki link ***]
 
-
-## Empty files
-
-It is possible that the input FASTA file contains zero sequences, or, when the `--minlen` command line argument is used, it is possible that the file contains no sequences of length greater-than-or-equal-to the supplied value. In both of those cases Corekaburra will not be able to compute minimum, maximum or average sequence lengths, and instead it shows output in the following way:
-
-The example below illustrates Corekaburra applied to a single FASTA file called `empty.fa` which contains zero sequences:
-```
-$ Corekaburra empty.fa
-FILENAME	NUMSEQ	TOTAL	MIN	AVG	MAX
-empty.fa	0	0	-	-	-
-```
-
-## Exit status values
-
-Corekaburra returns the following exit status values:
-
-* 0: The program completed successfully.
-* 1: File I/O error. This can occur if at least one of the input FASTA files cannot be opened for reading. This can occur because the file does not exist at the specified path, or Corekaburra does not have permission to read from the file. 
-* 2: A command line error occurred. This can happen if the user specifies an incorrect command line argument. In this circumstance Corekaburra will also print a usage message to the standard error device (stderr).
-
-# Running within the Docker container
-
-The following section describes how to run Corekaburra within the Docker container. It assumes you have Docker installed on your computer and have built the container as described above. 
-The container behaves in the same way as the normal version of Corekaburra, however there are some Docker-specific details that you must be aware of.
-
-The general syntax for running Corekaburra within Docker is as follows:
-```
-$ docker run -i Corekaburra CMD
-```
-where CMD should be replaced by the specific command line invocation of Corekaburra. Specific examples are below.
-
-Display the help message:
-```
-$ docker run -i Corekaburra Corekaburra -h
-```
-Note: it may seem strange that `Corekaburra` is mentioned twice in the command. The first instance is the name of the Docker container and the second instance is the name of the Corekaburra executable that you want to run inside the container.
-
-Display the version number:
-```
-$ docker run -i Corekaburra Corekaburra --version
-```
-
-Read from a single input FASTA file redirected from standard input:
-```
-$ docker run -i Corekaburra Corekaburra < file.FASTA 
-```
-
-Read from multuple input FASTA files named on the command line, where all the files are in the same directory. You must replace `DATA` with the absolute file path of the directory containing the FASTA files:  
-```
-$ docker run -i -v DATA:/in Corekaburra Corekaburra /in/file1.fasta /in/file2.fasta /in/file3.fasta
-```
-The argument `DATA:/in` maps the directory called DATA on your local machine into the `/in` directory within the Docker container.
-
-Logging progress to a file in the directory OUT: 
-```
-$ docker run -i -v DATA:/in -v OUT:/out Corekaburra-c Corekaburra --log /out/logfile.txt /in/file1.fasta /in/file2.fasta /in/file3.fasta
-```
-Replace `OUT` with the absolute path of the directory to write the log file. For example, if you want the log file written to the current working directory, replace `OUT` with `$PWD`.
-As above, you will also need to replace `DATA` with the absolite path to the directory containing your input FASTA files.
-
-# Testing
-
-## Unit tests
-
-You can run the unit tests for Corekaburra with the following commands:
-```
-$ cd Corekaburra/python/Corekaburra
-$ python -m unittest -v Corekaburra_test
-```
-
-## Test suite
-
-Sample test input files are provided in the `functional_tests/test_data` folder.
-```
-$ cd functional_tests/test_data
-$ Corekaburra two_sequence.fasta
-FILENAME        TOTAL   NUMSEQ  MIN     AVG     MAX
-two_sequence.fasta      2       357     120     178     237
-```
-
-Automated tests can be run using the `functional_tests/Corekaburra-test.sh` script like so:
-
-```
-$ cd functional_tests
-$ ./Corekaburra-test.sh -p Corekaburra -d test_data
-```
-
-The `-p` argument specifies the name of the program to test, the `-d` argument specifies the path of the directory containing test data.
-The script will print the number of passed and failed test cases. More detailed information about each test case can be obtained
-by requesting "verbose" output with the `-d` flag:
-
-```
-$ ./Corekaburra-test.sh -p Corekaburra -d test_data -v
-```
-
-The test script can also be run inside the Docker container:
-```
-$ docker run Corekaburra /Corekaburra/functional_tests/Corekaburra-test.sh -p Corekaburra -d /Corekaburra/functional_tests/test_data -v
-```
-
-# Common Workflow Language (CWL) wrapper
-
-The [Common Workflow Language (CWL)](https://www.commonwl.org/) specifies a portable mechanism for running software tools and workflows across many different platforms.
-We provide an example CWL wrapper for Corekaburra in the file `Corekaburra.cwl`. It invokes Corekaburra using the Docker container (described above). This wrapper allows you
-to easily incorporate Corekaburra into CWL workflows, and can be executed by any CWL-supporting workflow engine.
-
-You can test the wrapper using the `cwltool` workflow runner, which is provided by the CWL project (see the CWL documentation for how to install this on your computer).
-
-```
-$ cwltool Corekaburra.cwl --fasta_file file.fasta 
-```
 
 # Bug reporting and feature requests
+Please submit bug reports and feature requests to the issue tracker on GitHub: [Corekaburra issue tracker](https://github.com/milnus/Corekaburra/issues)
 
-Please submit bug reports and feature requests to the issue tracker on GitHub:
-
-[Corekaburra issue tracker](https://github.com/milnus/Corekaburra/issues)
+# Licence
+This program is released as open source software under the terms of [MIT License](https://raw.githubusercontent.com/milnus/Corekaburra/master/LICENSE).
