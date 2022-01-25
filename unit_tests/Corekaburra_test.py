@@ -382,7 +382,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         try:
             for file in os.listdir('TestParsingGenePresenceAbsenceFile/Corrected_gffs/'):
                 if '.gff' in file:
-                    print(file)
                     os.remove(os.path.join('TestParsingGenePresenceAbsenceFile/Corrected_gffs/', file))
         except FileNotFoundError:
             pass
