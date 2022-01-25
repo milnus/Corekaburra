@@ -1,9 +1,10 @@
-usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
-                   [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
-                   [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
-                   [-l | -q] [-h]
+usage: Corekaburra -ig file.gff [file.gff ...] -ip
+                                path/to/pan_genome [-cg complete_genomes.txt]
+                                [-a] [-cc 1.0] [-lc 0.05] [-o path/to/output]
+                                [-p OUTPUT_PREFIX] [-d] [-c int] [-l | -q]
+                                [-h] [-v]
 
-Welcome to Corekaburra!An extension to pan-genome analyses that summarise
+Welcome to Corekaburra! An extension to pan-genome analyses that summarise
 genomic regions between core genes and segments of neighbouring core genes
 using gene synteny from a set of input genomes and a pan-genome folder.
 
@@ -44,3 +45,4 @@ Other arguments:
   -l, --log             Record program progress in for debugging purpose
   -q, --quiet           Only print warnings
   -h, --help            Show help function
+  -v, --version         show program's version number and exit
