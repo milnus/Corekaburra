@@ -33,7 +33,7 @@ def read_gene_data(gene_data_file):
 
             # Check if refound gene
             if 'refound' in line[2]:
-                # Try to add the refound gene to the gene_data dict as a second key, value being the DNA sequence,
+                # Try to add the refound gene to the gene_data dict as a second key, value being the DNA sequence, name, and function in that order.
                 # if the first key (genome) is not found in gene_data dict,
                 # then construct dict for the genome and add the gene
                 try:
@@ -316,9 +316,3 @@ def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_
 
 if __name__ == '__main__':
     pass
-    # _, _, attribute_dict = read_gene_presence_absence('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_pan_split_paralogs/gene_presence_absence_roary.csv',
-    #                                                   1, 0.05)
-    #
-    # correct_gffs(['/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_genomes/GCA_008694005.gff'], '/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_pan_split_paralogs/gene_data.csv',
-    #                  "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests", attribute_dict)
-    # # genome_dict = extract_genome_fasta('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_genomes/GCA_000006785.gff')
