@@ -103,7 +103,7 @@ def segment_writer(segments, out_path, prefix):
     :param prefix: Prefix for any output files
     :return: Nothing
     """
-
+    # TODO - Maybe include presence of core genes in segment output?
     # Generate file name
     out_file_name = 'core_segments.csv'
     if prefix is not None:
@@ -119,8 +119,21 @@ def segment_writer(segments, out_path, prefix):
 
         # Write remaining rows:
         for key in sorted(segments.keys()):
+
+            # Examine if key pair is ordered
+            split_key = sorted(key.split('--'))
+            if key != f"{split_key[0]}--{split_key[1]}":
+                sorted_key = f"{split_key[0]}-{split_key[1]}"
+            else:
+                sorted_key = key.replace('--', '-')
+
+            # Examine if segment follows ordered key
+            if sorted_key.split('-')[0] != segments[key][0]:
+                segments[key] = segments[key][::-1]
+
+            # Write segment
             for index, gene in enumerate(segments[key]):
-                info = [key.replace('--', '-'), index+1, gene]
+                info = [sorted_key, index+1, gene]
 
                 writer.writerow(info)
 
