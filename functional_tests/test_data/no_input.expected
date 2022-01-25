@@ -1,7 +1,7 @@
 usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
-                                [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
-                                [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
-                                [-l | -q] [-h] [-v]
+                    [-cg complete_genomes.txt] [-a] [-cc 1.0] [-lc 0.05]
+                    [-o path/to/output] [-p OUTPUT_PREFIX] [-d] [-c int]
+                    [-l | -q] [-h] [-v]
 
 Welcome to Corekaburra! An extension to pan-genome analyses that summarise
 genomic regions between core genes and segments of neighbouring core genes
