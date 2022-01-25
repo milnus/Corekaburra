@@ -261,7 +261,7 @@ def main():
     time_end_passing_gffs = time.time()
     time_start_segments_search = time.time()
 
-    time_start = time.time()
+    time_start = time.time() # TODO - This seems like a lonely start timer?
     # Count number of unique accessory genes inserted into a core-core region across the genomes
     acc_region_count = {key: len(set(core_neighbour_low_freq[key])) for key in core_neighbour_low_freq}
     # Count number of unique low frequency genes inserted into a core-core region across the genomes
@@ -290,7 +290,7 @@ def main():
     logger.debug("Summary output")
     summary_info_writer(master_summary_info, args.output_path, args.output_prefix)
 
-    if double_edge_segements is not None:
+    if double_edge_segements:
         logger.debug("Segment output")
         segment_writer(double_edge_segements, args.output_path, args.output_prefix)
 
