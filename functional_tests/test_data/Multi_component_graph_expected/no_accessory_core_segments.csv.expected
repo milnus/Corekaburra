@@ -1,8 +1,8 @@
 Parent_segment_name,Sub_segment_name,Parent_segment_position,Sub_segment_position,Core_gene
 A-I,A-I,1,1,A
 A-I,A-I,1,2,I
-B-C,C-B,1,1,B
-B-C,C-B,1,2,C
+B-C,B-C,1,1,B
+B-C,B-C,1,2,C
 D-J,D-J,1,1,D
 D-J,D-J,1,2,J
 E-K,E-K,1,1,E
