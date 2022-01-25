@@ -162,10 +162,22 @@ def no_acc_segment_writer(no_acc_segments, out_path, prefix):
 
         # Write remaining rows:
         for key in sorted(no_acc_segments.keys()):
+
+            # Examine if key pair is ordered
+            split_key = sorted(key.split('--'))
+            if key != f"{split_key[0]}--{split_key[1]}":
+                sorted_key = f"{split_key[0]}-{split_key[1]}"
+            else:
+                sorted_key = key.replace('--', '-')
+
+            # Examine if segment follows ordered key, if not reverse the element
+            if sorted_key.split('-')[0] != no_acc_segments[key][0][0]:
+                no_acc_segments[key] = [sub_seg[::-1] for sub_seg in no_acc_segments[key]][::-1]
+
             for sub_index, subsegment in enumerate(no_acc_segments[key]):
                 sub_name = f'{subsegment[0]}-{subsegment[-1]}'
                 for index, gene in enumerate(subsegment):
-                    info = [key.replace('--', '-'), sub_name, sub_index + 1, index + 1, gene]
+                    info = [sorted_key, sub_name, sub_index + 1, index + 1, gene]
 
                     writer.writerow(info)
 

@@ -3836,12 +3836,12 @@ class TestWritingOutputFunction(unittest.TestCase):
         input_segments = {'pan_cluster_2--pan_cluster_4': ['pan_cluster_2',
                                                               'pan_cluster_3',
                                                               'pan_cluster_4'],
-                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_2',
+                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_6',
                                                               'pan_cluster_1',
-                                                              'pan_cluster_6'],
-                             'pan_cluster_4--pan_cluster_6': ['pan_cluster_4',
+                                                              'pan_cluster_2'],
+                             'pan_cluster_6--pan_cluster_4': ['pan_cluster_6',
                                                               'pan_cluster_5',
-                                                              'pan_cluster_6']}
+                                                              'pan_cluster_4']}
 
         out_path = 'TestWritingOutputFunction'
         prefix = 'test'
@@ -3858,12 +3858,13 @@ class TestWritingOutputFunction(unittest.TestCase):
         input_segments = {'pan_cluster_2--pan_cluster_4': [['pan_cluster_2'],
                                                            ['pan_cluster_3',
                                                            'pan_cluster_4']],
-                          'pan_cluster_2--pan_cluster_6': [['pan_cluster_2'],
+                          'pan_cluster_6--pan_cluster_2': [['pan_cluster_2'],
                                                            ['pan_cluster_1'],
                                                            ['pan_cluster_6']],
-                          'pan_cluster_4--pan_cluster_6': [['pan_cluster_4',
-                                                           'pan_cluster_5'],
-                                                           ['pan_cluster_6']]}
+                          'pan_cluster_6--pan_cluster_4': [['pan_cluster_6'],
+                                                           ['pan_cluster_5',
+                                                            'pan_cluster_4']
+                                                           ]}
 
         out_path = 'TestWritingOutputFunction'
         prefix = 'test'
