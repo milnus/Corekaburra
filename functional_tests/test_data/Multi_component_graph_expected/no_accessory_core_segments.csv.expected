@@ -1,0 +1,14 @@
+Parent_segment_name,Sub_segment_name,Parent_segment_position,Sub_segment_position,Core_gene
+A-I,A-I,1,1,A
+A-I,A-I,1,2,I
+B-C,C-B,1,1,C
+B-C,C-B,1,2,B
+D-J,D-J,1,1,D
+D-J,D-J,1,2,J
+E-K,E-K,1,1,E
+E-K,E-K,1,2,K
+F-G,F-G,1,1,F
+F-G,F-G,1,2,G
+H-M,H-M,1,1,H
+H-M,H-M,1,2,L
+H-M,H-M,1,3,M

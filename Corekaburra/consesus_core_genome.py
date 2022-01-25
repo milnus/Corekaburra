@@ -115,27 +115,40 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     return sub_segment_dict
 
 
-def identify_segments(core_graph, num_gffs, core_gene_dict):
+def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
     :param core_graph: Graph over core genes with weights being the number of connections between the genes
     :param num_gffs: Number of gffs inputted
+    :param core_gene_dict: Dict with keys being genomes, each genome is a dict with keys being genes and values the mapped pan-genome gene cluster.
+
     :return: Dict over stretches of core genes found in the core gene graph.
     """
+    # TODO - Describe missing parameters in docstring
+
+    # TODO - Fix Ouli's problem where the core gene graph may split into two seperat pieces, and also handle double chromosome.
+    #  - Add a chek if the core gene graph is a single component of multiple. Handle components separately. - Write test then program
+    #  - This likely require a change to the all-vs-all search of multi edge core gene search, by adding a try and expect statement maybe, or just handle each component separately.
 
     # Identify all nodes that contain more than two degrees.
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
+    # Check if multiple components in core graph, if then find single edge core_genes
+    if num_core_graph_components > 1:
+        singe_edge_nodes = [node for node, connections in core_graph.degree if connections == 1]
+    else:
+        singe_edge_nodes = []
 
     # Check if any node have multiple edges, if not then return.
-    if len(multi_edge_nodes) == 0:
+    if len(multi_edge_nodes+singe_edge_nodes) == 0:
         return None
 
     # Dict to hold connections between >2 edge nodes
     connect_dict = {}
 
     # for all nodes with >2 degrees themself, identify neighbouring nodes with >2 degrees
-    for node in multi_edge_nodes:
-        connect_dict[node] = [neighbor for neighbor in core_graph.neighbors(node) if neighbor in multi_edge_nodes]
+    for node in multi_edge_nodes+singe_edge_nodes:
+        connect_dict[node] = [neighbor for neighbor in core_graph.neighbors(node)
+                              if neighbor in multi_edge_nodes or neighbor in singe_edge_nodes]
 
     # Turn the weight into a 'distance' or number of times not found together.
     for edge in core_graph.edges(data=True):
@@ -147,8 +160,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
 
     # Go through all source and taget nodes,
     # see if a path can be found where all nodes between them have only two degrees
-    for source_node in multi_edge_nodes:
-        for target_node in multi_edge_nodes:
+    for source_node in multi_edge_nodes+singe_edge_nodes:
+        for target_node in multi_edge_nodes+singe_edge_nodes:
             if target_node != source_node:
                 # Get path (segment) from source to target
                 segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra') # bellman-ford or dijkstra
@@ -157,7 +170,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                 segment_length = len(segment)
 
                 # Get length of segment with multi nodes removed
-                two_degree_segment_length = len([node for node in segment if node not in multi_edge_nodes])
+                two_degree_segment_length = len([node for node in segment if node not in multi_edge_nodes+singe_edge_nodes])
 
                 # Check if no node between the source and target has more than two edges,
                 # if then move to record the segment/path
@@ -183,9 +196,9 @@ def identify_segments(core_graph, num_gffs, core_gene_dict):
                                             f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!")
 
     # Calculate the expected number of paths
-    total_edges_from_multi_edge_nodes = sum([connections for _, connections in core_graph.degree if connections > 2])
-    num_edges_between_multi_edge_nodes = sum([len(connect_dict[key]) for key in connect_dict])
-    expected_segment_number = int((total_edges_from_multi_edge_nodes / 2) - (num_edges_between_multi_edge_nodes / 2)) + len(multi_edge_connect_adjust)
+    total_edges_from_non_two_edge_core_genes = sum([connections for _, connections in core_graph.degree if connections > 2 or connections < 2])
+    num_edges_between_non_two_edge_core_genes = sum([len(connect_dict[key]) for key in connect_dict])
+    expected_segment_number = int((total_edges_from_non_two_edge_core_genes / 2) - (num_edges_between_non_two_edge_core_genes / 2)) + len(multi_edge_connect_adjust)
 
     # Check if less than the number of expected paths has been found,
     # if then try to identify missing paths
@@ -285,6 +298,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
     :param num_gffs: Number of inputted gff files # TODO - Should this be the minimum number determined by the input cut-off for core genes
     :param logger: Program logger
+    # TODO - Add parameters
 
     :return double_edge_segements:
     :return no_acc_segments:
@@ -294,11 +308,22 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
 
     # Construct a graph from core gene neighbours
     core_graph = construct_core_graph(core_neighbour_pairs)
+    num_core_graph_components = nx.number_connected_components(core_graph)
 
-    # Find segments in the genome between core genes with multiple neighbors
-    double_edge_segements = identify_segments(core_graph, num_gffs, core_gene_dict)
+    logger.debug(f'Identified: {num_core_graph_components} components in core genome graph')
 
-    if double_edge_segements is not None:
+    double_edge_segements = {}
+    # Identify all segments in components of core graph
+    for component in nx.connected_components(core_graph):
+        logger.debug(f'Searching component related to: {component}')
+
+        component_graph = core_graph.subgraph(component).copy()
+        return_segments = identify_segments(component_graph, num_gffs, core_gene_dict, num_core_graph_components)
+        if return_segments is not None:
+            double_edge_segements = double_edge_segements | return_segments
+
+    # if double_edge_segements is not None:
+    if double_edge_segements:
         logger.debug(f'A total of {len(double_edge_segements)} core genes were identified to have multiple neighbours.')
         logger.debug(f'Genes with multiple neighbours: {double_edge_segements}')
 

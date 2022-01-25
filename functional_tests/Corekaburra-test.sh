@@ -249,6 +249,27 @@ rm -r test_out_folder
 
 # TODO - Test that segmnets can be identified with a core-cutoff that is less than all genomes.
 
+# TODO - Test that segmnets can be identified on two 'chromosomes'/contigs that are linear and not circular.
+call_new_test "Test when core graph forms multiple components - not forming a single 'chromosome' - non circular input gffs"
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multi_component_graph_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Multi_component_graph_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Multi_component_graph_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Multi_component_graph_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Multi_component_graph_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
+
+
+# TODO Test the above but with complete genomes
+call_new_test "Test when core graph forms multiple components - not forming a single 'chromosome' - circular input gffs"
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cg complete_larger_double_chr_genome_list.txt > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multiple_component_graph_complete_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Multiple_component_graph_complete_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Multiple_component_graph_complete_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Multiple_component_graph_complete_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Multiple_component_graph_complete_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
+
 call_new_test "Test with decreased core-gene cutoff"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv core_90_cutoff_expected/core_core_accessory_gene_content.tsv.expected

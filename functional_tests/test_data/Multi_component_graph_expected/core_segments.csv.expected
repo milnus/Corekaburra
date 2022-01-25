@@ -1,0 +1,14 @@
+Segment_name,Segment_position,Core_gene
+A-I,1,A
+A-I,2,I
+B-C,1,C
+B-C,2,B
+D-J,1,D
+D-J,2,J
+E-K,1,E
+E-K,2,K
+F-G,1,F
+F-G,2,G
+H-M,1,H
+H-M,2,L
+H-M,3,M
