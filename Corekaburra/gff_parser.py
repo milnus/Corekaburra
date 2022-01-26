@@ -99,7 +99,7 @@ def record_core_core_region(core_genes, gff_name, gff_line, contig_end, previous
 
     # Check that a line from gff is provided and previous gene is not a sequence break
     if gff_line is not None and previous_core_gene_id != "Sequence_break":
-        # Check if core gene is fragmented
+        # Check if core gene is fragmented, if then change coordinates to the last part of the fragment.
         if core_genes[gff_name][previous_core_gene_id] == core_genes[gff_name][gff_line[8]]:
             previous_core_gene_id = gff_line[8]
             previous_core_gene_end_coor = int(gff_line[4])
@@ -109,17 +109,19 @@ def record_core_core_region(core_genes, gff_name, gff_line, contig_end, previous
                     core_gene_pair_distance, accessory_gene_content, low_freq_gene_content, core_gene_pairs, master_info)
 
     # Set core cluster names
-    # If no line from gff is given there is a sequence break,
+    # If no line from gff is given there is a sequence-break,
     # if it is given then set current cluster and try to find previous if not found it is a sequence break
     if gff_line is not None:
         current_core_gene_cluster = core_genes[gff_name][gff_line[8]]
         try:
             previous_core_gene_cluster = core_genes[gff_name][previous_core_gene_id]
+            core_gene_neighbours = sorted([previous_core_gene_cluster, current_core_gene_cluster])
         # Catch is previous gene was a sequence break.
         except KeyError:
             previous_core_gene_cluster = previous_core_gene_id
+            core_gene_neighbours = [previous_core_gene_cluster, current_core_gene_cluster]
 
-        core_gene_neighbours = sorted([previous_core_gene_cluster, current_core_gene_cluster])
+        # core_gene_neighbours = sorted([previous_core_gene_cluster, current_core_gene_cluster])
 
     else:
         current_core_gene_cluster = "Sequence_break"
@@ -448,7 +450,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 # Set that first core gene has been observed
                 first_core_gene = False
 
-            # Check if first gene on new contig is a core gene, if the record it.
+            # Check if first gene on new contig is a core gene, if then record it.
             elif line[8] in core_genes[gff_name]:
                 previous_core_gene_id = "Sequence_break"
 
@@ -541,15 +543,15 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
              accessory_gene_content,
              low_freq_gene_content, core_gene_pairs,
             master_info) = record_core_core_region(core_genes, gff_name, None, contig_sizes[previous_contig],
-                                                                             previous_core_gene_id,
-                                                                             previous_core_gene_end_coor,
-                                                                             acc_genes_in_region,
-                                                                             low_freq_genes_in_region,
-                                                                             core_gene_pair_distance,
-                                                                             accessory_gene_content,
-                                                                             low_freq_gene_content,
-                                                                             core_gene_pairs,
-                                                                             master_info)
+                                                   previous_core_gene_id,
+                                                   previous_core_gene_end_coor,
+                                                   acc_genes_in_region,
+                                                   low_freq_genes_in_region,
+                                                   core_gene_pair_distance,
+                                                   accessory_gene_content,
+                                                   low_freq_gene_content,
+                                                   core_gene_pairs,
+                                                   master_info)
         else:
             # Add a core-less contig if there has been accessory genes:
             coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, line[0])

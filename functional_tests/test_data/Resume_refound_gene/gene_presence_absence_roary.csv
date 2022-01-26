@@ -1,0 +1,8 @@
+,,,,,,,,,,,,,,genome_single_chrom_larger_refound,complete_genome_single_chrom_2,genome_single_chrom_larger_refound_2,genome_single_chrom_larger_rearrange
+A,,,4,4,1,,,,,,,,,tag_0001,single_comp_2_A,tag_0001,single_comp_2_A
+B,,,4,4,1,,,,,,,,,0_refound_0,single_comp_B,1_refound_1,single_comp_2_B
+C,,,4,4,1,,,,,,,,,tag_0003,single_comp_2_C,tag_0003,single_comp_2_C
+D,,,3,3,1,,,,,,,,,tag_0004,, tag_0004,single_comp_2_D
+E,,,4,4,1,,,,,,,,,tag_0005,single_comp_2_B, tag_0005,single_comp_2_E
+F,,,3,3,1,,,,,,,,,tag_0006,, tag_0006,single_comp_2_F
+G,,,2,2,1,,,,,,,,,tag_0007,, tag_0007,
