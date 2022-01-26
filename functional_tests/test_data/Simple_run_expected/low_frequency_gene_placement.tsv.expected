@@ -1,9 +1,9 @@
 Gff	Core_gene_1	Core_gene_2	Core_region_size	Core_region_accessory_count
 complete_genome_single_chrom	A	B	9	0
 complete_genome_single_chrom_2	A	B	9	0
-complete_genome_single_chrom	A	Sequence_break	0	0
-complete_genome_single_chrom_2	A	Sequence_break	0	0
 complete_genome_single_chrom	B	C	9	0
 complete_genome_single_chrom_2	B	C	9	0
 complete_genome_single_chrom	C	Sequence_break	10	0
 complete_genome_single_chrom_2	C	Sequence_break	10	0
+complete_genome_single_chrom	Sequence_break	A	0	0
+complete_genome_single_chrom_2	Sequence_break	A	0	0

@@ -9,6 +9,7 @@ import unittest
 import os
 from shutil import copyfile
 import logging
+from networkx import number_connected_components, connected_components
 # pylint: disable=no-name-in-module
 
 # import Corekaburra functions
@@ -259,6 +260,10 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
     """
     Test of the function that examines the placement of a potential core gene's placement, if it is fragmented in at least one genome.
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
 
     def tearDown(self):
         """ Class to remove created database files of gff files in tmp-folder"""
@@ -281,10 +286,13 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
+        gene_data_file = {}
+        corrected_dir = ''
 
         expected_return = [True]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
+                                                                        gene_data_file, corrected_dir, self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -302,10 +310,13 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
+        gene_data_file = {}
+        corrected_dir = ''
 
         expected_return = [False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
+                                                                        gene_data_file, corrected_dir, self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -324,10 +335,13 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
+        gene_data_file = {}
+        corrected_dir = ''
 
         expected_return = [True, False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path,
+                                                                        gene_data_file, corrected_dir, self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -340,10 +354,13 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestCheckingFragmentedGenes/Silas_the_Legionella.gff',
                       'TestCheckingFragmentedGenes/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
+        gene_data_file = {}
+        corrected_dir = ''
 
         expected_return = [False, False]
 
-        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path)
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
+                                                                        gene_data_file, corrected_dir, self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -356,6 +373,19 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
     def setUpClass(cls):
         cls.logger = logging.getLogger('test_logger.log')
         cls.logger.setLevel(logging.INFO)
+
+    def tearDown(self):
+        try:
+            os.remove('TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella_w_refound_db')
+        except FileNotFoundError:
+            pass
+
+        try:
+            for file in os.listdir('TestParsingGenePresenceAbsenceFile/Corrected_gffs/'):
+                if '.gff' in file:
+                    os.remove(os.path.join('TestParsingGenePresenceAbsenceFile/Corrected_gffs/', file))
+        except FileNotFoundError:
+            pass
 
     def test_parsing_w_100_presence(self):
         file_name = 'TestParsingGenePresenceAbsenceFile/gene_presence_absence_roary.csv'
@@ -373,6 +403,8 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
+        gene_data_file = {}
+        corrected_dir = ''
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -441,7 +473,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
             file_name, core_gene_presence,
             low_freq_gene, source_program,
-            input_gffs, tmp_folder_path, self.logger)
+            input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
 
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
@@ -463,7 +495,8 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-
+        gene_data_file = {}
+        corrected_dir = ''
 
 
         core_gene_dict, low_freq_gene_dict, \
@@ -471,7 +504,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, self.logger)
+                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -555,13 +588,15 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
+        gene_data_file = {}
+        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, self.logger)
+                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -645,13 +680,15 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
+        gene_data_file = {}
+        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, self.logger)
+                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -719,6 +756,100 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
 
+    def test_parsign_fragmented_gene_w_refound_component(self):
+        file_name = 'TestParsingGenePresenceAbsenceFile/gene_presence_absence_w_refound_fragment.csv'
+        core_gene_presence = 0.9
+        low_freq_gene = 0.1
+        source_program = 'Panaroo'
+        input_gffs = ['TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
+                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Legionella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella_w_refound.gff',
+                      'TestParsingGenePresenceAbsenceFile/Cari_the_Listeria.gff',
+                      'TestParsingGenePresenceAbsenceFile/Aman_the_Streptococcus.gff',
+                      'TestParsingGenePresenceAbsenceFile/Zion_the_Streptococcus.gff',
+                      'TestParsingGenePresenceAbsenceFile/Dina_the_Shigella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
+        tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
+        gene_data_file = {'Silas_the_Salmonella_w_refound': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTACTCTTCCGATCTAATCAAGATTGAGAGGAATT', 'gene_name', 'gene_function']}}
+        corrected_dir ='TestParsingGenePresenceAbsenceFile/Corrected_gffs'
+
+        core_gene_dict, low_freq_gene_dict, \
+        acc_gene_dict = \
+            parse_gene_presence_absence.read_gene_presence_absence(
+                file_name, core_gene_presence,
+                low_freq_gene, source_program,
+                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+
+        expected_core_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-1': "A",
+                                                                      '0_refound_0': "B",
+                                                                      'Silas_the_Salmonella_tag-1-2.2': "B",
+                                                                      'Silas_the_Salmonella_tag-1-3': 'C',
+                                                                      'Silas_the_Salmonella_tag-1-4.1': 'D',
+                                                                      'Silas_the_Salmonella_tag-1-4.2': 'D', },
+                                   'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A",
+                                                                   'Christina_the_Streptococcus_tag-2-2': "B",
+                                                                   'Christina_the_Streptococcus_tag-2-3': "C",
+                                                                   'Christina_the_Streptococcus_tag-2-4': "D"},
+                                   'Ajwa_the_Shigella': {'Ajwa_the_Shigella_tag-3-1': "A",
+                                                         'Ajwa_the_Shigella_tag-3-2': "B",
+                                                         "Ajwa_the_Shigella_tag-3-3": "C",
+                                                         "Ajwa_the_Shigella_tag-3-4": "D"},
+                                   'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-1': "A",
+                                                           'Ajwa_the_Legionella_tag-4-2': "B",
+                                                           'Ajwa_the_Legionella_tag-4-3': "C",
+                                                           'Ajwa_the_Legionella_tag-4-4': "D"},
+                                   'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-3": "C",
+                                                         "Cari_the_Listeria_tag-5-4": "D",
+                                                         'Cari_the_Listeria_tag-5-1': "A",
+                                                         'Cari_the_Listeria_tag-5-2': "B"},
+                                   'Aman_the_Streptococcus': {'Aman_the_Streptococcus_tag-6-1': "A",
+                                                              'Aman_the_Streptococcus_tag-6-2': "B",
+                                                              "Aman_the_Streptococcus_tag-6-3": "C",
+                                                              "Aman_the_Streptococcus_tag-6-4": "D"},
+                                   'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-3": "C",
+                                                              "Zion_the_Streptococcus_tag-7-4": "D",
+                                                              'Zion_the_Streptococcus_tag-7-1': "A",
+                                                              'Zion_the_Streptococcus_tag-7-2': "B"},
+                                   'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-3": "C",
+                                                         "Dina_the_Shigella_tag-8-4": "D",
+                                                         'Dina_the_Shigella_tag-8-1': "A",
+                                                         'Dina_the_Shigella_tag-8-2': "B"},
+                                   'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-3": "C",
+                                                            "Silas_the_Legionella_tag-9-4": "D",
+                                                            'Silas_the_Legionella_tag-9-1': "A",
+                                                            'Silas_the_Legionella_tag-9-2': "B"},
+                                   'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-1': "A",
+                                                          'Lilly_the_Shigella_tag-10-2': "B"}}
+
+        expected_low_freq_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag_2': "G"},
+                                       'Christina_the_Streptococcus': {},
+                                       'Ajwa_the_Shigella': {},
+                                       'Ajwa_the_Legionella': {},
+                                       'Cari_the_Listeria': {},
+                                       'Aman_the_Streptococcus': {},
+                                       'Zion_the_Streptococcus': {},
+                                       'Dina_the_Shigella': {},
+                                       'Silas_the_Legionella': {},
+                                       'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-6': "F"}}
+
+        expected_acc_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-5.1': 'E',
+                                                                     'Silas_the_Salmonella_tag-1-5.2': 'E'},
+                                  'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-5': "E"},
+                                  'Ajwa_the_Shigella': {"Ajwa_the_Shigella_tag-3-5": "E"},
+                                  'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-5': "E"},
+                                  'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-5": "E"},
+                                  'Aman_the_Streptococcus': {"Aman_the_Streptococcus_tag-6-5": "E"},
+                                  'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-5": "E"},
+                                  'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-5": "E"},
+                                  'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-5": "E"},
+                                  'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-5': "E"}}
+
+        self.assertEqual(expected_core_gene_dict, core_gene_dict)
+        self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
+        self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
+
 
 class TestReadGeneData(unittest.TestCase):
     """ Function to test the passing of gene_data.csv file from Panaroo """
@@ -761,13 +892,15 @@ class TestPrepairForReannotation(unittest.TestCase):
         self.assertEqual(input_gffs, corrected_files_return)
 
     def test_some_files_annotated(self):
-        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
+        input_gffs = ['mock/test/path/Mock_1.gff', 'mock/test/path/Mock_2.gff', 'Mocky/mock/mock/path/Mock_3.gff']
         gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
             'TestPrepairForReannotation/Mock_gene_data.csv',
             'TestPrepairForReannotation/Some_genomes',
             input_gffs, self.logger)
 
-        expected_gffs = ['Mock_2.gff', 'Mock_1_corrected.gff']
+        expected_gffs = ['mock/test/path/Mock_2.gff',
+                         'Mocky/mock/mock/path/Mock_3.gff',
+                         'TestPrepairForReannotation/Some_genomes/Corrected_gff_files/Mock_1_corrected.gff']
 
         self.assertEqual(expected_gffs, corrected_files_return)
 
@@ -778,7 +911,8 @@ class TestPrepairForReannotation(unittest.TestCase):
             'TestPrepairForReannotation/All_genomes',
             input_gffs, self.logger)
 
-        expected_gffs = ['Mock_1_corrected.gff', 'Mock_2_corrected.gff']
+        expected_gffs = ['TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_1_corrected.gff',
+                         'TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_2_corrected.gff']
 
         self.assertEqual(expected_gffs, corrected_files_return)
 
@@ -3191,8 +3325,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        num_components = number_connected_components(core_graph)
 
-        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {})
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
 
         self.assertEqual(None, return_1)
 
@@ -3220,8 +3355,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_10': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3245,8 +3381,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_1--pan_cluster_10': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3272,7 +3409,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 9}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3297,7 +3436,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_5': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3326,7 +3467,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_8': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict)
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3357,7 +3500,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_5': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict)
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3381,7 +3526,9 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 }
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {})
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3408,9 +3555,85 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_3': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict)
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, num_components)
 
         self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_multiple_component_core_graph(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_I': ['pan_cluster_A', 'pan_cluster_I'],
+                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_C', 'pan_cluster_B'],
+                             'pan_cluster_D--pan_cluster_J': ['pan_cluster_D', 'pan_cluster_J'],
+                             'pan_cluster_E--pan_cluster_K': ['pan_cluster_E', 'pan_cluster_K'],
+                             'pan_cluster_F--pan_cluster_G': ['pan_cluster_G', 'pan_cluster_F'],
+                             'pan_cluster_H--pan_cluster_M': ['pan_cluster_H', 'pan_cluster_L', 'pan_cluster_M'],
+                             'pan_cluster_Q--pan_cluster_O': ['pan_cluster_Q', 'pan_cluster_P', 'pan_cluster_O']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 1,
+                                'pan_cluster_A--pan_cluster_C': 1,
+                                'pan_cluster_A--pan_cluster_I': 2,
+                                'pan_cluster_B--pan_cluster_C': 2,
+                                'pan_cluster_B--pan_cluster_D': 1,
+                                'pan_cluster_C--pan_cluster_D': 1,
+                                'pan_cluster_D--pan_cluster_J': 2,
+                                'pan_cluster_E--pan_cluster_F': 1,
+                                'pan_cluster_E--pan_cluster_G': 1,
+                                'pan_cluster_E--pan_cluster_K': 2,
+                                'pan_cluster_F--pan_cluster_G': 2,
+                                'pan_cluster_F--pan_cluster_H': 1,
+                                'pan_cluster_G--pan_cluster_H': 1,
+                                'pan_cluster_H--pan_cluster_L': 2,
+                                'pan_cluster_L--pan_cluster_M': 2,
+                                'pan_cluster_O--pan_cluster_P': 2,
+                                'pan_cluster_P--pan_cluster_Q': 2,
+                                }
+
+        core_gene_dict = {'genome_1': {'tag_1': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_3': 'pan_cluster_C',
+                                       'tag_4': 'pan_cluster_D', 'tag_5': 'pan_cluster_E', 'tag_6': 'pan_cluster_F',
+                                       'tag_7': 'pan_cluster_G', 'tag_8': 'pan_cluster_H', 'tag_9': 'pan_cluster_I',
+                                       'tag_10': 'pan_cluster_J', 'tag_11': 'pan_cluster_K', 'tag_12': 'pan_cluster_L',
+                                       'tag_13': 'pan_cluster_M', 'tag_14': 'pan_cluster_O', 'tag_15': 'pan_cluster_P',
+                                       'tag_16': 'pan_cluster_Q'},
+                          'genome_2': {'tag_1': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_3': 'pan_cluster_C',
+                                       'tag_4': 'pan_cluster_D', 'tag_5': 'pan_cluster_E', 'tag_6': 'pan_cluster_F',
+                                       'tag_7': 'pan_cluster_G', 'tag_8': 'pan_cluster_H', 'tag_9': 'pan_cluster_I',
+                                       'tag_10': 'pan_cluster_J', 'tag_11': 'pan_cluster_K', 'tag_12': 'pan_cluster_L',
+                                       'tag_13': 'pan_cluster_M', 'tag_14': 'pan_cluster_O', 'tag_15': 'pan_cluster_P',
+                                       'tag_16': 'pan_cluster_Q'}}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+        num_components = number_connected_components(core_graph)
+
+        double_edge_segements = {}
+        for component in connected_components(core_graph):
+            component_graph = core_graph.subgraph(component).copy()
+            double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
+                                                                                                   core_gene_dict,
+                                                                                                   num_components)
+
+        # comparisons = [True for x in double_edge_segements
+        #                if
+        #                (x in expected_segments and
+        #                (expected_segments[x] == double_edge_segements[x] or expected_segments[x][::-1] == double_edge_segements[x]))
+        #                or
+        #                (f"{x.split('--')[1]}'--'{x.split('--')[0]}" in expected_segments and
+        #                (expected_segments[x] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"] or expected_segments[x][::-1] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"]))
+        #                ]
+        key_forward = [x for x in double_edge_segements if x in expected_segments]
+        key_reverse = [f"{x.split('--')[1]}--{x.split('--')[0]}" for x in double_edge_segements if f"{x.split('--')[1]}--{x.split('--')[0]}" in expected_segments]
+        expected_key_match = key_forward+key_reverse
+
+        # Test if the number of expected segments were returned
+        self.assertEqual(len(expected_key_match), len(expected_segments))
+
+        comparisons = [True for returned_key, expected_key in zip(double_edge_segements, expected_key_match)
+                       if double_edge_segements[returned_key] == expected_segments[expected_key]
+                       or
+                       double_edge_segements[returned_key] == expected_segments[expected_key][::-1]]
+
+        # Test of all returned segments look as expected
+        self.assertTrue(all(comparisons))
 
     # TODO - Chat to Andrew about this function how it works and how we can test it more - possibly just run some things to see if it breaks
 
@@ -3616,12 +3839,12 @@ class TestWritingOutputFunction(unittest.TestCase):
         input_segments = {'pan_cluster_2--pan_cluster_4': ['pan_cluster_2',
                                                               'pan_cluster_3',
                                                               'pan_cluster_4'],
-                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_2',
+                             'pan_cluster_2--pan_cluster_6': ['pan_cluster_6',
                                                               'pan_cluster_1',
-                                                              'pan_cluster_6'],
-                             'pan_cluster_4--pan_cluster_6': ['pan_cluster_4',
+                                                              'pan_cluster_2'],
+                             'pan_cluster_6--pan_cluster_4': ['pan_cluster_6',
                                                               'pan_cluster_5',
-                                                              'pan_cluster_6']}
+                                                              'pan_cluster_4']}
 
         out_path = 'TestWritingOutputFunction'
         prefix = 'test'
@@ -3638,12 +3861,13 @@ class TestWritingOutputFunction(unittest.TestCase):
         input_segments = {'pan_cluster_2--pan_cluster_4': [['pan_cluster_2'],
                                                            ['pan_cluster_3',
                                                            'pan_cluster_4']],
-                          'pan_cluster_2--pan_cluster_6': [['pan_cluster_2'],
+                          'pan_cluster_6--pan_cluster_2': [['pan_cluster_2'],
                                                            ['pan_cluster_1'],
                                                            ['pan_cluster_6']],
-                          'pan_cluster_4--pan_cluster_6': [['pan_cluster_4',
-                                                           'pan_cluster_5'],
-                                                           ['pan_cluster_6']]}
+                          'pan_cluster_6--pan_cluster_4': [['pan_cluster_6'],
+                                                           ['pan_cluster_5',
+                                                            'pan_cluster_4']
+                                                           ]}
 
         out_path = 'TestWritingOutputFunction'
         prefix = 'test'

@@ -30,10 +30,11 @@ def read_gene_data(gene_data_file):
         for line in gene_data.readlines():
             # Split read line at commas
             line = line.split(',')
+            # TODO - Scaffold (contig) name can be found in second position of a gene_data.csv line. This could possibly be used to speed things up so that the entire set of contigs isn't required for search.
 
             # Check if refound gene
             if 'refound' in line[2]:
-                # Try to add the refound gene to the gene_data dict as a second key, value being the DNA sequence,
+                # Try to add the refound gene to the gene_data dict as a second key, value being the DNA sequence, name, and function in that order.
                 # if the first key (genome) is not found in gene_data dict,
                 # then construct dict for the genome and add the gene
                 try:
@@ -69,6 +70,10 @@ def prepair_for_reannotation(gene_data_path, output_folder, gffs, logger):
     try:
         os.mkdir(corrected_gff_out_dir)
     except FileExistsError:
+        # Get path for input
+        input_path_dict = {os.path.basename(gff): os.path.split(gff)[0] for gff in gffs}
+        # input_path = os.path.split(gffs[0])[0]
+
         corrected_folder_content = os.listdir(corrected_gff_out_dir)
 
         gff_names = [os.path.basename(gff) for gff in gffs]
@@ -76,9 +81,12 @@ def prepair_for_reannotation(gene_data_path, output_folder, gffs, logger):
         corrected_files = [file for file in corrected_folder_content if
                            f'{file.split("_corrected")[0]}.gff' in gff_names]
 
+        corrected_files_w_path = [os.path.join(corrected_gff_out_dir, file) for file in corrected_files]
+
         if len(corrected_files) > 0:
             gffs = [file for file in gff_names if f'{file.replace(".gff", "")}_corrected.gff' not in corrected_files]
-            gffs = gffs + corrected_files
+            gffs = [os.path.join(input_path_dict[gff], gff) for gff in gffs]
+            gffs = gffs + corrected_files_w_path
 
     return gene_data_dict, corrected_gff_out_dir, gffs
 
@@ -316,9 +324,3 @@ def annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_
 
 if __name__ == '__main__':
     pass
-    # _, _, attribute_dict = read_gene_presence_absence('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_pan_split_paralogs/gene_presence_absence_roary.csv',
-    #                                                   1, 0.05)
-    #
-    # correct_gffs(['/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_genomes/GCA_008694005.gff'], '/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_pan_split_paralogs/gene_data.csv',
-    #                  "/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests", attribute_dict)
-    # # genome_dict = extract_genome_fasta('/Users/mjespersen/OneDrive - The University of Melbourne/Phd/Parts/Recombination_hotspots/Code/Between_core_variation/data_for_unit_tests/test_pan_genome/50_refseq_genomes/GCA_000006785.gff')

@@ -7,22 +7,24 @@ and distance between core genes. Information from neighboring core genes is furt
 gene clusters throughout the pan-genome that appear in all genomes given as input. Corekaburra is compatible with outputs 
 from standard pan-genome pipelines: [Roary](academic.oup.com/bioinformatics/article/31/22/3691/240757) and [Panaroo](genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02090-4).
 
-# When to use
+# Why and When to use Corekaburra
 Corekaburra fits into the existing frameworks of bioinformatics pipelines for pan-genomes. It does not reinvent a new pan-genome pipeline, but leverages the existing ones. Because of this, Corekaburra is build to be a natural extension to the analysis of pan-genomes by summarising information and inferring relationships in the pan-genome otherwise not easily accessible via pan-genome graphs. Other tools provide similar outputs or information, but in their own standalone pan-genome analysis framework or pipeline. Such frameworks/pipelines are [PPanGGolin](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007732) and [Panakeia](https://www.biorxiv.org/content/biorxiv/early/2021/03/02/2021.03.02.433540.full.pdf). By building on top of existing tools Corekaburra frees users from potentially cross referencing beteween pan-genomes, which in itself is a challenging task. Corekaburra's workflow also allows it to be extended to any pan-genome tool, with an output similar to the gene_presence_absence.csv produced by Roary, making Corekaburra versatile for future implementations.
 
-# Why use Corekaburra?
-
-
 # Installation
-Corekaburra can be installed via pip and conda. A Docker container is also available.
+Corekaburra is writen in Python 3.9, and can be installed via pip and conda. A Docker container is also available.
 ## pip
-```Comming soon```
+```pip install corekaburra```
 
-## Conda
+## building a Conda environment from scratch
+```conda create -n Corekaburra python==3.9```
+```conda activate Corekaburra```
+```pip install corekaburra```
+
+## Conda install
 ```Comming```
 
 ## Docker
-See the Wiki for more information (*** Link to wiki's Docker page ***)[]
+See the (Wiki for more information)[https://github.com/milnus/Corekaburra/wiki/Docker.md]
 
 # Help
 ```
@@ -114,7 +116,7 @@ A folder containing Gff files that have been corrected by annotating the genes r
 **Notice this will duplicate your Gff files, meaning that ```-a``` or ```-d``` arguments should be used to avoid this, when dealing with memory issues or large datasets**
 
 # For more info
-For more into on Corekaburra, its workings, inputs, outputs and more see the (wiki)[*** Wiki link ***]
+For more into on Corekaburra, its workings, inputs, outputs and more see the (wiki)[https://github.com/milnus/Corekaburra/wiki]
 
 
 # Bug reporting and feature requests

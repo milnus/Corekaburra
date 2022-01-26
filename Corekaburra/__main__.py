@@ -146,7 +146,7 @@ def main():
     inital_check_time_start = time.time()
 
     # get arguments from the commandline
-    args = get_commandline_arguments(sys.argv[1:])
+    args = get_commandline_arguments(sys.argv[1:], PROGRAM_VERSION)
 
     # Construct output folder
     try:
@@ -195,21 +195,23 @@ def main():
 
     ## Read in gene presence absence file
     time_start_read_files = time.time()
+    # Prepair folder for reannotated genes and examine if any are already present
+    if source_program == "Panaroo" and args.annotate:
+        gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
+                                                                                  args.input_gffs, logger)
+    else:
+        gene_data_dict = None
+        corrected_dir = None
+
     # TODO - ATM the column with presence of gene in genomes is used to define what is core and not. Is it better to use the number of input gffs instead?
     #   - There are upsides to the current. You can use the same genome to find segments for two different populations with in the dataset using the same reference of core-genes
     #   - Making it depend on the input is not viable for comparing runs, even within the same pan-genome, when using different sets of gff files.
     # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
-                                                                         args.input_gffs, tmp_folder_path, logger)
+                                                                         args.input_gffs, tmp_folder_path,
+                                                                         gene_data_dict, corrected_dir, logger)
 
-    # Prepair folder for reannotated genes and examine if any are already present
-    if source_program == "Panaroo" and args.annotate:
-        gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
-                                                                                   args.input_gffs, logger)
-    else:
-        gene_data_dict = None
-        corrected_dir = None
 
     time_end_read_files = time.time()
     time_start_passing_gffs = time.time()
@@ -259,7 +261,7 @@ def main():
     time_end_passing_gffs = time.time()
     time_start_segments_search = time.time()
 
-    time_start = time.time()
+    time_start = time.time() # TODO - This seems like a lonely start timer?
     # Count number of unique accessory genes inserted into a core-core region across the genomes
     acc_region_count = {key: len(set(core_neighbour_low_freq[key])) for key in core_neighbour_low_freq}
     # Count number of unique low frequency genes inserted into a core-core region across the genomes
@@ -288,7 +290,7 @@ def main():
     logger.debug("Summary output")
     summary_info_writer(master_summary_info, args.output_path, args.output_prefix)
 
-    if double_edge_segements is not None:
+    if double_edge_segements:
         logger.debug("Segment output")
         segment_writer(double_edge_segements, args.output_path, args.output_prefix)
 

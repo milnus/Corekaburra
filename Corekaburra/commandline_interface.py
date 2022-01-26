@@ -4,15 +4,16 @@ import sys
 EXIT_COMMAND_LINE_ERROR = 2
 
 
-def get_commandline_arguments(args):
+def get_commandline_arguments(args, version):
     """
     Function that takes the input given to the commandline and passes it.
     will check for no input and '-help'
     :param args: List of input arguments given to the commandline
+    :param version: Version of Corekaburra
     :return: matched argument object for passing in main function.
     """
     # Set up parser
-    parser = argparse.ArgumentParser(description='Welcome to Corekaburra!'
+    parser = argparse.ArgumentParser(description='Welcome to Corekaburra! '
                                                  'An extension to pan-genome analyses that summarise genomic regions '
                                                  'between core genes and segments of neighbouring core genes using '
                                                  'gene synteny from a set of input genomes and a pan-genome folder.',
@@ -124,7 +125,10 @@ def get_commandline_arguments(args):
                           action='help',
                           help='Show help function')
 
-
+    rem_args.add_argument('-v',
+                          '--version',
+                          action='version',
+                          version=f'Corekaburra {version}')
 
     # Check if any thing is given as input otherwise warn and print help
     if len(args) < 1:
@@ -137,3 +141,7 @@ def get_commandline_arguments(args):
     args = parser.parse_args(args)
 
     return args
+
+
+if __name__ == '__main__':
+    get_commandline_arguments([], 666)
