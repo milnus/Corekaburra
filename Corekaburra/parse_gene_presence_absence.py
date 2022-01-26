@@ -53,7 +53,6 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
                             if f"{gff}_corrected" in [os.path.basename(gff_name),
                                                       os.path.basename(gff_name).rsplit('.', 1)[0],
                                                       os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
-                print('HERE')
             except IndexError:
                 pass
 
@@ -116,14 +115,13 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
             region = (first_fragment_contig, min_frag_coor, max_frag_coor)
 
             # Find all features that are completely within the region
-            region_features = gff_database.region(region=region, completely_within=True, featuretype=['ID'])
+            region_features = gff_database.region(region=region, completely_within=True)
 
             # Find if some pieces are refound and change old_locus_tag to ID
             refound_pieces = [[i, fragment_piece] for i, fragment_piece in enumerate(fragment_pieces) if 'refound' in fragment_piece]
             if refound_pieces:
                 for i, piece in refound_pieces:
                     fragment_pieces[i] = gff_database[piece]['ID'][0]
-
             # find all genes that are not part of the fragmented gene
             region_locus_tags = set([feature[8]['locus_tag'][0] for feature in region_features])
             excess_genes = region_locus_tags.difference(fragment_pieces)

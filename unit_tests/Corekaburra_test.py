@@ -892,13 +892,15 @@ class TestPrepairForReannotation(unittest.TestCase):
         self.assertEqual(input_gffs, corrected_files_return)
 
     def test_some_files_annotated(self):
-        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
+        input_gffs = ['mock/test/path/Mock_1.gff', 'mock/test/path/Mock_2.gff', 'Mocky/mock/mock/path/Mock_3.gff']
         gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
             'TestPrepairForReannotation/Mock_gene_data.csv',
             'TestPrepairForReannotation/Some_genomes',
             input_gffs, self.logger)
 
-        expected_gffs = ['Mock_2.gff', 'Mock_1_corrected.gff']
+        expected_gffs = ['mock/test/path/Mock_2.gff',
+                         'Mocky/mock/mock/path/Mock_3.gff',
+                         'TestPrepairForReannotation/Some_genomes/Corrected_gff_files/Mock_1_corrected.gff']
 
         self.assertEqual(expected_gffs, corrected_files_return)
 
@@ -909,7 +911,8 @@ class TestPrepairForReannotation(unittest.TestCase):
             'TestPrepairForReannotation/All_genomes',
             input_gffs, self.logger)
 
-        expected_gffs = ['Mock_1_corrected.gff', 'Mock_2_corrected.gff']
+        expected_gffs = ['TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_1_corrected.gff',
+                         'TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_2_corrected.gff']
 
         self.assertEqual(expected_gffs, corrected_files_return)
 

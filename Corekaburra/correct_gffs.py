@@ -71,7 +71,8 @@ def prepair_for_reannotation(gene_data_path, output_folder, gffs, logger):
         os.mkdir(corrected_gff_out_dir)
     except FileExistsError:
         # Get path for input
-        input_path = os.path.split(gffs[0])[0]
+        input_path_dict = {os.path.basename(gff): os.path.split(gff)[0] for gff in gffs}
+        # input_path = os.path.split(gffs[0])[0]
 
         corrected_folder_content = os.listdir(corrected_gff_out_dir)
 
@@ -84,7 +85,7 @@ def prepair_for_reannotation(gene_data_path, output_folder, gffs, logger):
 
         if len(corrected_files) > 0:
             gffs = [file for file in gff_names if f'{file.replace(".gff", "")}_corrected.gff' not in corrected_files]
-            gffs = [os.path.join(input_path, gff) for gff in gffs]
+            gffs = [os.path.join(input_path_dict[gff], gff) for gff in gffs]
             gffs = gffs + corrected_files_w_path
 
     return gene_data_dict, corrected_gff_out_dir, gffs
