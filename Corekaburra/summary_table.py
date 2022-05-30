@@ -1,4 +1,5 @@
 import numpy as np
+# pylint: disable=E4702
 
 try:
     from Corekaburra.consesus_core_genome import count_gene_co_occurrence
