@@ -1098,9 +1098,6 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
         with self.assertRaises(SystemExit):
             correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
-    # TODO - Add test for annotating of second contig
-
-
 class TestExtractGenomeFasta(unittest.TestCase):
     def test_extract_genome_fasta(self):
         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
@@ -2999,8 +2996,6 @@ class TestSegmentingMockGffs(unittest.TestCase):
         self.assertEqual(master_info, return_master_info)
         self.assertEqual(coreless_contigs, return_coreless_contigs)
 
-    def test_something(self): # TODO - What other wired and wonderfull examples can we come up with?
-        pass
 
 
 class TestMergingDicts(unittest.TestCase):
@@ -3309,6 +3304,27 @@ class TestGeneCoOccurrence(unittest.TestCase):
         self.assertEqual(a_occurrence, individual_occurrences["A"])
         self.assertEqual(b_occurrence, individual_occurrences["B"])
 
+
+# class TestMultiProcessing(unittest.TestCase):
+#     @classmethod
+#     def setUpClass(cls):
+#         cls.logger = logging.getLogger('test_logger.log')
+#         cls.logger.setLevel(logging.INFO)
+#
+#     def test_ttt(self):
+#         core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
+#                                 'pan_cluster_2--pan_cluster_3': 10,
+#                                 'pan_cluster_4--pan_cluster_5': 10,
+#                                 'pan_cluster_5--pan_cluster_6': 10,
+#                                 'pan_cluster_1--Sequence_break': 10,
+#                                 'pan_cluster_3--Sequence_break': 10,
+#                                 'pan_cluster_4--Sequence_break': 10,
+#                                 'pan_cluster_6--Sequence_break': 10}
+#
+#         combined_acc_gene_count = {'pan_cluster_1--pan_cluster_6': 0, 'pan_cluster_5--pan_cluster_6': 1,
+#                                    'pan_cluster_2--pan_cluster_3': 0, 'pan_cluster_3--pan_cluster_4': 0}
+#
+#         consesus_core_genome.determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, 10, {}, 1, self.logger)
 
 class TestSegmentationIdentification(unittest.TestCase):
     """
@@ -3632,8 +3648,6 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         # Test of all returned segments look as expected
         self.assertTrue(all(comparisons))
-
-    # TODO - Chat to Andrew about this function how it works and how we can test it more - possibly just run some things to see if it breaks
 
 
 class TestNoAccessorySegmentIdentifcation(unittest.TestCase):

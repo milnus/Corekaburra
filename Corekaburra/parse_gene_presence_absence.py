@@ -14,7 +14,6 @@ try:
 except ModuleNotFoundError:
     from exit_with_error import exit_with_error
 
-
 def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     """
     Function to add a gene to a given dictionary
@@ -25,7 +24,7 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     :return: returns the dict to be used further
     """
     if ';' in gene:
-        for gene_part in gene.split(';'):  # TODO - NOTE! HERE BOTH GENES IN A PAIR IS ADDED as separate key/value-pairs
+        for gene_part in gene.split(';'):
             main_dict[genome][gene_part] = pan_gene_name
     else:
         main_dict[genome][gene] = pan_gene_name
@@ -42,9 +41,9 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
     :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
     """
     # Check if any refound genes are in fragments to be checked, if then reannotate the genes before checking:
-    refound_fregments = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
-    if refound_fregments:
-        for i, gene_gff in refound_fregments:
+    refound_genes = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
+    if refound_genes:
+        for i, gene_gff in refound_genes:
             gene, gff = gene_gff
             gff_name = None
 
@@ -135,7 +134,6 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
             fragments_close.append(False)
 
     return fragments_close
-    # TODO - find out what the non-closed file problem is here! Can be seen when running unit-tests.
 
 
 def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, gene_data_dict, corrected_dir, logger):
@@ -219,7 +217,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
 
                 # Check that each annotation is neighboring the other annotation.
                 fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict,
-                                                        corrected_dir, logger) # TODO - If a core gene is found to be made up of fragments not places close enough (With something in between) should this then not be subtracted from the core gene count? - How would this be handled if there is a gff that is not given as input?
+                                                        corrected_dir, logger)
                 # Check if gene was found to be a core gene
                 if all(fragments_close):
                     # Add the gene to the annotation dict

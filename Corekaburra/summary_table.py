@@ -58,12 +58,12 @@ def calculate_n_create_summaries(master_info, core_gene_dict):
                                    pair_occurrence,
                                    occurrence_dict[core_pair][gene_list[0]],
                                    occurrence_dict[core_pair][gene_list[1]],
-                                   occurrence_dict[core_pair]['co_occurrence'], # TODO - Add neighbour ratio?
+                                   occurrence_dict[core_pair]['co_occurrence'],
                                    min_values[0], max_values[0],
                                    round(mean_values[0], 1), round(median_values[0], 1),
                                    min_values[1], max_values[1],
                                    round(mean_values[1], 1), round(median_values[1], 1)
-                                   ] # TODO - at the moment all sequence breaks are reported as zero and gives a co-occurrence equal to zero - is this acceptable?
+                                   ]
 
     return summary_dict
 
