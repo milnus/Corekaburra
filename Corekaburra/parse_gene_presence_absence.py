@@ -2,12 +2,17 @@ import os
 import csv
 from math import ceil, floor
 import gffutils
+EXIT_GFF_REANNOTATION_ERROR = 3
 
 try:
     from Corekaburra.correct_gffs import annotate_refound_genes
 except ModuleNotFoundError:
     from correct_gffs import annotate_refound_genes
 
+try:
+    from Corekaburra.exit_with_error import exit_with_error
+except ModuleNotFoundError:
+    from exit_with_error import exit_with_error
 
 
 def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
@@ -37,17 +42,34 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
     :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
     """
     # Check if any refound genes are in fragments to be checked, if then reannotate the genes before checking:
-    refound_genes = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
-    if refound_genes:
-        for i, gene_gff in refound_genes:
-            # TODO Check if corrected genome is already made if then skip and just correct genome to look in.
+    refound_fregments = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
+    if refound_fregments:
+        for i, gene_gff in refound_fregments:
             gene, gff = gene_gff
-            gff_name = [gff_name for gff_name in input_gffs
-                        if gff in [os.path.basename(gff_name),
-                                   os.path.basename(gff_name).rsplit('.', 1)[0],
-                                   os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
+            gff_name = None
 
-            fragment_info[i][1] = annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_dir, logger)
+            try:
+                gff_name = [gff_name for gff_name in input_gffs
+                            if f"{gff}_corrected" in [os.path.basename(gff_name),
+                                                      os.path.basename(gff_name).rsplit('.', 1)[0],
+                                                      os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
+            except IndexError:
+                pass
+
+            if gff_name is None:
+                try:
+                    gff_name = [gff_name for gff_name in input_gffs
+                                if gff in [os.path.basename(gff_name),
+                                           os.path.basename(gff_name).rsplit('.', 1)[0],
+                                           os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
+                except IndexError:
+                    exit_with_error(EXIT_GFF_REANNOTATION_ERROR,
+                                    f'A problem occurred when trying to find a file for reannotation, when passing the '
+                                    f'gene_presence_absence_roary.csv! GFF: {gff}, Gene: {gene}')
+
+                gff_name = annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_dir, logger)
+
+            fragment_info[i][1] = gff_name
 
     fragments_close = []
     for fragment in fragment_info:
@@ -98,9 +120,8 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
             # Find if some pieces are refound and change old_locus_tag to ID
             refound_pieces = [[i, fragment_piece] for i, fragment_piece in enumerate(fragment_pieces) if 'refound' in fragment_piece]
             if refound_pieces:
-                for piece in refound_pieces:
-                    fragment_pieces[i] = gff_database[piece[1]]['ID'][0]
-
+                for i, piece in refound_pieces:
+                    fragment_pieces[i] = gff_database[piece]['ID'][0]
             # find all genes that are not part of the fragmented gene
             region_locus_tags = set([feature[8]['locus_tag'][0] for feature in region_features])
             excess_genes = region_locus_tags.difference(fragment_pieces)
@@ -199,7 +220,6 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 # Check that each annotation is neighboring the other annotation.
                 fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict,
                                                         corrected_dir, logger) # TODO - If a core gene is found to be made up of fragments not places close enough (With something in between) should this then not be subtracted from the core gene count? - How would this be handled if there is a gff that is not given as input?
-
                 # Check if gene was found to be a core gene
                 if all(fragments_close):
                     # Add the gene to the annotation dict
