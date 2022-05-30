@@ -1152,7 +1152,29 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
 
-        return_generator = gff_parser.parse_gff(input_gff_file)
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
+
+        for expected, generated in zip(expected_output, return_generator):
+            self.assertEqual(expected, generated)
+
+    def test_gff_generator_generation_gzipped_input(self):
+        input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella.gff.gz'
+
+        expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
+                           ['contig_1', '.', 'CDS', '100', '190', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.1'],
+                           ['contig_1', '.', 'CDS', '200', '290', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.2'],
+                           ['contig_1', '.', 'CDS', '300', '390', '.', '.', '.', 'Silas_the_Salmonella_tag-1-3'],
+                           ['contig_1', '.', 'CDS', '400', '490', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.1'],
+                           ['contig_1', '.', 'CDS', '500', '590', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.2'],
+                           ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
+                           ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
+                           ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
+
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
@@ -1171,7 +1193,9 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"],
                            ['contig_1', 'Panaroo', 'CDS', '900', '1000', '.', '+', '0', 'refound_gene_1']]
 
-        return_generator = gff_parser.parse_gff(input_gff_file)
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)

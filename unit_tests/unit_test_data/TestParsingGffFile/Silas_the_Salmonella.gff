@@ -1,3 +1,4 @@
+##gff-version 3
 contig_1	.	CDS	1	90	.	.	.	ID=Silas_the_Salmonella_tag-1-1;locus_tag=Silas_the_Salmonella_tag-1-1
 contig_1	.	CDS	100	190	.	.	.	ID=Silas_the_Salmonella_tag-1-2.1;locus_tag=Silas_the_Salmonella_tag-1-2.1
 contig_1	.	CDS	200	290	.	.	.	ID=Silas_the_Salmonella_tag-1-2.2;locus_tag=Silas_the_Salmonella_tag-1-2.2

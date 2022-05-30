@@ -1,4 +1,5 @@
 import os
+import gzip
 
 try:
     from Corekaburra.correct_gffs import annotate_refound_genes
@@ -8,31 +9,44 @@ except ModuleNotFoundError:
 
 def parse_gff(input_file):
     """
-    Read a gff file and return it as a generator object that return all line containing CDS
+    Try to read a GFF file as gzipped then normal
+    pass it to the parser and return it as a generator object that return all line containing CDS.
+    Break whenever the fasta sequence is reached.
     :param input_file: File-path to a given gff file to be processed
-    :return: Generator object returning CDS from a gff file
+    :return: line from generator object returning CDS from a gff file
     """
-    with open(input_file, 'r') as gff_file:
-        for line in gff_file:
-            if "##FASTA" in line:
-                break
-            if "#" not in line and 'CDS' in line:
-                # Strip line for newline and split columns into list
-                line = line.strip()
-                line = line.split("\t")
 
-                # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
-                if "old_locus_tag=" in line[8]:
-                    gene_id = line[8][line[8].find('old_locus_tag'):]
-                    if ';' in gene_id:
-                        gene_id = gene_id[:gene_id.find(';')]
-                else:
-                    gene_id = line[8][line[8].find('ID'):line[8].find(';')]
+    # Open input file as if it was gzipped
+    open_file = gzip.open(input_file, 'rt')
+    try:
+        # Test if gzipped by reading line
+        open_file.readline()
+    except (OSError, gzip.BadGzipFile):
+        # Open inout as if normal
+        open_file = open(input_file, 'r')
 
-                # Remove equal sign from id and add as identifier for the returned gff line
-                gene_id = gene_id[gene_id.find('=') + 1:]
-                line[8] = gene_id
-                yield line
+    for line in open_file:
+        if "##FASTA" in line:
+            # FASTA found - close file and end loop
+            open_file.close()
+            break
+        if "#" not in line and 'CDS' in line:
+            # Strip line for newline and split columns into list
+            line = line.strip()
+            line = line.split("\t")
+
+            # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
+            if "old_locus_tag=" in line[8]:
+                gene_id = line[8][line[8].find('old_locus_tag'):]
+                if ';' in gene_id:
+                    gene_id = gene_id[:gene_id.find(';')]
+            else:
+                gene_id = line[8][line[8].find('ID'):line[8].find(';')]
+
+            # Remove equal sign from id and add as identifier for the returned gff line
+            gene_id = gene_id[gene_id.find('=') + 1:]
+            line[8] = gene_id
+            yield line
 
 
 def get_contig_lengths(input_file):
@@ -591,6 +605,7 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
             input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
 
     gff_generator = parse_gff(input_gff_file)
+
     return_data = segment_gff_content(gff_generator=gff_generator,
                                       gff_path=input_gff_file,
                                       core_genes=core_genes,
