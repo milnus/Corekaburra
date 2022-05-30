@@ -119,6 +119,7 @@ def init_logging(debug_log, quiet, out_path):
     # Log command-line argument and debug line for Corekaburra start
     file_logger.info(f"command line: {' '.join(sys.argv)}")
 
+
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     file_logger.addHandler(stream_handler)

@@ -14,6 +14,7 @@ try:
 except ModuleNotFoundError:
     from exit_with_error import exit_with_error
 
+
 def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     """
     Function to add a gene to a given dictionary

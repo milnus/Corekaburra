@@ -1,5 +1,6 @@
 import networkx as nx
 import concurrent.futures
+
 try:
     from Corekaburra.exit_with_error import exit_with_error
 except ModuleNotFoundError:
@@ -116,6 +117,7 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     return sub_segment_dict
 
 
+
 def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components, logger):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
@@ -164,6 +166,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
                 # Get path (segment) from source to target
                 segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
 
+
                 # Get length of path
                 segment_length = len(segment)
 
@@ -193,6 +196,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
                         if double_edge_segements[source_target_name] != segment[::-1]:
                             exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
                                             f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!", logger)
+
 
     # Calculate the expected number of paths
     total_edges_from_non_two_edge_core_genes = sum([connections for _, connections in core_graph.degree if connections > 2 or connections < 2])
@@ -290,6 +294,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
 
 
 def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict, max_cpus, logger):
+
     """
     Function to be called from main that collects the functions for determining core segments in pan-genome
 
@@ -327,6 +332,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
             if return_segments is not None:
                 double_edge_segements = double_edge_segements | return_segments
 
+
     # if double_edge_segements is not None:
     if double_edge_segements:
         logger.debug(f'A total of {len(double_edge_segements)} core genes were identified to have multiple neighbours.')
@@ -343,7 +349,6 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
         no_acc_segments = None
 
     return double_edge_segements, no_acc_segments, core_graph
-
 
 if __name__ == '__main__':
     pass

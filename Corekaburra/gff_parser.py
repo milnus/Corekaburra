@@ -395,7 +395,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                     # acc_genes_in_region.append(acc_genes[gff_name][line[8]])
                     try:
                         acc_genes_in_region.append(acc_genes[gff_name][line[8]])
-                    except KeyError:
+                    except KeyError: # TODO - WHAT DOES THIS DO? - Likely search for fragment within composite, as fragments were previously storred in their composit strings.
                         gene_key = [key for key in acc_genes[gff_name].keys() if line[8] in key]
                         if len(gene_key) > 1:
                             acc_genes_in_region.append(acc_genes[gff_name][gene_key][0])
@@ -607,7 +607,6 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
             input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
 
     gff_generator = parse_gff(input_gff_file)
-
     return_data = segment_gff_content(gff_generator=gff_generator,
                                       gff_path=input_gff_file,
                                       core_genes=core_genes,
