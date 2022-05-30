@@ -1,4 +1,5 @@
 import networkx as nx
+import concurrent.futures
 try:
     from Corekaburra.exit_with_error import exit_with_error
 except ModuleNotFoundError:
@@ -115,7 +116,7 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     return sub_segment_dict
 
 
-def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components):
+def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components, logger):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
     :param core_graph: Graph over core genes with weights being the number of connections between the genes
@@ -126,10 +127,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
     """
     # TODO - Describe missing parameters in docstring
 
-    # TODO - Fix Ouli's problem where the core gene graph may split into two seperat pieces, and also handle double chromosome.
-    #  - Add a chek if the core gene graph is a single component of multiple. Handle components separately. - Write test then program
-    #  - This likely require a change to the all-vs-all search of multi edge core gene search, by adding a try and expect statement maybe, or just handle each component separately.
-
+    # TODO - Handle multiple chromosomes
     # Identify all nodes that contain more than two degrees.
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
     # Check if multiple components in core graph, if then find single edge core_genes
@@ -194,7 +192,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
                     else:
                         if double_edge_segements[source_target_name] != segment[::-1]:
                             exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
-                                            f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!")
+                                            f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!", logger)
 
     # Calculate the expected number of paths
     total_edges_from_non_two_edge_core_genes = sum([connections for _, connections in core_graph.degree if connections > 2 or connections < 2])
@@ -291,13 +289,13 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
     return double_edge_segements
 
 
-def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict, logger):
+def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict, max_cpus, logger):
     """
     Function to be called from main that collects the functions for determining core segments in pan-genome
 
     :param core_neighbour_pairs: Dict of the number of times core pairs have been detected
     :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
-    :param num_gffs: Number of inputted gff files # TODO - Should this be the minimum number determined by the input cut-off for core genes
+    :param num_gffs: Number of inputted gff files
     :param logger: Program logger
     # TODO - Add parameters
 
@@ -315,13 +313,19 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
 
     double_edge_segements = {}
     # Identify all segments in components of core graph
-    for component in nx.connected_components(core_graph):
-        logger.debug(f'Searching component related to: {component}')
+    #for component in nx.connected_components(core_graph):
 
-        component_graph = core_graph.subgraph(component).copy()
-        return_segments = identify_segments(component_graph, num_gffs, core_gene_dict, num_core_graph_components)
-        if return_segments is not None:
-            double_edge_segements = double_edge_segements | return_segments
+    logger.debug(f'Searching components of core gene graph')
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
+        return_object = [executor.submit(identify_segments,
+                                         core_graph.subgraph(component).copy(), num_gffs,
+                                         core_gene_dict, num_core_graph_components, logger)
+                         for component in nx.connected_components(core_graph)]
+     #       identify_segments(core_graph.subgraph(component).copy(), num_gffs, core_gene_dict, num_core_graph_components, logger)
+        for output in concurrent.futures.as_completed(return_object):
+            return_segments = output.result()
+            if return_segments is not None:
+                double_edge_segements = double_edge_segements | return_segments
 
     # if double_edge_segements is not None:
     if double_edge_segements:
