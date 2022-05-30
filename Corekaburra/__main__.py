@@ -193,7 +193,7 @@ def main():
     # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
-                                                                         args.input_gffs, tmp_folder_path,
+                                                                         args.input_gffs, tmp_folder_path.name,
                                                                          gene_data_dict, corrected_dir, logger)
 
 
@@ -219,9 +219,8 @@ def main():
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu) as executor:
         logger.info(f"------Start core region identification of given gff files-----\n")
         logger.info(f'{len(args.input_gffs)} GFF files to process')
-
         results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes,
-                                   source_program, args.annotate, gene_data_dict, corrected_dir, tmp_folder_path, args.discard_gffs, logger)
+                                   source_program, args.annotate, gene_data_dict, corrected_dir, tmp_folder_path.name, args.discard_gffs, logger)
                    for gff in args.input_gffs]
 
         for output in concurrent.futures.as_completed(results):
