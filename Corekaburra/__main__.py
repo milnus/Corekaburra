@@ -118,18 +118,8 @@ def init_logging(debug_log, quiet, out_path):
     # Log command-line argument and debug line for Corekaburra start
     file_logger.info(f"command line: {' '.join(sys.argv)}")
 
-    return file_logger
-
-
-def stream_logging(file_logger):
-    """
-    Function adding in stream logging following initial logging
-    :param file_logger: Logger object
-    :return: Logger object with added stream logging
-    """
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
-
     file_logger.addHandler(stream_handler)
 
     file_logger.info('\n----------------------Processing started----------------------\n')
@@ -156,14 +146,10 @@ def main():
         pass
 
     # Run initialisation of logger:
-    logger = init_logging(args.log, args.quiet, args.output_path) # TODO - if not dependency check is done then it should be possible to add the stream logger following the logging of the command line in the initial logging function.
-    logger = stream_logging(logger)
+    logger = init_logging(args.log, args.quiet, args.output_path)
 
     # Check that low-frequency cutoff and core cutoff are as expected
     check_cutoffs(args.low_cutoff, args.core_cutoff, logger)
-
-    # TODO - Make Corekaburra take gzipped inputs
-    # TODO - Add so that a single gff file can only be given as input once and not multiple times?
 
     # Check the presence of provided complete genomes among input GFFs
     if args.comp_genomes is not None:
@@ -175,11 +161,13 @@ def main():
     source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan, logger)
 
     # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
+    # TODO Likely not needed anymore with new implementations in Panaroo
     if args.annotate and source_program == 'Panaroo':
         gene_data_path = check_gene_data(args.input_pan, logger)
     else:
         gene_data_path = None
 
+    # Check that all GFF files given can be found in the pan-genome
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path, logger)
 
     # Construct temporary folder:
