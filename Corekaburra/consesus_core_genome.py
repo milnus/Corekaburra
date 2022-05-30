@@ -164,7 +164,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
         for target_node in multi_edge_nodes+singe_edge_nodes:
             if target_node != source_node:
                 # Get path (segment) from source to target
-                segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra') # bellman-ford or dijkstra
+                segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
 
                 # Get length of path
                 segment_length = len(segment)
@@ -181,6 +181,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
                         if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrences:
                             continue
                         else:
+                            # Check if segment has been added in opposite direction, if not they add it to be further examined
                             if all([x != segment[::-1] for x in multi_edge_connect_adjust]): multi_edge_connect_adjust.append(segment)
 
                     # Construct name for path
@@ -337,7 +338,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
         logger.debug(f'No segments can be identified in given pan-genome\n')
         no_acc_segments = None
 
-    return double_edge_segements, no_acc_segments
+    return double_edge_segements, no_acc_segments, core_graph
 
 
 if __name__ == '__main__':

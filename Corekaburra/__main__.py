@@ -17,6 +17,7 @@ import os
 import logging
 import time
 import concurrent.futures
+from networkx import write_gml
 
 try:
     from Corekaburra.commandline_interface import get_commandline_arguments
@@ -196,6 +197,7 @@ def main():
     ## Read in gene presence absence file
     time_start_read_files = time.time()
     # Prepair folder for reannotated genes and examine if any are already present
+    # TODO - likely not required after new implementations in Panaroo.
     if source_program == "Panaroo" and args.annotate:
         gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
                                                                                   args.input_gffs, logger)
@@ -203,10 +205,8 @@ def main():
         gene_data_dict = None
         corrected_dir = None
 
-    # TODO - ATM the column with presence of gene in genomes is used to define what is core and not. Is it better to use the number of input gffs instead?
-    #   - There are upsides to the current. You can use the same genome to find segments for two different populations with in the dataset using the same reference of core-genes
-    #   - Making it depend on the input is not viable for comparing runs, even within the same pan-genome, when using different sets of gff files.
     # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
+    # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
                                                                          args.input_gffs, tmp_folder_path,
@@ -261,7 +261,6 @@ def main():
     time_end_passing_gffs = time.time()
     time_start_segments_search = time.time()
 
-    time_start = time.time() # TODO - This seems like a lonely start timer?
     # Count number of unique accessory genes inserted into a core-core region across the genomes
     acc_region_count = {key: len(set(core_neighbour_low_freq[key])) for key in core_neighbour_low_freq}
     # Count number of unique low frequency genes inserted into a core-core region across the genomes
@@ -271,7 +270,7 @@ def main():
     # Combine the accessory and low frequency counts:
     combined_acc_gene_count = {key: low_frew_region_count[key] + acc_region_count[key] for key in low_frew_region_count}
 
-    double_edge_segements, no_acc_segments = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
+    double_edge_segements, no_acc_segments, core_graph = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
                                                                        len(args.input_gffs), core_dict, logger)
 
     time_end_segments_search = time.time()
@@ -296,10 +295,12 @@ def main():
 
         logger.debug("No Accessory segment output")
         no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix)
-    # TODO - Possibly output core gene graph. with segment annotations in colour - possibly info on edges using weight for conenctions and other atributes for acc content.?
 
-    # TODO - Print summary number of genes and names for non-core contigs
-    # TODO - Should we print a low-freq, placement?
+        logger.debug("Writing core gene graph")
+        graph_name = f'{args.output_prefix}_core_gene_graph.gml' if args.output_prefix is not None else 'core_gene_graph.gml'
+        write_gml(core_graph, path=os.path.join(args.output_path, graph_name))
+
+    # TODO - Make this work!
     if len(non_core_contig_info)> 0:
         logger.debug("Non-core contig output")
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
