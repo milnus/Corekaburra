@@ -3330,6 +3330,11 @@ class TestSegmentationIdentification(unittest.TestCase):
     """
     Test the function that identifies core gene segments from a pan-genome.
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_double_edge_segment_identification_all_2_degree_input(self):
         core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
                                 'pan_cluster_2--pan_cluster_3': 10,
@@ -3341,7 +3346,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
 
         self.assertEqual(None, return_1)
 
@@ -3371,7 +3376,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3397,7 +3402,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3425,7 +3430,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3452,7 +3457,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3483,7 +3488,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3516,7 +3521,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3542,7 +3547,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3571,7 +3576,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
         num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, num_components, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3624,7 +3629,7 @@ class TestSegmentationIdentification(unittest.TestCase):
             component_graph = core_graph.subgraph(component).copy()
             double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
                                                                                                    core_gene_dict,
-                                                                                                   num_components)
+                                                                                                   num_components, self.logger)
 
         # comparisons = [True for x in double_edge_segements
         #                if
