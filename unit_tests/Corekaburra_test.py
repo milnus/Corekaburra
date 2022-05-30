@@ -30,32 +30,6 @@ try:
 except FileNotFoundError:
     os.chdir('unit_test_data/')
 
-
-class TestExitWithError(unittest.TestCase):
-    """ Test for the function carrying out a nice exit """
-    @classmethod
-    def setUpClass(cls):
-        cls.logger = logging.getLogger('test_logger.log')
-        cls.logger.setLevel(logging.INFO)
-
-    def test_exit_w_tmp_folder_deletion(self):
-        ''' Test the exit function is able to remove the temporary folder '''
-
-        # copy the placeholder tmp folder to replace it afterwards
-        tmp_folder = 'TestExitWithError/tmp_folder'
-        tmp_folder_copy = 'TestExitWithError/tmp_folder_copy'
-        os.mkdir(tmp_folder_copy)
-
-        tmp_files = os.listdir(tmp_folder)
-        for file in tmp_files:
-            copyfile(os.path.join(tmp_folder, file), os.path.join(tmp_folder_copy, file))
-
-        with self.assertRaises(SystemExit):
-            exit_with_error.exit_with_error(exit_status=2, message='test msg', logger=self.logger, tmp_folder=tmp_folder)
-
-        os.rename(tmp_folder_copy, tmp_folder)
-
-
 class TestCutOffViolations(unittest.TestCase):
     """ Test for the function that examines the cutoffs given for core and low-frequency genes"""
     @classmethod

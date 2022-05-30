@@ -15,6 +15,7 @@ from standard pan-genome pipelines: Roary and Panaroo.
 
 import os
 import logging
+import tempfile
 import time
 import concurrent.futures
 from networkx import write_gml
@@ -171,13 +172,7 @@ def main():
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path, logger)
 
     # Construct temporary folder:
-    # TODO - check that the temporary folder does not exist and that the user does not have a folder with same name already. (Maybe use a time stamp for the start to make it unique.)
-    tmp_folder_path = os.path.join(args.output_path, 'Corekaburra_tmp')
-    try:
-        os.mkdir(tmp_folder_path)
-    except FileExistsError:
-        for file in os.listdir(tmp_folder_path):
-            os.remove(file)
+    tmp_folder_path = tempfile.TemporaryDirectory()
 
     logger.info('Initial checks successful\n')
     inital_check_time_end = time.time()
@@ -289,7 +284,7 @@ def main():
         write_gml(core_graph, path=os.path.join(args.output_path, graph_name))
 
     # TODO - Make this work!
-    if len(non_core_contig_info)> 0:
+    if len(non_core_contig_info) > 0:
         logger.debug("Non-core contig output")
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
 
@@ -308,13 +303,6 @@ def main():
     logger.debug(f"Reading pan-genome files time: {read_fies_time}s")
     logger.debug(f"Passing over Gff files time: {passing_gffs_time}s")
     logger.debug(f"Searching for segments time: {segment_search_time}s")
-
-
-    # Remove temporary database holding gff databases
-    if os.path.isdir(tmp_folder_path):
-        os.rmdir(tmp_folder_path)
-    if args.discard_gffs:
-        os.rmdir(os.path.join(args.output_path, 'Corrected_gff_files'))
 
 
 if __name__ == '__main__':
