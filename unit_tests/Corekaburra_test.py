@@ -30,35 +30,6 @@ try:
 except FileNotFoundError:
     os.chdir('unit_test_data/')
 
-<<<<<<< HEAD
-=======
-
-class TestExitWithError(unittest.TestCase):
-    """ Test for the function carrying out a nice exit """
-    @classmethod
-    def setUpClass(cls):
-        cls.logger = logging.getLogger('test_logger.log')
-        cls.logger.setLevel(logging.INFO)
-
-    def test_exit_w_tmp_folder_deletion(self):
-        ''' Test the exit function is able to remove the temporary folder '''
-
-        # copy the placeholder tmp folder to replace it afterwards
-        tmp_folder = 'TestExitWithError/tmp_folder'
-        tmp_folder_copy = 'TestExitWithError/tmp_folder_copy'
-        os.mkdir(tmp_folder_copy)
-
-        tmp_files = os.listdir(tmp_folder)
-        for file in tmp_files:
-            copyfile(os.path.join(tmp_folder, file), os.path.join(tmp_folder_copy, file))
-
-        with self.assertRaises(SystemExit):
-            exit_with_error.exit_with_error(exit_status=2, message='test msg', logger=self.logger, tmp_folder=tmp_folder)
-
-        os.rename(tmp_folder_copy, tmp_folder)
-
-
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
 class TestCutOffViolations(unittest.TestCase):
     """ Test for the function that examines the cutoffs given for core and low-frequency genes"""
     @classmethod
@@ -1127,12 +1098,6 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
         with self.assertRaises(SystemExit):
             correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
-<<<<<<< HEAD
-=======
-    # TODO - Add test for annotating of second contig
-
-
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
 class TestExtractGenomeFasta(unittest.TestCase):
     def test_extract_genome_fasta(self):
         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
@@ -1161,7 +1126,6 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
 
-<<<<<<< HEAD
         return_generator = []
         for line in gff_parser.parse_gff(input_gff_file):
             return_generator += [line]
@@ -1185,9 +1149,6 @@ class TestParsingGffFile(unittest.TestCase):
         return_generator = []
         for line in gff_parser.parse_gff(input_gff_file):
             return_generator += [line]
-=======
-        return_generator = gff_parser.parse_gff(input_gff_file)
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
@@ -1206,13 +1167,9 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"],
                            ['contig_1', 'Panaroo', 'CDS', '900', '1000', '.', '+', '0', 'refound_gene_1']]
 
-<<<<<<< HEAD
         return_generator = []
         for line in gff_parser.parse_gff(input_gff_file):
             return_generator += [line]
-=======
-        return_generator = gff_parser.parse_gff(input_gff_file)
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
@@ -3039,12 +2996,6 @@ class TestSegmentingMockGffs(unittest.TestCase):
         self.assertEqual(master_info, return_master_info)
         self.assertEqual(coreless_contigs, return_coreless_contigs)
 
-<<<<<<< HEAD
-=======
-    def test_something(self): # TODO - What other wired and wonderfull examples can we come up with?
-        pass
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
-
 
 class TestMergingDicts(unittest.TestCase):
     """ Functions to merge dictionaries and lists into dictionaries """
@@ -3353,7 +3304,6 @@ class TestGeneCoOccurrence(unittest.TestCase):
         self.assertEqual(b_occurrence, individual_occurrences["B"])
 
 
-<<<<<<< HEAD
 # class TestMultiProcessing(unittest.TestCase):
 #     @classmethod
 #     def setUpClass(cls):
@@ -3375,8 +3325,7 @@ class TestGeneCoOccurrence(unittest.TestCase):
 #
 #         consesus_core_genome.determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, 10, {}, 1, self.logger)
 
-=======
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
+
 class TestSegmentationIdentification(unittest.TestCase):
     """
     Test the function that identifies core gene segments from a pan-genome.
@@ -3700,11 +3649,6 @@ class TestSegmentationIdentification(unittest.TestCase):
         # Test of all returned segments look as expected
         self.assertTrue(all(comparisons))
 
-<<<<<<< HEAD
-=======
-    # TODO - Chat to Andrew about this function how it works and how we can test it more - possibly just run some things to see if it breaks
-
->>>>>>> c01a8a7ac66be3a86c67c9ac6f000ffb8f69e52b
 
 class TestNoAccessorySegmentIdentifcation(unittest.TestCase):
     """
