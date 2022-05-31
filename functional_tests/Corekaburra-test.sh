@@ -220,25 +220,25 @@ rm -r test_out_folder
 # TODO - test gzipped input gffs - implemented - delete if successfull
 call_new_test "test gzipped input gffs"
 Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff.gz -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - test mixed gzipped and non-gzipped input gffs - implemented - delete if successfull
 call_new_test "test mixed gzipped and non-gzipped input gffs"
 Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 # TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.  - delete if successfull
 call_new_test "Test complete genome with single contig and single complete genome among input"
 Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff.gz -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
 
