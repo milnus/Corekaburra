@@ -262,11 +262,11 @@ rm -r test_out_folder
 # TODO - Test that segments are produced for instances where a core gene may be left out. - not done paper graph 1
 call_new_test "Test that segments are produced for instances where a core gene may be left out"
 Corekaburra -ip Less_than_all_core_complex/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_complex/core_core_accessory_gene_content.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_core_complex/low_frequency_gene_placement.expected
-test_output_file test_out_folder/core_pair_summary.csv Less_than_all_core_complex/core_pair_summary.expected
-test_output_file test_out_folder/core_segments.csv Less_than_all_core_complex/core_segments.expected
-test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_core_complex/no_accessory_core_segments.expected
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_complex_expected/core_core_accessory_gene_content.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_core_complex_expected/low_frequency_gene_placement.expected
+test_output_file test_out_folder/core_pair_summary.csv Less_than_all_core_complex_expected/core_pair_summary.expected
+test_output_file test_out_folder/core_segments.csv Less_than_all_core_complex_expected/core_segments.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_core_complex_expected/no_accessory_core_segments.expected
 rm -r test_out_folder
 
 # TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.
