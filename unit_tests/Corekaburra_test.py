@@ -30,6 +30,7 @@ try:
 except FileNotFoundError:
     os.chdir('unit_test_data/')
 
+
 class TestCutOffViolations(unittest.TestCase):
     """ Test for the function that examines the cutoffs given for core and low-frequency genes"""
     @classmethod
@@ -839,7 +840,7 @@ class TestReadGeneData(unittest.TestCase):
 
         self.assertEqual(expected_dict, return_dict)
 
-
+# TODO - likely obsolete after addition of Panaroo functions
 class TestPrepairForReannotation(unittest.TestCase):
     """ Test for pre-pairing a folder for corrected genomes, and testing if any are present from previous runs """
     @classmethod
@@ -890,7 +891,7 @@ class TestPrepairForReannotation(unittest.TestCase):
     #
     #     self.assertEqual(expected_gffs, corrected_files_return)
 
-
+# TODO - likely obsolete after addition of Panaroo functions
 class TestAddGeneToGff(unittest.TestCase):
     """
     Test of the function used to add a gene annotation (line) to a gff file
@@ -973,7 +974,7 @@ class TestAddGeneToGff(unittest.TestCase):
         with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
             self.assertEqual(expected_lines, added_gff.readlines())
 
-
+# TODO - likely obsolete after addition of Panaroo functions
 class TestWriteContig(unittest.TestCase):
     """
     Test of the function used to write a contig in a gff file.
@@ -1003,7 +1004,7 @@ class TestWriteContig(unittest.TestCase):
         with open('TestWriteContig/mocky_test_gff.gff', 'r') as added_gff:
             self.assertEqual(expected_lines, added_gff.readlines())
 
-
+# TODO - likely obsolete after addition of Panaroo functions
 class TestAnnotateRefoundGenomes(unittest.TestCase):
     """
     Test of the function used to reannotate refound genes identified by panaroo in a gff file.
@@ -1098,6 +1099,7 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
         with self.assertRaises(SystemExit):
             correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
+
 class TestExtractGenomeFasta(unittest.TestCase):
     def test_extract_genome_fasta(self):
         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
@@ -1153,7 +1155,7 @@ class TestParsingGffFile(unittest.TestCase):
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
 
-    def test_gff_generator_generation_corrected_gff(self):
+    def test_gff_generator_generation_panaroo_produced_gff(self):
         input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella_corrected.gff'
 
         expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
@@ -1165,7 +1167,7 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
                            ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"],
-                           ['contig_1', 'Panaroo', 'CDS', '900', '1000', '.', '+', '0', 'refound_gene_1']]
+                           ['contig_1', '.', 'candidate_gene', '900', '1000', '.', '+', '0', 'refound_gene_1']]
 
         return_generator = []
         for line in gff_parser.parse_gff(input_gff_file):
