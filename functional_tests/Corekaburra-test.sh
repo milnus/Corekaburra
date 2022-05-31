@@ -217,6 +217,23 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_exp
 test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
+# TODO - test gzipped input gffs - implemented - delete if successfull
+call_new_test "Test complete genome with single contig and single complete genome among input"
+Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff.gz -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+# TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.  - delete if successfull
+call_new_test "Test complete genome with single contig and single complete genome among input"
+Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff.gz -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Single_comple_chromosome_expected/core_pair_summary.csv.expected
+rm -r test_out_folder
+
+
 call_new_test "Test complete genome with single contig and single complete genome among input"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
@@ -247,7 +264,6 @@ test_output_file test_out_folder/core_segments.csv Rearrangement_run_expected/co
 test_output_file test_out_folder/no_accessory_core_segments.csv Rearrangement_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
-# TODO - Test that segmnets can be identified with a core-cutoff that is less than all genomes. - not done paper graph 2 - implemented remove if successfull
 call_new_test "Test that segmnets can be identified with a core-cutoff that is less than all genomes"
 Corekaburra -ip Less_than_all_core_simple/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_simple_expected/core_core_accessory_gene_content.expected
@@ -258,8 +274,6 @@ test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_co
 rm -r test_out_folder
 
 
-
-# TODO - Test that segments are produced for instances where a core gene may be left out. - not done paper graph 1
 call_new_test "Test that segments are produced for instances where a core gene may be left out"
 Corekaburra -ip Less_than_all_core_complex/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_complex_expected/core_core_accessory_gene_content.expected
@@ -269,12 +283,7 @@ test_output_file test_out_folder/core_segments.csv Less_than_all_core_complex_ex
 test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_core_complex_expected/no_accessory_core_segments.expected
 rm -r test_out_folder
 
-# TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.
 
-# TODO - test gzipped input gffs
-
-
-# TODO - Test using two complete chromosomes (complete genome) when >1 contig test. - implemented remove if successful
 call_new_test "Test using two complete chromosomes (complete genome) when >1 contig test"
 Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cc 0.9 -cg complete_larger_double_chr_genome_list.txt  > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multiple_component_graph_complete_expected/core_core_accessory_gene_content.tsv.expected

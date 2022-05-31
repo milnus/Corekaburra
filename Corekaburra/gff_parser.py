@@ -30,7 +30,7 @@ def parse_gff(input_file):
             # FASTA found - close file and end loop
             open_file.close()
             break
-        if "#" not in line and 'CDS' in line:
+        if "#" not in line and ('CDS' in line or 'candidate_gene' in line):
             # Strip line for newline and split columns into list
             line = line.strip()
             line = line.split("\t")
