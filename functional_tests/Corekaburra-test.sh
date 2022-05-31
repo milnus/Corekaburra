@@ -247,7 +247,39 @@ test_output_file test_out_folder/core_segments.csv Rearrangement_run_expected/co
 test_output_file test_out_folder/no_accessory_core_segments.csv Rearrangement_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
-# TODO - Test that segmnets can be identified with a core-cutoff that is less than all genomes.
+# TODO - Test that segmnets can be identified with a core-cutoff that is less than all genomes. - not done paper graph 2 - implemented remove if successfull
+Corekaburra -ip Less_than_all_core_simple/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_gffs_simple_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_gffs_simple_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Less_than_all_gffs_simple_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_simple_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_simple_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
+
+
+
+# TODO - Test that segments are produced for instances where a core gene may be left out. - not done paper graph 1
+Corekaburra -ip Less_than_all_core_complex/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_gffs_complex_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_gffs_complex_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Less_than_all_gffs_complex_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_complex_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_complex_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
+
+# TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.
+
+# TODO - test gzipped input gffs
+
+
+# TODO - Test using two complete chromosomes (complete genome) when >1 contig test. - implemented remove if successful
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cc 0.9 -cg complete_larger_double_chr_genome_list.txt  > /dev/null 2>&1
+test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multi_complete_chromosome_expected/core_core_accessory_gene_content.tsv.expected
+test_output_file test_out_folder/low_frequency_gene_placement.tsv Multi_complete_chromosome_expected/low_frequency_gene_placement.tsv.expected
+test_output_file test_out_folder/core_pair_summary.csv Multi_complete_chromosome_expected/core_pair_summary.csv.expected
+test_output_file test_out_folder/core_segments.csv Multi_complete_chromosome_expected/core_segments.csv.expected
+test_output_file test_out_folder/no_accessory_core_segments.csv Multi_complete_chromosome_expected/no_accessory_core_segments.csv.expected
+rm -r test_out_folder
 
 call_new_test "Test when core graph forms multiple components - not forming a single 'chromosome' - non circular input gffs"
 Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/  > /dev/null 2>&1
@@ -332,7 +364,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_cor
 test_output_file test_out_folder/core_pair_summary.csv Fragmented_core_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO Test a fragmented core gene not accepted as core
 call_new_test "Test a fragmented core gene not accepted as core"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_break_run/ -o test_out_folder/ > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_gene_break_run_expected/core_core_accessory_gene_content.tsv.expected
@@ -340,7 +371,6 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_cor
 test_output_file test_out_folder/core_pair_summary.csv Fragmented_core_gene_break_run_expected/core_pair_summary.csv.expected
 rm -r test_out_folder
 
-# TODO Test with part of fragmented gene being a refound gene
 call_new_test "Test with part of fragmented gene being a refound gene"
 Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger_refound.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip fragmented_refound_core_gene/ -o test_out_folder/ > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv fragmented_refound_core_gene_expected/core_core_accessory_gene_content.tsv.expected
@@ -373,7 +403,6 @@ test_output_file test_out_folder/core_pair_summary.csv Coreless_contig_complete_
 test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv Coreless_contig_complete_expected/coreless_contig_accessory_gene_content.tsv.expected
 rm -r test_out_folder
 
-# TODO - Test with a genome that have been corrected and one that have not - with fragmented refound gene (Resume run)
 call_new_test "Test with a genome that have been corrected and one that have not (Resume run)"
 Corekaburra -ig genome_single_chrom_larger_refound_2.gff genome_single_chrom_larger_refound.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Resume_refound_run_fragment/ -o Resume_refound_run_fragment/ > /dev/null 2>&1
 test_output_file Resume_refound_run_fragment/core_core_accessory_gene_content.tsv Resume_refound_run_fragment/core_core_accessory_gene_content.tsv.expected
@@ -386,7 +415,6 @@ rm Resume_refound_run_fragment/core_core_accessory_gene_content.tsv
 rm Resume_refound_run_fragment/core_pair_summary.csv
 rm Resume_refound_run_fragment/Corekaburra.log
 
-# TODO!! - Test with all genomes that have been corrected (Resume run)
 call_new_test "Test with all genomes that have been corrected (Resume run)"
 Corekaburra -ig genome_single_chrom_larger_refound_2.gff genome_single_chrom_larger_refound.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Resume_all_found_gene_refound_run_fragment/ -o Resume_all_found_gene_refound_run_fragment/ > /dev/null 2>&1
 test_output_file Resume_all_found_gene_refound_run_fragment/core_core_accessory_gene_content.tsv Resume_all_found_gene_refound_run_fragment/core_core_accessory_gene_content.tsv.expected
@@ -397,7 +425,6 @@ rm Resume_all_found_gene_refound_run_fragment/core_core_accessory_gene_content.t
 rm Resume_all_found_gene_refound_run_fragment/core_pair_summary.csv
 rm Resume_all_found_gene_refound_run_fragment/Corekaburra.log
 
-# TODO - Test recognition of corrected gff files in output folder (Resume run)
 call_new_test "Test recognition of corrected gff files in output folder (Resume run)"
 Corekaburra -ig genome_single_chrom_larger_refound_2.gff genome_single_chrom_larger_refound.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Resume_refound_gene/ -o Resume_refound_gene/ > /dev/null 2>&1
 test_output_file Resume_refound_gene/core_core_accessory_gene_content.tsv Resume_refound_gene/core_core_accessory_gene_content.tsv.expected

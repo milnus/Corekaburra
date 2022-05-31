@@ -117,6 +117,56 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
     return sub_segment_dict
 
 
+def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes):
+    # Counter to stop loop
+    counter = 0
+    # Identifier to see if path has been found, to stop loop
+    path_identified = False
+    while not path_identified:
+        counter += 1
+
+        # Get all shortest path between source and target.
+        all_shortest_paths = nx.all_shortest_paths(core_graph_copy, source_node, target_node)
+
+        # Go through each path to see if is satisfies the criteria
+        try:
+            for index, path in enumerate(all_shortest_paths):
+                # Get length of path
+                segment_length = len(path)
+
+                # Get length of segment with multi nodes removed
+                two_degree_segment_length = len([node for node in path if node not in multi_edge_nodes])
+
+                # Check that the path does not contain nodes with >2 degrees outside of source and target,
+                # if then add path,
+                # else then find nodes that has >2 edges and remove an edge that leads to the node, to break the path for next run through loop
+                if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0:
+                    # double_edge_segements[suspected_pair] = path
+                    return path
+
+                else:
+                    # Check if path is length >2,
+                    # if then find >2 degree nodes and remove an edge to them,
+                    # else just remove edge found between nodes.
+                    if len(path) > 2:
+                        multi_node_in_path = [[path[index], path[index + 1]] for index, node in enumerate(path) if
+                                              node in multi_edge_nodes and node != source_node and node != target_node]
+                        for multi_node_pair in multi_node_in_path:
+                            # Try to remove edge found to multi node, if already removed move on.
+                            try:
+                                core_graph_copy.remove_edge(*multi_node_pair)
+                            except nx.exception.NetworkXError:
+                                continue
+                    else:
+                        core_graph_copy.remove_edge(*path)
+
+                if counter == 1000:
+                    raise IndexError(
+                        f"Counter reached limit in detecting a new path for pair, with name {target_node = } and {source_node = }")
+        except nx.NetworkXNoPath:
+            # No simple paths could be found for the source and target thus the while loop is terminated.
+            return
+
 
 def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components, logger):
     """
@@ -129,26 +179,21 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
     """
     # TODO - Describe missing parameters in docstring
 
-    # TODO - Handle multiple chromosomes
-    # Identify all nodes that contain more than two degrees.
+    # Identify all nodes that contain more than two degrees and only one degree.
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
-    # Check if multiple components in core graph, if then find single edge core_genes
-    if num_core_graph_components > 1:
-        singe_edge_nodes = [node for node, connections in core_graph.degree if connections == 1]
-    else:
-        singe_edge_nodes = []
+    single_edge_nodes = [node for node, connections in core_graph.degree if connections == 1]
 
     # Check if any node have multiple edges, if not then return.
-    if len(multi_edge_nodes+singe_edge_nodes) == 0:
+    if len(multi_edge_nodes+single_edge_nodes) == 0:
         return None
 
     # Dict to hold connections between >2 edge nodes
     connect_dict = {}
 
     # for all nodes with >2 degrees themself, identify neighbouring nodes with >2 degrees
-    for node in multi_edge_nodes+singe_edge_nodes:
+    for node in multi_edge_nodes+single_edge_nodes:
         connect_dict[node] = [neighbor for neighbor in core_graph.neighbors(node)
-                              if neighbor in multi_edge_nodes or neighbor in singe_edge_nodes]
+                              if neighbor in multi_edge_nodes or neighbor in single_edge_nodes]
 
     # Turn the weight into a 'distance' or number of times not found together.
     for edge in core_graph.edges(data=True):
@@ -160,18 +205,17 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
 
     # Go through all source and taget nodes,
     # see if a path can be found where all nodes between them have only two degrees
-    for source_node in multi_edge_nodes+singe_edge_nodes:
-        for target_node in multi_edge_nodes+singe_edge_nodes:
+    for source_node in multi_edge_nodes+single_edge_nodes:
+        for target_node in multi_edge_nodes+single_edge_nodes:
             if target_node != source_node:
                 # Get path (segment) from source to target
                 segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
-
 
                 # Get length of path
                 segment_length = len(segment)
 
                 # Get length of segment with multi nodes removed
-                two_degree_segment_length = len([node for node in segment if node not in multi_edge_nodes+singe_edge_nodes])
+                two_degree_segment_length = len([node for node in segment if node not in multi_edge_nodes+single_edge_nodes])
 
                 # Check if no node between the source and target has more than two edges,
                 # if then move to record the segment/path
@@ -232,8 +276,9 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
         # Go through nodes that are missing at least one path and try to identify missing paths
         for source_node in nodes_missing_connections:
             for target_node in nodes_missing_connections:
-                # Check that the current target node is not a neighbouring node or the current node itself
-                if target_node not in connect_dict[source_node] and target_node != source_node:
+
+                # Check that the source and target are not the same node
+                if target_node != source_node:
                     # Copy the graph to manipulate it
                     core_graph_copy = core_graph.copy()
 
@@ -241,54 +286,20 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_compo
                     suspected_pair = sorted([source_node, target_node])
                     suspected_pair = f'{suspected_pair[0]}--{suspected_pair[1]}'
 
-                    # Check that the pair has not been found in a previous run
-                    if suspected_pair not in double_edge_segements:
-                        # Counter to stop loop
-                        counter = 0
-                        # Identifier to see if path has been found, to stop loop
-                        path_identified = False
-                        while not path_identified:
-                            counter += 1
+                    # Check that the current target node is not a neighbouring node
+                    if target_node not in connect_dict[source_node]:
+                        # Search for path
+                        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
 
-                            # Get all shortest path between source and target.
-                            all_shortest_paths = nx.all_shortest_paths(core_graph_copy, source_node, target_node)
+                    else:
+                        # Remove the link between the two core genes that are neighbours
+                        core_graph_copy.remove_edge(*suspected_pair.split('--'))
+                        # Search for path
+                        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
 
-                            # Go through each path to see if is satisfies the criteria
-                            try:
-                                for index, path in enumerate(all_shortest_paths):
-                                    # Get length of path
-                                    segment_length = len(path)
-
-                                    # Get length of segment with multi nodes removed
-                                    two_degree_segment_length = len([node for node in path if node not in multi_edge_nodes])
-
-                                    # Check that the path does not contain nodes with >2 degrees outside of source and target,
-                                    # if then add path,
-                                    # else then find nodes that has >2 edges and remove an edge that leads to the node, to break the path for next run through loop
-                                    if segment_length - 2 == two_degree_segment_length and two_degree_segment_length != 0:
-                                        double_edge_segements[suspected_pair] = path
-                                        path_identified = True
-                                        continue
-                                    else:
-                                        # Check if path is length >2,
-                                        # if then find >2 degree nodes and remove an edge to them,
-                                        # else just remove edge found between nodes.
-                                        if len(path) > 2:
-                                            multi_node_in_path = [[path[index], path[index+1]] for index, node in enumerate(path) if node in multi_edge_nodes and node != source_node and node != target_node]
-                                            for multi_node_pair in multi_node_in_path:
-                                                # Try to remove edge found to multi node, if already removed move on.
-                                                try:
-                                                    core_graph_copy.remove_edge(*multi_node_pair)
-                                                except nx.exception.NetworkXError:
-                                                    continue
-                                        else:
-                                            core_graph_copy.remove_edge(*path)
-
-                                    if counter == 1000:
-                                        raise IndexError("Counter reached limit! in detecting a new path for pair.")
-                            except nx.NetworkXNoPath:
-                                # No simple paths could be found for the source and target thus the while loop is terminated.
-                                path_identified = True
+                    # Check if proper path is returned and insert it
+                    if return_path is not None:
+                        double_edge_segements[suspected_pair] = return_path
 
     return double_edge_segements
 
