@@ -235,7 +235,7 @@ rm -r test_out_folder
 
 # TODO - Do functional test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS.  - delete if successfull
 call_new_test "Test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS"
-Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff.gz -ip candidate_gene_pan_input -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff -ip candidate_gene_pan_input -o test_out_folder > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv candidate_gene_pan_input_expected/core_core_accessory_gene_content.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv candidate_gene_pan_input_expected/low_frequency_gene_placement.expected
 test_output_file test_out_folder/core_pair_summary.csv candidate_gene_pan_input_expected/core_pair_summary.expected
