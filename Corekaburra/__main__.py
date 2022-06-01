@@ -164,10 +164,10 @@ def main():
 
     # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
     # TODO Likely not needed anymore with new implementations in Panaroo
-    if args.annotate and source_program == 'Panaroo':
-        gene_data_path = check_gene_data(args.input_pan, logger)
-    else:
-        gene_data_path = None
+    # if args.annotate and source_program == 'Panaroo':
+    #     gene_data_path = check_gene_data(args.input_pan, logger)
+    # else:
+    #     gene_data_path = None
 
     # Check that all GFF files given can be found in the pan-genome
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path, logger)
@@ -182,12 +182,15 @@ def main():
     time_start_read_files = time.time()
     # Prepair folder for reannotated genes and examine if any are already present
     # TODO - likely not required after new implementations in Panaroo.
-    if source_program == "Panaroo" and args.annotate:
-        gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
-                                                                                  args.input_gffs, logger)
-    else:
-        gene_data_dict = None
-        corrected_dir = None
+    # if source_program == "Panaroo" and args.annotate:
+    #     gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
+    #                                                                               args.input_gffs, logger)
+    # else:
+    #     gene_data_dict = None
+    #     corrected_dir = None
+    # TODO - remove if script works without reannotation
+    gene_data_dict = None
+    corrected_dir = None
 
     # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
     # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'

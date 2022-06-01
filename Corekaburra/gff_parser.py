@@ -608,10 +608,10 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
 
     # Correct input gff file
     # Add in the refound genes into the gff files and print the corrected GFF files.
-    if source_program == "Panaroo" and annotate:
-        # check if not already corrected file and if any gene is to be inserted at all
-        if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
-            input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
+    # if source_program == "Panaroo" and annotate:
+    #     check if not already corrected file and if any gene is to be inserted at all
+        # if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
+        #     input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
 
     gff_generator = parse_gff(input_gff_file)
     return_data = segment_gff_content(gff_generator=gff_generator,
@@ -621,7 +621,7 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
                                       acc_genes=acc_gene_dict,
                                       complete_genomes=complete_genomes)
 
-    if "_corrected" in input_gff_file and discard_corrected:
-        os.remove(input_gff_file)
+    # if "_corrected" in input_gff_file and discard_corrected:
+    #     os.remove(input_gff_file)
 
     return return_data
