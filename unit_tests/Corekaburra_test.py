@@ -1116,6 +1116,43 @@ class TestAnnotateRefoundGenomes(unittest.TestCase):
             correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
 
 
+class TestOpeningFileToGenerator(unittest.TestCase):
+    def test_opening_refular_file(self):
+        input_file_path = 'TestOpeningFileToGenerator/test_text_file.txt.gz'
+
+        expected_output = ['contig_1\t.\tCDS\t1\t90\t.\t.\t.\tID=Silas_the_Salmonella_tag-1-1;locus_tag=Silas_the_Salmonella_tag-1-1\n',
+                           '##FASTA\n',
+                           '>contig_1\n',
+                           'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n',
+                           'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n']
+
+        return_generator = gff_parser.open_file_generator(input_file_path)
+
+        given_output = []
+        for line in return_generator:
+            given_output.append(line)
+
+        self.assertEqual(expected_output, given_output)
+
+    def test_opening_gzipped(self):
+        input_file_path = 'TestOpeningFileToGenerator/test_text_file.txt'
+
+        expected_output = ['##gff version\n',
+                           'contig_1\t.\tCDS\t1\t90\t.\t.\t.\tID=Silas_the_Salmonella_tag-1-1;locus_tag=Silas_the_Salmonella_tag-1-1\n',
+                           '##FASTA\n',
+                           '>contig_1\n',
+                           'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n',
+                           'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n']
+
+        return_generator = gff_parser.open_file_generator(input_file_path)
+
+        given_output = []
+        for line in return_generator:
+            given_output.append(line)
+
+        self.assertEqual(expected_output, given_output)
+
+
 class TestExtractGenomeFasta(unittest.TestCase):
     def test_extract_genome_fasta(self):
         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
@@ -1231,6 +1268,14 @@ class TestGetContigLenth(unittest.TestCase):
 
         self.assertEqual(expected_dict, return_dict)
 
+    def test_multiple_wrapped_contigs_gz(self):
+        input_gff_path = 'TestGetContigLenth/multi_contig_wrapped.txt.gz'
+        expected_dict = {'contig_1': 1300,
+                         'contig_2': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
 
 class TestRecordCoreCoreRegion(unittest.TestCase):
     """

@@ -7,6 +7,23 @@ except ModuleNotFoundError:
     from correct_gffs import annotate_refound_genes
 
 
+def open_file_generator(input_file_path):
+    # Open input file as if it was gzipped
+    try:
+        with gzip.open(input_file_path, 'rt') as open_file:
+            # Test if gzipped by reading line
+            open_file.readline()
+
+            for line in open_file:
+                yield line
+
+    except (OSError, gzip.BadGzipFile):
+        # Open input as if normal
+        with open(input_file_path, 'r') as open_file:
+            for line in open_file:
+                yield line
+
+
 def parse_gff(input_file):
     """
     Try to read a GFF file as gzipped then normal
@@ -15,20 +32,12 @@ def parse_gff(input_file):
     :param input_file: File-path to a given gff file to be processed
     :return: line from generator object returning CDS from a gff file
     """
+    file_generator = open_file_generator(input_file)
 
-    # Open input file as if it was gzipped
-    open_file = gzip.open(input_file, 'rt')
-    try:
-        # Test if gzipped by reading line
-        open_file.readline()
-    except (OSError, gzip.BadGzipFile):
-        # Open inout as if normal
-        open_file = open(input_file, 'r')
-
-    for line in open_file:
+    for line in file_generator:
         if "##FASTA" in line:
-            # FASTA found - close file and end loop
-            open_file.close()
+            # FASTA found - end loop
+            file_generator.close()
             break
         if "#" not in line and ('CDS' in line or 'candidate_gene' in line):
             # Strip line for newline and split columns into list
@@ -61,29 +70,28 @@ def get_contig_lengths(input_file):
     contig_size_dir = {}
 
     # Open the given gff file, find the fasta section of the file and count the length of each contig.
-    with open(input_file, 'r', ) as gff_file:
-        for line in gff_file:
-            if fasta_reached and '>' not in line:
-                contig_size += len(line.rstrip())
-            if fasta_reached and '>' in line:
-                if contig_size > 0:
-                    # Record the previous contig
-                    if contig_name not in contig_size_dir:
-                        contig_size_dir[contig_name] = contig_size
-                    else:
-                        raise ValueError(f"contig name: {contig_name}, in file {input_file} is duplicated! Please fix this")
-
-                    # Set the contig name to the next contig
-                    contig_name = line.strip().split(' ')[0].replace('>', '')
-                    contig_size = 0
+    for line in open_file_generator(input_file):
+        if fasta_reached and '>' not in line:
+            contig_size += len(line.rstrip())
+        if fasta_reached and '>' in line:
+            if contig_size > 0:
+                # Record the previous contig
+                if contig_name not in contig_size_dir:
+                    contig_size_dir[contig_name] = contig_size
                 else:
-                    contig_name = line.strip().split(' ')[0].replace('>', '')
+                    raise ValueError(f"contig name: {contig_name}, in file {input_file} is duplicated! Please fix this")
 
-            if "##FASTA" in line:
-                fasta_reached = True
+                # Set the contig name to the next contig
+                contig_name = line.strip().split(' ')[0].replace('>', '')
+                contig_size = 0
+            else:
+                contig_name = line.strip().split(' ')[0].replace('>', '')
 
-        # Record last contig
-        contig_size_dir[contig_name] = contig_size
+        if "##FASTA" in line:
+            fasta_reached = True
+
+    # Record last contig
+    contig_size_dir[contig_name] = contig_size
 
     return contig_size_dir
 
@@ -304,7 +312,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     :return master_info: A dict of multiple pieces of info for each core gene pair (Gff file, core gene 1, core gene 2, distnace between them, genes between them, list of accesspry genes, list of low-frequency genes)
     :return coreless_contigs: Dict of contigs found to not encode any core genes on them. The accessory and low-frequency genes are recorded.
     """
-
     # Initialize data structures to be returned
     core_gene_pairs = []
     core_gene_pair_distance = {}
@@ -317,7 +324,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     if complete_genomes is None:
         complete_genome = False
     else:
-        if os.path.basename(gff_path).replace('.gff', '').replace('_corrected', '') in complete_genomes:
+        if os.path.basename(gff_path).replace('.gz', '').replace('.gff', '') in complete_genomes:
             complete_genome = True
         else:
             complete_genome = False
