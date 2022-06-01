@@ -200,6 +200,22 @@ class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
         with self.assertRaises(SystemExit):
             check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
+    def test_input_gff_pres_abs_pairing_all_gffs_gzipped(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella.gff.gz', 'Christina_the_Streptococcus.gff.gz', 'Ajwa_the_Shigella.gff.gz']
+
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
+
+        self.assertEqual(return_bool, True)
+
+    def test_input_gff_pres_abs_pairing_all_gffs_mixed_gzipped(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella', 'Christina_the_Streptococcus.gff', 'Ajwa_the_Shigella.gff.gz']
+
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
+
+        self.assertEqual(return_bool, True)
+
 
 class TestAddingGeneToDict(unittest.TestCase):
     """

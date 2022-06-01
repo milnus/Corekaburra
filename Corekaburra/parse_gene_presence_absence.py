@@ -265,11 +265,6 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 f"{low_freq_gene_number} low frequency gene clusters were identified\n"
                 f"{acc_gene_number} intermediate accessory gene clusters were identified\n")
 
-    # Remove gff databases
-    # files_in_tmp = os.listdir(tmp_folder_path)
-    # gff_dbs = [file for file in files_in_tmp if '_db' in file]
-    # [os.remove(os.path.join(tmp_folder_path, db)) for db in gff_dbs]
-
     return core_gene_dict, low_freq_gene_dict, acc_gene_dict
 
 
