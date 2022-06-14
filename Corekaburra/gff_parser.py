@@ -581,8 +581,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
            low_freq_gene_content, master_info, coreless_contigs
 
 
-def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes, source_program,
-                           annotate, gene_data_dict, corrected_dir, tmp_folder_path, discard_corrected, logger):
+def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes): #, source_program, annotate, gene_data_dict, corrected_dir, tmp_folder_path, discard_corrected, logger):
     """
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
@@ -591,7 +590,7 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     :param acc_gene_dict: Dictionary over accessory genes
     :param complete_genomes: Bool indicating if this genome should be considered as a complete genome
     :param source_program: String indicating if program comes from Roary or Panaroo.
-    :param annotate: Bool to indicate if refound genes should be annotated
+    :param annotate: Bool to indicate if refound genes should be annotated # TODOD - remove!
     :param gene_data_dict: Dict of genes, annotations, names, and sequences found in the gene_data.csv file from Panaroo
     :param corrected_dir: File path to directory where corrected Gff files are to be stored.
     :param tmp_folder_path: Path to the temporary working folder.
