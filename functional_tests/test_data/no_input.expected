@@ -1,8 +1,11 @@
-usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome [-cg complete_genomes.txt] [-cc 1.0] [-lc 0.05] [-o path/to/output] [-p OUTPUT_PREFIX] [-c int] [-l | -q] [-h]
-                   [-v]
+usage: __main__.py -ig file.gff [file.gff ...] -ip path/to/pan_genome
+                   [-cg complete_genomes.txt] [-cc 1.0] [-lc 0.05]
+                   [-o path/to/output] [-p OUTPUT_PREFIX] [-c int] [-l | -q]
+                   [-h] [-v]
 
-Welcome to Corekaburra! An extension to pan-genome analyses that summarise genomic regions between core genes and segments of neighbouring core genes using gene synteny from a set of
-input genomes and a pan-genome folder.
+Welcome to Corekaburra! An extension to pan-genome analyses that summarise
+genomic regions between core genes and segments of neighbouring core genes
+using gene synteny from a set of input genomes and a pan-genome folder.
 
 Required arguments:
   -ig file.gff [file.gff ...], --input_gffs file.gff [file.gff ...]
@@ -12,15 +15,19 @@ Required arguments:
 
 Analysis modifiers:
   -cg complete_genomes.txt, --complete_genomes complete_genomes.txt
-                        text file containing names of genomes that are to be handled as complete genomes
+                        text file containing names of genomes that are to be
+                        handled as complete genomes
   -cc 1.0, --core_cutoff 1.0
-                        Percentage of isolates in which a core gene must be present [default: 1.0]
+                        Percentage of isolates in which a core gene must be
+                        present [default: 1.0]
   -lc 0.05, --low_cutoff 0.05
-                        Percentage of isolates where genes found in less than these are seen as low-frequency genes [default: 0.05]
+                        Percentage of isolates where genes found in less than
+                        these are seen as low-frequency genes [default: 0.05]
 
 Output control:
   -o path/to/output, --output path/to/output
-                        Path to where output files will be placed [default: current folder]
+                        Path to where output files will be placed [default:
+                        current folder]
   -p OUTPUT_PREFIX, --prefix OUTPUT_PREFIX
                         Prefix for output files, if any is desired
 
