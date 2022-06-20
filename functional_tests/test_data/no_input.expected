@@ -1,4 +1,4 @@
-usage: __main__.py -ig file.gff [file.gff ...] -ip path/to/pan_genome
+usage: Corekaburra -ig file.gff [file.gff ...] -ip path/to/pan_genome
                    [-cg complete_genomes.txt] [-cc 1.0] [-lc 0.05]
                    [-o path/to/output] [-p OUTPUT_PREFIX] [-c int] [-l | -q]
                    [-h] [-v]
