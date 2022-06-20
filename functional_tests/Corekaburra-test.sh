@@ -197,8 +197,8 @@ test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_p
 call_new_test "Test exit upon unsuccessful identification of source program"
 test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder > /dev/null 2>&1" 1
 
-call_new_test "Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_panaroo_folder > /dev/null 2>&1" 1
+#call_new_test "Test exit upon unsuccessful identification of gene_data, when -a is not given for Panaroo" #TODO - likely remove when gffs are no longer corrected
+#test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_panaroo_folder > /dev/null 2>&1" 1
 
 call_new_test "Test exit upon gff not found in pan is provided as input"
 test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Crash_gff_folder > /dev/null 2>&1" 1
@@ -211,7 +211,7 @@ test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_
 rm -r test_out_folder
 
 call_new_test "Test Panaroo input"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder -a > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.csv Simple_run_expected/core_pair_summary.csv.expected
@@ -349,19 +349,19 @@ test_output_file test_out_folder/core_segments.csv Less_than_all_gffs_run_expect
 test_output_file test_out_folder/no_accessory_core_segments.csv Less_than_all_gffs_run_expected/no_accessory_core_segments.csv.expected
 rm -r test_out_folder
 
-call_new_test "Test unsuccessful reannotation of Panaroo"
-test_exit_status "$test_program -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_fail -o test_out_folder > /dev/null 2>&1" 3
-rm -r test_out_folder
+#call_new_test "Test unsuccessful reannotation of Panaroo" # TODO - remove after Panaroo reannotates gffs
+#test_exit_status "$test_program -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_fail -o test_out_folder > /dev/null 2>&1" 3
+#rm -r test_out_folder
 
-call_new_test "Test Panaroo input with correction of gff files"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_succes/ -o test_out_folder/  > /dev/null 2>&1
-test_output_file test_out_folder/core_core_accessory_gene_content.tsv Reannotation_sucessful_expected/core_core_accessory_gene_content.tsv.expected
-test_output_file test_out_folder/low_frequency_gene_placement.tsv Reannotation_sucessful_expected/low_frequency_gene_placement.tsv.expected
-test_output_file test_out_folder/core_pair_summary.csv Reannotation_sucessful_expected/core_pair_summary.csv.expected
-test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chrom_2_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_2_corrected.gff.expected
-test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chrom_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_corrected.gff.expected
-test_output_file test_out_folder/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff.expected
-rm -r test_out_folder
+#call_new_test "Test Panaroo input with correction of gff files" # TODO - remove after Panaroo reannotates gffs
+#Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Reannotate_run_succes/ -o test_out_folder/  > /dev/null 2>&1
+#test_output_file test_out_folder/core_core_accessory_gene_content.tsv Reannotation_sucessful_expected/core_core_accessory_gene_content.tsv.expected
+#test_output_file test_out_folder/low_frequency_gene_placement.tsv Reannotation_sucessful_expected/low_frequency_gene_placement.tsv.expected
+#test_output_file test_out_folder/core_pair_summary.csv Reannotation_sucessful_expected/core_pair_summary.csv.expected
+#test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chrom_2_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_2_corrected.gff.expected
+#test_output_file test_out_folder/Corrected_gff_files/complete_genome_single_chrom_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/complete_genome_single_chrom_corrected.gff.expected
+#test_output_file test_out_folder/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff Reannotation_sucessful_expected/Corrected_gff_files/genome_single_chrom_larger_rearrange_corrected.gff.expected
+#rm -r test_out_folder
 
 call_new_test "Test with a single core gene on a contig that is not complete"
 Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ > /dev/null 2>&1
