@@ -277,13 +277,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [True]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -301,13 +299,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -326,13 +322,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [True, False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -345,13 +339,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestCheckingFragmentedGenes/Silas_the_Legionella.gff',
                       'TestCheckingFragmentedGenes/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [False, False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -394,8 +386,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -464,7 +454,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
             file_name, core_gene_presence,
             low_freq_gene, source_program,
-            input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+            input_gffs, tmp_folder_path, self.logger)
 
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
@@ -486,8 +476,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
 
         core_gene_dict, low_freq_gene_dict, \
@@ -495,7 +483,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -579,15 +567,13 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -671,15 +657,13 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -733,100 +717,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                                        'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-6': "F"}}
         expected_acc_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-5.1': 'E',
                                                            'Silas_the_Salmonella_tag-1-5.2': 'E'},
-                                  'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-5': "E"},
-                                  'Ajwa_the_Shigella': {"Ajwa_the_Shigella_tag-3-5": "E"},
-                                  'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-5': "E"},
-                                  'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-5": "E"},
-                                  'Aman_the_Streptococcus': {"Aman_the_Streptococcus_tag-6-5": "E"},
-                                  'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-5": "E"},
-                                  'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-5": "E"},
-                                  'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-5": "E"},
-                                  'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-5': "E"}}
-
-        self.assertEqual(expected_core_gene_dict, core_gene_dict)
-        self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
-        self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
-
-    def test_parsign_fragmented_gene_w_refound_component(self):
-        file_name = 'TestParsingGenePresenceAbsenceFile/gene_presence_absence_w_refound_fragment.csv'
-        core_gene_presence = 0.9
-        low_freq_gene = 0.1
-        source_program = 'Panaroo'
-        input_gffs = ['TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Legionella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella_w_refound.gff',
-                      'TestParsingGenePresenceAbsenceFile/Cari_the_Listeria.gff',
-                      'TestParsingGenePresenceAbsenceFile/Aman_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Zion_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Dina_the_Shigella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
-        tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {'Silas_the_Salmonella_w_refound': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTACTCTTCCGATCTAATCAAGATTGAGAGGAATT', 'gene_name', 'gene_function']}}
-        corrected_dir ='TestParsingGenePresenceAbsenceFile/Corrected_gffs'
-
-        core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict = \
-            parse_gene_presence_absence.read_gene_presence_absence(
-                file_name, core_gene_presence,
-                low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
-
-        expected_core_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-1': "A",
-                                                                      '0_refound_0': "B",
-                                                                      'Silas_the_Salmonella_tag-1-2.2': "B",
-                                                                      'Silas_the_Salmonella_tag-1-3': 'C',
-                                                                      'Silas_the_Salmonella_tag-1-4.1': 'D',
-                                                                      'Silas_the_Salmonella_tag-1-4.2': 'D', },
-                                   'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A",
-                                                                   'Christina_the_Streptococcus_tag-2-2': "B",
-                                                                   'Christina_the_Streptococcus_tag-2-3': "C",
-                                                                   'Christina_the_Streptococcus_tag-2-4': "D"},
-                                   'Ajwa_the_Shigella': {'Ajwa_the_Shigella_tag-3-1': "A",
-                                                         'Ajwa_the_Shigella_tag-3-2': "B",
-                                                         "Ajwa_the_Shigella_tag-3-3": "C",
-                                                         "Ajwa_the_Shigella_tag-3-4": "D"},
-                                   'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-1': "A",
-                                                           'Ajwa_the_Legionella_tag-4-2': "B",
-                                                           'Ajwa_the_Legionella_tag-4-3': "C",
-                                                           'Ajwa_the_Legionella_tag-4-4': "D"},
-                                   'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-3": "C",
-                                                         "Cari_the_Listeria_tag-5-4": "D",
-                                                         'Cari_the_Listeria_tag-5-1': "A",
-                                                         'Cari_the_Listeria_tag-5-2': "B"},
-                                   'Aman_the_Streptococcus': {'Aman_the_Streptococcus_tag-6-1': "A",
-                                                              'Aman_the_Streptococcus_tag-6-2': "B",
-                                                              "Aman_the_Streptococcus_tag-6-3": "C",
-                                                              "Aman_the_Streptococcus_tag-6-4": "D"},
-                                   'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-3": "C",
-                                                              "Zion_the_Streptococcus_tag-7-4": "D",
-                                                              'Zion_the_Streptococcus_tag-7-1': "A",
-                                                              'Zion_the_Streptococcus_tag-7-2': "B"},
-                                   'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-3": "C",
-                                                         "Dina_the_Shigella_tag-8-4": "D",
-                                                         'Dina_the_Shigella_tag-8-1': "A",
-                                                         'Dina_the_Shigella_tag-8-2': "B"},
-                                   'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-3": "C",
-                                                            "Silas_the_Legionella_tag-9-4": "D",
-                                                            'Silas_the_Legionella_tag-9-1': "A",
-                                                            'Silas_the_Legionella_tag-9-2': "B"},
-                                   'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-1': "A",
-                                                          'Lilly_the_Shigella_tag-10-2': "B"}}
-
-        expected_low_freq_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag_2': "G"},
-                                       'Christina_the_Streptococcus': {},
-                                       'Ajwa_the_Shigella': {},
-                                       'Ajwa_the_Legionella': {},
-                                       'Cari_the_Listeria': {},
-                                       'Aman_the_Streptococcus': {},
-                                       'Zion_the_Streptococcus': {},
-                                       'Dina_the_Shigella': {},
-                                       'Silas_the_Legionella': {},
-                                       'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-6': "F"}}
-
-        expected_acc_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-5.1': 'E',
-                                                                     'Silas_the_Salmonella_tag-1-5.2': 'E'},
                                   'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-5': "E"},
                                   'Ajwa_the_Shigella': {"Ajwa_the_Shigella_tag-3-5": "E"},
                                   'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-5': "E"},

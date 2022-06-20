@@ -8,6 +8,11 @@ except ModuleNotFoundError:
 
 
 def open_file_generator(input_file_path):
+    """
+    Function to read a gff file as either gzip or text
+    :param input_file_path: String path to file
+    :return: Generator with line by line
+    """
     # Open input file as if it was gzipped
     try:
         with gzip.open(input_file_path, 'rt') as open_file:
@@ -285,6 +290,16 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
 
 
 def record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, contig_name):
+    """
+    Function to record the presence and info of a contig without a core gene
+    :param coreless_contigs: List with info of other core less contigs
+    :param acc_genes_in_region: List of accessory genes on contig
+    :param low_freq_genes_in_region: List of low frequency genes on contig
+    :param gff_name: String name of input gff file.
+    :param contig_name: String name of the contg
+
+    :return: Dict of information round coreless contigs as list.
+    """
     acc_genes_in_region = sorted(list(set(acc_genes_in_region)))
     low_freq_genes_in_region = sorted(list(set(low_freq_genes_in_region)))
     if len(acc_genes_in_region) + len(low_freq_genes_in_region) > 0:
@@ -582,20 +597,13 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
 
 
 def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes):
-    """ # TODO - Update parameters
+    """
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
     :param core_genes: Dictionary over core genes
     :param low_freq_genes: Dictionary over low-frequency genes
     :param acc_gene_dict: Dictionary over accessory genes
     :param complete_genomes: Bool indicating if this genome should be considered as a complete genome
-    :param source_program: String indicating if program comes from Roary or Panaroo.
-    :param annotate: Bool to indicate if refound genes should be annotated # TODOD - remove!
-    :param gene_data_dict: Dict of genes, annotations, names, and sequences found in the gene_data.csv file from Panaroo
-    :param corrected_dir: File path to directory where corrected Gff files are to be stored.
-    :param tmp_folder_path: Path to the temporary working folder.
-    :param discard_corrected: Bool indicating if corrected Gff files should be preserved as an output
-    :param logger: Progran logger
 
     :return input_gff_file: File path to the gff being searched
     :return core_genes: Dict of core genes passed to genomes and the pan-genome clusters.

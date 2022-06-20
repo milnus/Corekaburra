@@ -33,7 +33,7 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     return main_dict
 
 
-def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict, corrected_dir, logger):
+def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
     """
     Function that check for that placement of fragmented gene parts, to determine if they are neighbouring or have some genomic feature between them
     :param fragment_info: List of genes that are found to be fragmented, one composite of fragments for each index
@@ -67,7 +67,7 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
                                     f'A problem occurred when trying to find a file for reannotation, when passing the '
                                     f'gene_presence_absence_roary.csv! GFF: {gff}, Gene: {gene}')
 
-                gff_name = annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_dir, logger)
+                # gff_name = annotate_refound_genes(gff_name, tmp_folder_path, logger) # TODO - This was commented out
 
             fragment_info[i][1] = gff_name
 
@@ -137,7 +137,7 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
     return fragments_close
 
 
-def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, gene_data_dict, corrected_dir, logger):
+def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, logger):
     """
     Function that pass a Roary style gene presence/absence file.
     :param pres_abs_file: File path to the gene presence/absence file identified
@@ -217,8 +217,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 fragment_info = [[genes, gff] for genes, gff in zip(line[14:], gff_file_names[14:]) if ';' in genes]
 
                 # Check that each annotation is neighboring the other annotation.
-                fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict,
-                                                        corrected_dir, logger)
+                fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger)
                 # Check if gene was found to be a core gene
                 if all(fragments_close):
                     # Add the gene to the annotation dict

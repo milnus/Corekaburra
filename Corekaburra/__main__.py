@@ -162,13 +162,6 @@ def main():
     # Check if Panaroo or Roary input folder is given
     source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan, logger)
 
-    # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
-    # TODO Likely not needed anymore with new implementations in Panaroo
-    # if args.annotate and source_program == 'Panaroo':
-    #     gene_data_path = check_gene_data(args.input_pan, logger)
-    # else:
-    #     gene_data_path = None
-
     # Check that all GFF files given can be found in the pan-genome
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path, logger)
 
@@ -180,24 +173,13 @@ def main():
 
     ## Read in gene presence absence file
     time_start_read_files = time.time()
-    # Prepair folder for reannotated genes and examine if any are already present
-    # TODO - likely not required after new implementations in Panaroo.
-    # if source_program == "Panaroo" and args.annotate:
-    #     gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
-    #                                                                               args.input_gffs, logger)
-    # else:
-    #     gene_data_dict = None
-    #     corrected_dir = None
-    # TODO - remove if script works without reannotation
-    gene_data_dict = None
-    corrected_dir = None
 
     # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
     # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
                                                                          args.input_gffs, tmp_folder_path.name,
-                                                                         gene_data_dict, corrected_dir, logger)
+                                                                         logger)
 
 
     time_end_read_files = time.time()
@@ -287,10 +269,9 @@ def main():
 
     # TODO - Make this work!
     if len(non_core_contig_info) > 0:
+        print("hello!")
         logger.debug("Non-core contig output")
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
-
-    # time_calculator(time_start, time.time(), "writing output files")
 
     # Finish up running
     total_time = round(time.time() - total_time_start, 1)
