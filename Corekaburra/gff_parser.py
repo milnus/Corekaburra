@@ -581,8 +581,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
            low_freq_gene_content, master_info, coreless_contigs
 
 
-def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes): #, source_program, annotate, gene_data_dict, corrected_dir, tmp_folder_path, discard_corrected, logger):
-    """
+def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes):
+    """ # TODO - Update parameters
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
     :param core_genes: Dictionary over core genes
@@ -605,13 +605,6 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     :return complete_genomes: List of genomes given as complete by the user.
     """
 
-    # Correct input gff file
-    # Add in the refound genes into the gff files and print the corrected GFF files.
-    # if source_program == "Panaroo" and annotate:
-    #     check if not already corrected file and if any gene is to be inserted at all
-        # if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
-        #     input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
-
     gff_generator = parse_gff(input_gff_file)
     return_data = segment_gff_content(gff_generator=gff_generator,
                                       gff_path=input_gff_file,
@@ -619,8 +612,5 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
                                       low_freq_genes=low_freq_genes,
                                       acc_genes=acc_gene_dict,
                                       complete_genomes=complete_genomes)
-
-    # if "_corrected" in input_gff_file and discard_corrected:
-    #     os.remove(input_gff_file)
 
     return return_data

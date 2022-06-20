@@ -222,7 +222,7 @@ def main():
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu) as executor:
         logger.info(f"------Start core region identification of given gff files-----\n")
         logger.info(f'{len(args.input_gffs)} GFF files to process')
-        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes) # ,source_program, args.annotate, gene_data_dict, corrected_dir, tmp_folder_path.name, args.discard_gffs, logger)
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes)
                    for gff in args.input_gffs]
 
         for output in concurrent.futures.as_completed(results):
