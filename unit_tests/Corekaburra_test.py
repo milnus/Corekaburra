@@ -7,13 +7,12 @@ Usage: python -m unittest -v Corekaburra_test
 # import
 import unittest
 import os
-from shutil import copyfile
 import logging
 from networkx import number_connected_components, connected_components
+
 # pylint: disable=no-name-in-module
 
 # import Corekaburra functions
-from Corekaburra import exit_with_error
 from Corekaburra import read_complete_genome_file
 from Corekaburra import check_inputs
 from Corekaburra import parse_gene_presence_absence
@@ -22,38 +21,12 @@ from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
 from Corekaburra import summary_table
 from Corekaburra import output_writer_functions
-from Corekaburra import correct_gffs
 
 # move to folder with mock files. First try Github structure, then try pulled repository structure
 try:
     os.chdir('/Corekaburra/unit_tests/unit_test_data/')
 except FileNotFoundError:
     os.chdir('unit_test_data/')
-
-
-class TestExitWithError(unittest.TestCase):
-    """ Test for the function carrying out a nice exit """
-    @classmethod
-    def setUpClass(cls):
-        cls.logger = logging.getLogger('test_logger.log')
-        cls.logger.setLevel(logging.INFO)
-
-    def test_exit_w_tmp_folder_deletion(self):
-        ''' Test the exit function is able to remove the temporary folder '''
-
-        # copy the placeholder tmp folder to replace it afterwards
-        tmp_folder = 'TestExitWithError/tmp_folder'
-        tmp_folder_copy = 'TestExitWithError/tmp_folder_copy'
-        os.mkdir(tmp_folder_copy)
-
-        tmp_files = os.listdir(tmp_folder)
-        for file in tmp_files:
-            copyfile(os.path.join(tmp_folder, file), os.path.join(tmp_folder_copy, file))
-
-        with self.assertRaises(SystemExit):
-            exit_with_error.exit_with_error(exit_status=2, message='test msg', logger=self.logger, tmp_folder=tmp_folder)
-
-        os.rename(tmp_folder_copy, tmp_folder)
 
 
 class TestCutOffViolations(unittest.TestCase):
@@ -225,6 +198,22 @@ class TestPresenceOfGffsInPresAbsFile(unittest.TestCase):
         with self.assertRaises(SystemExit):
             check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
 
+    def test_input_gff_pres_abs_pairing_all_gffs_gzipped(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella.gff.gz', 'Christina_the_Streptococcus.gff.gz', 'Ajwa_the_Shigella.gff.gz']
+
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
+
+        self.assertEqual(return_bool, True)
+
+    def test_input_gff_pres_abs_pairing_all_gffs_mixed_gzipped(self):
+        input_pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        input_file_list = ['Silas_the_Salmonella', 'Christina_the_Streptococcus.gff', 'Ajwa_the_Shigella.gff.gz']
+
+        return_bool = check_inputs.check_gff_in_pan(input_file_list, input_pres_abs, self.logger)
+
+        self.assertEqual(return_bool, True)
+
 
 class TestAddingGeneToDict(unittest.TestCase):
     """
@@ -286,13 +275,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [True]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -310,13 +297,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -335,13 +320,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [True, False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -354,13 +337,11 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
                       'TestCheckingFragmentedGenes/Silas_the_Legionella.gff',
                       'TestCheckingFragmentedGenes/Lilly_the_Shigella.gff']
         tmp_folder_path = 'test_tmp_folder'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_return = [False, False]
 
         return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
-                                                                        gene_data_file, corrected_dir, self.logger)
+                                                                        self.logger)
 
         self.assertEqual(expected_return, return_bool)
 
@@ -403,8 +384,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -473,7 +452,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
             file_name, core_gene_presence,
             low_freq_gene, source_program,
-            input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+            input_gffs, tmp_folder_path, self.logger)
 
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
@@ -495,8 +474,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
 
         core_gene_dict, low_freq_gene_dict, \
@@ -504,7 +481,7 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -588,15 +565,13 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -680,15 +655,13 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
                       'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
                       'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
         tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {}
-        corrected_dir = ''
 
         core_gene_dict, low_freq_gene_dict, \
         acc_gene_dict = \
             parse_gene_presence_absence.read_gene_presence_absence(
                 file_name, core_gene_presence,
                 low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
+                input_gffs, tmp_folder_path, self.logger)
 
         expected_core_gene_dict = {'Silas_the_Salmonella': {'Silas_the_Salmonella_tag-1-1': "A",
                                                             'Silas_the_Salmonella_tag-1-2.1': "B",
@@ -756,389 +729,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
 
-    def test_parsign_fragmented_gene_w_refound_component(self):
-        file_name = 'TestParsingGenePresenceAbsenceFile/gene_presence_absence_w_refound_fragment.csv'
-        core_gene_presence = 0.9
-        low_freq_gene = 0.1
-        source_program = 'Panaroo'
-        input_gffs = ['TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Shigella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Ajwa_the_Legionella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella_w_refound.gff',
-                      'TestParsingGenePresenceAbsenceFile/Cari_the_Listeria.gff',
-                      'TestParsingGenePresenceAbsenceFile/Aman_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Zion_the_Streptococcus.gff',
-                      'TestParsingGenePresenceAbsenceFile/Dina_the_Shigella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Silas_the_Legionella.gff',
-                      'TestParsingGenePresenceAbsenceFile/Lilly_the_Shigella.gff']
-        tmp_folder_path = 'TestParsingGenePresenceAbsenceFile/'
-        gene_data_file = {'Silas_the_Salmonella_w_refound': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTACTCTTCCGATCTAATCAAGATTGAGAGGAATT', 'gene_name', 'gene_function']}}
-        corrected_dir ='TestParsingGenePresenceAbsenceFile/Corrected_gffs'
-
-        core_gene_dict, low_freq_gene_dict, \
-        acc_gene_dict = \
-            parse_gene_presence_absence.read_gene_presence_absence(
-                file_name, core_gene_presence,
-                low_freq_gene, source_program,
-                input_gffs, tmp_folder_path, gene_data_file, corrected_dir, self.logger)
-
-        expected_core_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-1': "A",
-                                                                      '0_refound_0': "B",
-                                                                      'Silas_the_Salmonella_tag-1-2.2': "B",
-                                                                      'Silas_the_Salmonella_tag-1-3': 'C',
-                                                                      'Silas_the_Salmonella_tag-1-4.1': 'D',
-                                                                      'Silas_the_Salmonella_tag-1-4.2': 'D', },
-                                   'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-1': "A",
-                                                                   'Christina_the_Streptococcus_tag-2-2': "B",
-                                                                   'Christina_the_Streptococcus_tag-2-3': "C",
-                                                                   'Christina_the_Streptococcus_tag-2-4': "D"},
-                                   'Ajwa_the_Shigella': {'Ajwa_the_Shigella_tag-3-1': "A",
-                                                         'Ajwa_the_Shigella_tag-3-2': "B",
-                                                         "Ajwa_the_Shigella_tag-3-3": "C",
-                                                         "Ajwa_the_Shigella_tag-3-4": "D"},
-                                   'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-1': "A",
-                                                           'Ajwa_the_Legionella_tag-4-2': "B",
-                                                           'Ajwa_the_Legionella_tag-4-3': "C",
-                                                           'Ajwa_the_Legionella_tag-4-4': "D"},
-                                   'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-3": "C",
-                                                         "Cari_the_Listeria_tag-5-4": "D",
-                                                         'Cari_the_Listeria_tag-5-1': "A",
-                                                         'Cari_the_Listeria_tag-5-2': "B"},
-                                   'Aman_the_Streptococcus': {'Aman_the_Streptococcus_tag-6-1': "A",
-                                                              'Aman_the_Streptococcus_tag-6-2': "B",
-                                                              "Aman_the_Streptococcus_tag-6-3": "C",
-                                                              "Aman_the_Streptococcus_tag-6-4": "D"},
-                                   'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-3": "C",
-                                                              "Zion_the_Streptococcus_tag-7-4": "D",
-                                                              'Zion_the_Streptococcus_tag-7-1': "A",
-                                                              'Zion_the_Streptococcus_tag-7-2': "B"},
-                                   'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-3": "C",
-                                                         "Dina_the_Shigella_tag-8-4": "D",
-                                                         'Dina_the_Shigella_tag-8-1': "A",
-                                                         'Dina_the_Shigella_tag-8-2': "B"},
-                                   'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-3": "C",
-                                                            "Silas_the_Legionella_tag-9-4": "D",
-                                                            'Silas_the_Legionella_tag-9-1': "A",
-                                                            'Silas_the_Legionella_tag-9-2': "B"},
-                                   'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-1': "A",
-                                                          'Lilly_the_Shigella_tag-10-2': "B"}}
-
-        expected_low_freq_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag_2': "G"},
-                                       'Christina_the_Streptococcus': {},
-                                       'Ajwa_the_Shigella': {},
-                                       'Ajwa_the_Legionella': {},
-                                       'Cari_the_Listeria': {},
-                                       'Aman_the_Streptococcus': {},
-                                       'Zion_the_Streptococcus': {},
-                                       'Dina_the_Shigella': {},
-                                       'Silas_the_Legionella': {},
-                                       'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-6': "F"}}
-
-        expected_acc_gene_dict = {'Silas_the_Salmonella_w_refound': {'Silas_the_Salmonella_tag-1-5.1': 'E',
-                                                                     'Silas_the_Salmonella_tag-1-5.2': 'E'},
-                                  'Christina_the_Streptococcus': {'Christina_the_Streptococcus_tag-2-5': "E"},
-                                  'Ajwa_the_Shigella': {"Ajwa_the_Shigella_tag-3-5": "E"},
-                                  'Ajwa_the_Legionella': {'Ajwa_the_Legionella_tag-4-5': "E"},
-                                  'Cari_the_Listeria': {"Cari_the_Listeria_tag-5-5": "E"},
-                                  'Aman_the_Streptococcus': {"Aman_the_Streptococcus_tag-6-5": "E"},
-                                  'Zion_the_Streptococcus': {"Zion_the_Streptococcus_tag-7-5": "E"},
-                                  'Dina_the_Shigella': {"Dina_the_Shigella_tag-8-5": "E"},
-                                  'Silas_the_Legionella': {"Silas_the_Legionella_tag-9-5": "E"},
-                                  'Lilly_the_Shigella': {'Lilly_the_Shigella_tag-10-5': "E"}}
-
-        self.assertEqual(expected_core_gene_dict, core_gene_dict)
-        self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
-        self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
-
-
-class TestReadGeneData(unittest.TestCase):
-    """ Function to test the passing of gene_data.csv file from Panaroo """
-    def test_read_file(self):
-        expected_dict = {'PY_40': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
-                                   '0_refound_100': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
-                                   '0_refound_10': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function']},
-                         'PY_41': {'0_refound_1': ['ATGTTGTAGGAAAATACTTGGAAGAATACGTTGACAGGGGTATTTTTGATAAGGAGCCGTTCCAGACCTTTGATCAGAAAGGGATTGGCCGTCTCTTTAGCCCGTTCGGTTAAGCCTGAGTTGAAACTTGGTATTTGTGGGGAACATGGTGGCGATCCTGCTTCCATTGACTTTTACCACAGCCAAGGCCTGACCTACGTTTCTTGTTCGCCATTTAGAGTGCCGCTTACTCGCTTGGCGGCTGCTCAGGCTGCCATCAAAGCTTCAGGCCACAGTCTTACCCAAGACAAATAG', 'gene_name', 'gene_function']},
-                         'PY_42': {'0_refound_2': ['ATGTCACTACTGCATATTCATCACAATAAAAAAAAGACAATAGCCCTAATCGTGCTATTGTCTCAAAATCATTTATTTACTTGAAACTTTATCGTGTTACACCAACAGTTTAA', 'gene_name', 'gene_function']},
-                         'PY_43': {'0_refound_4': ['ATGAAACGCTATCAACAAGATGCCCTGCTTTTCAAAAAAAATAGATAAAGAAAAGGCTGCGACAGTATCTGCAAGCAGGGCAAAAGAACTAGAAGATAGGCTCAGTCATCAGCCATTAATTGATGATTATCGAGAAAAGATGCAAGATGCAAGATGCAAGTGATGTGACTCAGTATATCACCAAACGTATAGAAGATCAGTTAAACAAGGAGTTAACAAATGGCAAAAACTAA', 'gene_name', 'gene_function']}}
-
-        return_dict = correct_gffs.read_gene_data('TestReadGeneData/Mock_gene_data.csv')
-
-        self.assertEqual(expected_dict, return_dict)
-
-
-class TestPrepairForReannotation(unittest.TestCase):
-    """ Test for pre-pairing a folder for corrected genomes, and testing if any are present from previous runs """
-    @classmethod
-    def setUpClass(cls):
-        cls.logger = logging.getLogger('test_logger.log')
-        cls.logger.setLevel(logging.INFO)
-
-    def tearDown(self):
-        try:
-            """ Class to remove created corrected output folder"""
-            os.rmdir('TestPrepairForReannotation/Corrected_gff_files')
-        except FileNotFoundError:
-            pass
-
-    def test_no_files_annotated(self):
-        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
-        gene_data_dict_return, \
-        corrected_gff_out_dir_return, \
-        corrected_files_return = correct_gffs.prepair_for_reannotation('TestPrepairForReannotation/Mock_gene_data.csv',
-                                                                       'TestPrepairForReannotation/',
-                                                                       input_gffs, self.logger)
-
-        self.assertTrue(os.path.isdir('TestPrepairForReannotation/Corrected_gff_files'))
-        self.assertEqual(input_gffs, corrected_files_return)
-
-    def test_some_files_annotated(self):
-        input_gffs = ['mock/test/path/Mock_1.gff', 'mock/test/path/Mock_2.gff', 'Mocky/mock/mock/path/Mock_3.gff']
-        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
-            'TestPrepairForReannotation/Mock_gene_data.csv',
-            'TestPrepairForReannotation/Some_genomes',
-            input_gffs, self.logger)
-
-        expected_gffs = ['mock/test/path/Mock_2.gff',
-                         'Mocky/mock/mock/path/Mock_3.gff',
-                         'TestPrepairForReannotation/Some_genomes/Corrected_gff_files/Mock_1_corrected.gff']
-
-        self.assertEqual(expected_gffs, corrected_files_return)
-
-    def test_all_files_annotated(self):
-        input_gffs = ['Mock_1.gff', 'Mock_2.gff']
-        gene_data_dict_return, corrected_gff_out_dir_return, corrected_files_return = correct_gffs.prepair_for_reannotation(
-            'TestPrepairForReannotation/Mock_gene_data.csv',
-            'TestPrepairForReannotation/All_genomes',
-            input_gffs, self.logger)
-
-        expected_gffs = ['TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_1_corrected.gff',
-                         'TestPrepairForReannotation/All_genomes/Corrected_gff_files/Mock_2_corrected.gff']
-
-        self.assertEqual(expected_gffs, corrected_files_return)
-
-
-class TestAddGeneToGff(unittest.TestCase):
-    """
-    Test of the function used to add a gene annotation (line) to a gff file
-    """
-    # Make a setup and a teardown that copies and renames the mock file
-    def setUp(self):
-        """ Class to copy the mock gff before modifying"""
-        copyfile('TestAddGeneToGff/mocky_test_gff.gff', 'TestAddGeneToGff/mocky_test_gff.gff_copy')
-
-    def tearDown(self):
-        """ Class to remove modified gff and rename the original"""
-        os.remove('TestAddGeneToGff/mocky_test_gff.gff')
-        os.rename('TestAddGeneToGff/mocky_test_gff.gff_copy', 'TestAddGeneToGff/mocky_test_gff.gff')
-
-    def test_adding_a_gene_no_info(self):
-        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
-        gene_oi = ['TATA', '', '']
-        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
-        contig = 'test_contig_1'
-        strand = '+'
-        refound_gene_tag = '0_refound_0'
-        largest_locus_tag = 'fer_1432'
-
-        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0\n']
-
-        with open(tmp_gff_file, 'a') as tmp_gff:
-            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
-
-        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-    def test_adding_a_gene_name(self):
-        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
-        gene_oi = ['TATA', 'Gene_name', '']
-        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
-        contig = 'test_contig_1'
-        strand = '+'
-        refound_gene_tag = '0_refound_0'
-        largest_locus_tag = 'fer_1432'
-
-        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;name=Gene_name\n']
-
-        with open(tmp_gff_file, 'a') as tmp_gff:
-            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
-
-        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-    def test_adding_a_gene_annotation(self):
-        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
-        gene_oi = ['TATA', '', 'Gene_annotation']
-        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
-        contig = 'test_contig_1'
-        strand = '+'
-        refound_gene_tag = '0_refound_0'
-        largest_locus_tag = 'fer_1432'
-
-        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;annotation=Gene_annotation\n']
-
-        with open(tmp_gff_file, 'a') as tmp_gff:
-            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
-
-        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-    def test_adding_a_gene_name_and_annotation(self):
-        tmp_gff_file = 'TestAddGeneToGff/mocky_test_gff.gff'
-        gene_oi = ['TATA', 'Gene_name', 'Gene_annotation']
-        genome_oi = 'CCCCCCCCCCCCTATACCCCCCCC'
-        contig = 'test_contig_1'
-        strand = '+'
-        refound_gene_tag = '0_refound_0'
-        largest_locus_tag = 'fer_1432'
-
-        expected_lines = ['##gff-version 3\n', '#test comment line\n', 'test_contig_1\tPanaroo\tCDS\t13\t16\t.\t+\t0\tID=fer_1433;locus_tag=fer_1433;old_locus_tag=0_refound_0;name=Gene_name;annotation=Gene_annotation\n']
-
-        with open(tmp_gff_file, 'a') as tmp_gff:
-            correct_gffs.add_gene_to_gff(tmp_gff, gene_oi[0], genome_oi, contig, strand, refound_gene_tag, gene_oi[1:], largest_locus_tag)
-
-        with open('TestAddGeneToGff/mocky_test_gff.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-
-class TestWriteContig(unittest.TestCase):
-    """
-    Test of the function used to write a contig in a gff file.
-    """
-    # Make a setup and a teardown that copies and renames the mock file
-    def setUp(self):
-        """ Class to copy the mock gff before modifying"""
-        copyfile('TestWriteContig/mocky_test_gff.gff', 'TestWriteContig/mocky_test_gff.gff_copy')
-
-    def tearDown(self):
-        """ Class to remove modified gff and rename the original"""
-        os.remove('TestWriteContig/mocky_test_gff.gff')
-        os.rename('TestWriteContig/mocky_test_gff.gff_copy', 'TestWriteContig/mocky_test_gff.gff')
-
-    def test_writing_a_contig(self):
-        file_path = 'TestWriteContig/mocky_test_gff.gff'
-        contig_name = 'Test_contig_name space'
-        sequence = 'AAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGC'
-
-        expected_lines = ['##gff-version 3\n', '#test comment line\n', '>Test_contig_name space\n',
-                          'AAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGCAAATAAATGGGC\n',
-                          'GGGCAAATAAATGGGCGGGCAAATAAATGGGCGGGC\n']
-
-        with open(file_path, 'a') as file:
-            correct_gffs.write_contig(file, contig_name, sequence)
-
-        with open('TestWriteContig/mocky_test_gff.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-
-class TestAnnotateRefoundGenomes(unittest.TestCase):
-    """
-    Test of the function used to reannotate refound genes identified by panaroo in a gff file.
-    """
-    @classmethod
-    def setUpClass(cls):
-        cls.logger = logging.getLogger('test_logger.log')
-        cls.logger.setLevel(logging.INFO)
-
-    def tearDown(self):
-        """ Class to remove modified gff and rename the original"""
-        try:
-            os.remove('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff')
-        except FileNotFoundError:
-            os.remove('TestAnnotateRefoundGenomes/reannotate_gff_tmp.gff')
-            os.remove('TestAnnotateRefoundGenomes/reannotate_gff.gff_db')
-
-    def test_annotation_of_pos_stand_gene(self):
-        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
-        gene_data_dict = {'reannotate_gff': {'0_refound_0': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', 'gene_function'],
-                                   '0_refound_100': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', '', 'gene_function'],
-                                   '0_refound_10': ['CTCTTCCGATCTAATCAAGATTGAGAGGAATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAG', 'gene_name', '']}}
-        tmp_folder_path = 'TestAnnotateRefoundGenomes'
-        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
-
-        expected_lines = \
-            ['##gff-version 3\n',
-             '#test comment line\n',
-             'test_contig\tProkka\tCDS\t1\t10\t.\t+\t0\tlocus_tag=locus_tag_0097\n',
-             'test_contig\tPanaroo\tCDS\t16\t158\t.\t+\t0\tID=locus_tag_0099;locus_tag=locus_tag_0099;old_locus_tag=0_refound_0;name=gene_name;annotation=gene_function\n',
-             'test_contig\tPanaroo\tCDS\t174\t316\t.\t+\t0\tID=locus_tag_0100;locus_tag=locus_tag_0100;old_locus_tag=0_refound_100;annotation=gene_function\n',
-             'test_contig\tPanaroo\tCDS\t332\t469\t.\t+\t0\tID=locus_tag_0101;locus_tag=locus_tag_0101;old_locus_tag=0_refound_10;name=gene_name\n',
-             'test_contig\tProkka\tCDS\t474\t484\t.\t+\t0\tlocus_tag=locus_tag_0098\n',
-             '##FASTA\n',
-             '>test_contig\n',
-             'TTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTG\n',
-             'GCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAG\n',
-             'GACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCC\n',
-             'GATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCT\n',
-             'GATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTAT\n',
-             'TTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGA\n',
-             'ATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTT\n',
-             'TGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTT\n',
-             'TTTT\n'
-             ]
-
-        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
-
-        with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-    def test_annotation_of_neg_stand_gene(self):
-        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
-        gene_data_dict = {'reannotate_gff': {'0_refound_0': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAATAAAAACAGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', 'gene_name', 'gene_function'],
-                                             '0_refound_100': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAAAAAAAAAAGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', '', 'gene_function'],
-                                             '0_refound_10': ['CTAAAATTCATTATAAATAAAGTTACTTTGACCATGTCCTAGATAACCAAAGAAATAGACCAGCAACATTAAAATCAGATAAAATAAAATTGTCTTGCCAAGGCGCAATTCCTCTCAATCTTGATTAGATCGGAAGAG', 'gene_name', '']}}
-        tmp_folder_path = 'TestAnnotateRefoundGenomes'
-        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
-        expected_lines = ['##gff-version 3\n',
-                          '#test comment line\n',
-                          'test_contig\tProkka\tCDS\t1\t10\t.\t+\t0\tlocus_tag=locus_tag_0097\n',
-                          'test_contig\tPanaroo\tCDS\t16\t158\t.\t-\t0\tID=locus_tag_0099;locus_tag=locus_tag_0099;old_locus_tag=0_refound_0;name=gene_name;annotation=gene_function\n',
-                          'test_contig\tPanaroo\tCDS\t174\t316\t.\t-\t0\tID=locus_tag_0100;locus_tag=locus_tag_0100;old_locus_tag=0_refound_100;annotation=gene_function\n',
-                          'test_contig\tPanaroo\tCDS\t332\t469\t.\t-\t0\tID=locus_tag_0101;locus_tag=locus_tag_0101;old_locus_tag=0_refound_10;name=gene_name\n',
-                          'test_contig\tProkka\tCDS\t474\t484\t.\t+\t0\tlocus_tag=locus_tag_0098\n',
-                          '##FASTA\n',
-                          '>test_contig\n',
-                          'TTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGAATTGCTGTTTTTATTG\n',
-                          'GCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAG\n',
-                          'GACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCC\n',
-                          'GATCTAATCAAGATTGAGAGGAATTGCTTTTTTTTTTGGCAAGACAATTTTATTTTATCT\n',
-                          'GATTTTAATGTTGCTGGTCTATTTCTTTGGTTATCTAGGACATGGTCAAAGTAACTTTAT\n',
-                          'TTATAATGAATTTTAGTTTTTTTTTTTTTTTCTCTTCCGATCTAATCAAGATTGAGAGGA\n',
-                          'ATTGCGCCTTGGCAAGACAATTTTATTTTATCTGATTTTAATGTTGCTGGTCTATTTCTT\n',
-                          'TGGTTATCTAGGACATGGTCAAAGTAACTTTATTTATAATGAATTTTAGTTTTTTTTTTT\n',
-                          'TTTT\n']
-
-        correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
-
-        with open('TestAnnotateRefoundGenomes/reannotate_gff_corrected.gff', 'r') as added_gff:
-            self.assertEqual(expected_lines, added_gff.readlines())
-
-    def test_gene_not_found(self):
-        gff_name = 'TestAnnotateRefoundGenomes/reannotate_gff.gff'
-        gene_data_dict = {'reannotate_gff': {'0_refound_0': [
-            'CCCCCCCCCCCCGGGGGGGGGGGGGGGCGGCGCGCGCGCGCGCGGCGCGCGCGGCGCGC',
-            'gene_name', 'gene_function']}}
-
-        tmp_folder_path = 'TestAnnotateRefoundGenomes'
-        corrected_gff_out_dir = 'TestAnnotateRefoundGenomes'
-
-        with self.assertRaises(SystemExit):
-            correct_gffs.annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_gff_out_dir, self.logger)
-
-    # TODO - Add test for annotating of second contig
-
-
-class TestExtractGenomeFasta(unittest.TestCase):
-    def test_extract_genome_fasta(self):
-        genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
-        largest_locus_tag_expected = 'fer_006'
-        header_lines_expected = ['##gff-version3\n', '#test-line\n']
-
-        genome_fasta_dict, largest_locus_tag, header_lines = correct_gffs.extract_genome_fasta('TestExtractGenomeFasta/Mock_gff.gff')
-
-        self.assertEqual(genome_fasta_dict_expected, genome_fasta_dict)
-        self.assertEqual(largest_locus_tag_expected, largest_locus_tag)
-        self.assertEqual(header_lines_expected, header_lines)
-
 
 class TestParsingGffFile(unittest.TestCase):
     """ Test of the function that is used to pass a gff file and return a generator object of CDS lines """
@@ -1155,12 +745,34 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
 
-        return_generator = gff_parser.parse_gff(input_gff_file)
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
 
-    def test_gff_generator_generation_corrected_gff(self):
+    def test_gff_generator_generation_gzipped_input(self):
+        input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella.gff.gz'
+
+        expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
+                           ['contig_1', '.', 'CDS', '100', '190', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.1'],
+                           ['contig_1', '.', 'CDS', '200', '290', '.', '.', '.', 'Silas_the_Salmonella_tag-1-2.2'],
+                           ['contig_1', '.', 'CDS', '300', '390', '.', '.', '.', 'Silas_the_Salmonella_tag-1-3'],
+                           ['contig_1', '.', 'CDS', '400', '490', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.1'],
+                           ['contig_1', '.', 'CDS', '500', '590', '.', '.', '.', 'Silas_the_Salmonella_tag-1-4.2'],
+                           ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
+                           ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
+                           ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"]]
+
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
+
+        for expected, generated in zip(expected_output, return_generator):
+            self.assertEqual(expected, generated)
+
+    def test_gff_generator_generation_panaroo_produced_gff(self):
         input_gff_file = 'TestParsingGffFile/Silas_the_Salmonella_corrected.gff'
 
         expected_output = [['contig_1', '.', 'CDS', '1', '90', '.', '.', '.', 'Silas_the_Salmonella_tag-1-1'],
@@ -1172,9 +784,11 @@ class TestParsingGffFile(unittest.TestCase):
                            ['contig_1', '.', 'CDS', '600', '690', '.', '.', '.', 'Silas_the_Salmonella_tag-1-5.1'],
                            ['contig_1', '.', 'CDS', '700', '790', '.', '.', '.', 'Silas_the_Salmonella_tag-1.7'],
                            ['contig_1', '.', 'CDS', '800', '890', '.', '.', '.', "Silas_the_Salmonella_tag-1-5.2"],
-                           ['contig_1', 'Panaroo', 'CDS', '900', '1000', '.', '+', '0', 'refound_gene_1']]
+                           ['contig_1', '.', 'candidate_gene', '900', '1000', '.', '+', '0', 'refound_gene_1']]
 
-        return_generator = gff_parser.parse_gff(input_gff_file)
+        return_generator = []
+        for line in gff_parser.parse_gff(input_gff_file):
+            return_generator += [line]
 
         for expected, generated in zip(expected_output, return_generator):
             self.assertEqual(expected, generated)
@@ -1211,6 +825,15 @@ class TestGetContigLenth(unittest.TestCase):
 
     def test_multiple_wrapped_contigs(self):
         input_gff_path = 'TestGetContigLenth/multi_contig_wrapped.txt'
+        expected_dict = {'contig_1': 1300,
+                         'contig_2': 1300}
+
+        return_dict = gff_parser.get_contig_lengths(input_gff_path)
+
+        self.assertEqual(expected_dict, return_dict)
+
+    def test_multiple_wrapped_contigs_gz(self):
+        input_gff_path = 'TestGetContigLenth/multi_contig_wrapped.txt.gz'
         expected_dict = {'contig_1': 1300,
                          'contig_2': 1300}
 
@@ -3001,9 +2624,6 @@ class TestSegmentingMockGffs(unittest.TestCase):
         self.assertEqual(master_info, return_master_info)
         self.assertEqual(coreless_contigs, return_coreless_contigs)
 
-    def test_something(self): # TODO - What other wired and wonderfull examples can we come up with?
-        pass
-
 
 class TestMergingDicts(unittest.TestCase):
     """ Functions to merge dictionaries and lists into dictionaries """
@@ -3316,6 +2936,11 @@ class TestSegmentationIdentification(unittest.TestCase):
     """
     Test the function that identifies core gene segments from a pan-genome.
     """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+
     def test_double_edge_segment_identification_all_2_degree_input(self):
         core_neighbour_pairs = {'pan_cluster_1--pan_cluster_2': 10,
                                 'pan_cluster_2--pan_cluster_3': 10,
@@ -3325,9 +2950,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(None, return_1)
 
@@ -3355,9 +2979,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_10': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3381,9 +3004,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_1--pan_cluster_10': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3409,14 +3031,70 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 9}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_segments_w_segment_between_multi_connect_genes(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_A'],
+                             'pan_cluster_C--pan_cluster_I': ['pan_cluster_C', 'pan_cluster_D', 'pan_cluster_H', 'pan_cluster_I'],
+                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_C', 'pan_cluster_Q', 'pan_cluster_B']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 3,
+                                'pan_cluster_B--pan_cluster_C': 1,
+                                'pan_cluster_B--pan_cluster_Q': 2,
+                                'pan_cluster_C--pan_cluster_Q': 2,
+                                'pan_cluster_C--pan_cluster_D': 3,
+                                'pan_cluster_D--pan_cluster_H': 3,
+                                'pan_cluster_H--pan_cluster_I': 3,
+                                }
+        core_gene_dict = {'genome_1': {'tag_7': 'pan_cluster_Q', 'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'},
+                          'genome_2': {'tag_7': 'pan_cluster_Q', 'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'},
+                          'genome_3': {'tag_7': 'pan_cluster_Q', 'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'}}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
+
+        self.assertEqual(expected_segments, double_edge_segements)
+
+    def test_segments_w_large_segment_between_multi_connect_genes(self):
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_A'],
+                             'pan_cluster_H--pan_cluster_I': ['pan_cluster_H', 'pan_cluster_I'],
+                             'pan_cluster_C--pan_cluster_D': ['pan_cluster_D', 'pan_cluster_Q', 'pan_cluster_Z', 'pan_cluster_Y', 'pan_cluster_X', 'pan_cluster_C']}
+
+        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 3,
+                                'pan_cluster_B--pan_cluster_C': 2,
+                                'pan_cluster_B--pan_cluster_D': 1,
+                                'pan_cluster_C--pan_cluster_D': 2,
+                                'pan_cluster_C--pan_cluster_H': 1,
+                                'pan_cluster_C--pan_cluster_X': 1,
+                                'pan_cluster_D--pan_cluster_H': 2,
+                                'pan_cluster_D--pan_cluster_Q': 1,
+                                'pan_cluster_H--pan_cluster_I': 3,
+                                'pan_cluster_X--pan_cluster_Y': 1,
+                                'pan_cluster_Y--pan_cluster_Z': 1,
+                                'pan_cluster_Z--pan_cluster_Q': 1
+                                }
+        core_gene_dict = {'genome_1': {'tag_10': 'pan_cluster_Q', 'tag_9': 'pan_cluster_Z', 'tag_8': 'pan_cluster_Y', 'tag_7': 'pan_cluster_X', 'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'},
+                          'genome_2': {'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'},
+                          'genome_3': {'tag_6': 'pan_cluster_I', 'tag_5': 'pan_cluster_H', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C',
+                                       'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'}}
+
+        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
+
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths(self):
-        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_E', 'pan_cluster_F', 'pan_cluster_G', 'pan_cluster_B'],
+        expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_G', 'pan_cluster_F', 'pan_cluster_E', 'pan_cluster_A'],
                              'pan_cluster_B--pan_cluster_C': ['pan_cluster_C', 'pan_cluster_B']}
 
         core_neighbour_pairs = {'pan_cluster_A--pan_cluster_C': 4,
@@ -3436,9 +3114,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_5': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3467,42 +3144,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_8': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components)
-
-        self.assertEqual(expected_segments, double_edge_segements)
-
-    def test_double_edge_segment_identification_segments_node_w_all_challenging_paths(self):
-        expected_segments = {'pan_cluster_A--pan_cluster_D': ['pan_cluster_A', 'pan_cluster_G', 'pan_cluster_F', 'pan_cluster_E', 'pan_cluster_D'],
-                             'pan_cluster_B--pan_cluster_C': ['pan_cluster_B', 'pan_cluster_H', 'pan_cluster_I', 'pan_cluster_J', 'pan_cluster_C']}#,}
-
-        core_neighbour_pairs = {'pan_cluster_A--pan_cluster_B': 4,
-                                'pan_cluster_A--pan_cluster_K': 4,
-                                'pan_cluster_A--pan_cluster_G': 2,
-                                'pan_cluster_B--pan_cluster_H': 2,
-                                'pan_cluster_B--pan_cluster_L': 4,
-                                'pan_cluster_C--pan_cluster_J': 2,
-                                'pan_cluster_C--pan_cluster_K': 4,
-                                'pan_cluster_D--pan_cluster_C': 4,
-                                'pan_cluster_D--pan_cluster_L': 4,
-                                'pan_cluster_D--pan_cluster_E': 2,
-                                'pan_cluster_E--pan_cluster_F': 2,
-                                'pan_cluster_F--pan_cluster_G': 2,
-                                'pan_cluster_H--pan_cluster_I': 2,
-                                'pan_cluster_I--pan_cluster_J': 2,
-                                'pan_cluster_K--pan_cluster_L': 1
-                                }
-        core_gene_dict = {'genome_1': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
-                          'genome_2': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
-                          'genome_3': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
-                          'genome_4': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'},
-                          'genome_5': {'tag_5': 'pan_cluster_K', 'tag_4': 'pan_cluster_L', 'tag_3': 'pan_cluster_A', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', 'tag_6': 'pan_cluster_C', 'tag_7': 'pan_cluster_D'}}
-
-        core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
-
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3526,9 +3169,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 }
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3555,9 +3197,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_3': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, num_components)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3603,23 +3244,12 @@ class TestSegmentationIdentification(unittest.TestCase):
                                        'tag_16': 'pan_cluster_Q'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
-
         double_edge_segements = {}
         for component in connected_components(core_graph):
             component_graph = core_graph.subgraph(component).copy()
             double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
-                                                                                                   core_gene_dict,
-                                                                                                   num_components)
+                                                                                                   core_gene_dict, self.logger)
 
-        # comparisons = [True for x in double_edge_segements
-        #                if
-        #                (x in expected_segments and
-        #                (expected_segments[x] == double_edge_segements[x] or expected_segments[x][::-1] == double_edge_segements[x]))
-        #                or
-        #                (f"{x.split('--')[1]}'--'{x.split('--')[0]}" in expected_segments and
-        #                (expected_segments[x] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"] or expected_segments[x][::-1] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"]))
-        #                ]
         key_forward = [x for x in double_edge_segements if x in expected_segments]
         key_reverse = [f"{x.split('--')[1]}--{x.split('--')[0]}" for x in double_edge_segements if f"{x.split('--')[1]}--{x.split('--')[0]}" in expected_segments]
         expected_key_match = key_forward+key_reverse
@@ -3634,8 +3264,6 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         # Test of all returned segments look as expected
         self.assertTrue(all(comparisons))
-
-    # TODO - Chat to Andrew about this function how it works and how we can test it more - possibly just run some things to see if it breaks
 
 
 class TestNoAccessorySegmentIdentifcation(unittest.TestCase):

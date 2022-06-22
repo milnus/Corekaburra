@@ -47,14 +47,14 @@ def get_commandline_arguments(args, version):
                           default=None,
                           dest='comp_genomes')
 
-    run_mods.add_argument('-a',
-                          '--no_annotate_refound',
-                          help='Flag to toggle off the creation of new gff files, with annotation of refound genes.\n'
-                               'Only done if input pangenome is detected as coming from Panaroo',
-                          required=False,
-                          default=True,
-                          action='store_false',
-                          dest='annotate')
+    # run_mods.add_argument('-a',
+    #                       '--no_annotate_refound',
+    #                       help='Flag to toggle off the creation of new gff files, with annotation of refound genes.\n'
+    #                            'Only done if input pangenome is detected as coming from Panaroo',
+    #                       required=False,
+    #                       default=True,
+    #                       action='store_false',
+    #                       dest='annotate')
 
     run_mods.add_argument('-cc',
                           '--core_cutoff',
@@ -88,13 +88,13 @@ def get_commandline_arguments(args, version):
                                 default=None,
                                 dest='output_prefix')
 
-    output_control.add_argument('-d',
-                                '--discard_corrected',
-                                help='Discard gff files corrected with refound genes identified by Panaroo - Only compativle if pan-genome comes from Panaroo [Default: Corrected files are kept]',
-                                required=False,
-                                default=False,
-                                action='store_true',
-                                dest='discard_gffs')
+    # output_control.add_argument('-d',
+    #                             '--discard_corrected',
+    #                             help='Discard gff files corrected with refound genes identified by Panaroo - Only compativle if pan-genome comes from Panaroo [Default: Corrected files are kept]',
+    #                             required=False,
+    #                             default=False,
+    #                             action='store_true',
+    #                             dest='discard_gffs')
 
     rem_args.add_argument('-c',
                           '--cpu',

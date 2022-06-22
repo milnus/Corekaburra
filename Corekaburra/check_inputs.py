@@ -93,7 +93,8 @@ def check_gff_in_pan(file_list, gene_presence_absence_path, logger):
         genome_names = [name.replace('"', '') for name in genome_names]
 
     file_list = [os.path.basename(file) for file in file_list]
-    file_list_no_suffix = [file.rstrip('.gff') for file in file_list]
+    file_list_no_suffix = [file.rstrip('.gz') for file in file_list]
+    file_list_no_suffix = [file.rstrip('.gff') for file in file_list_no_suffix]
 
     # Check if all or subset of GFFs from pan genome have been supplied,
     # if only a subset then raise warning

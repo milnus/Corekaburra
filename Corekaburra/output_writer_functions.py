@@ -103,7 +103,6 @@ def segment_writer(segments, out_path, prefix):
     :param prefix: Prefix for any output files
     :return: Nothing
     """
-    # TODO - Maybe include presence of core genes in segment output?
     # Generate file name
     out_file_name = 'core_segments.csv'
     if prefix is not None:

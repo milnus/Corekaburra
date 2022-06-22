@@ -2,12 +2,6 @@ import os
 import csv
 from math import ceil, floor
 import gffutils
-EXIT_GFF_REANNOTATION_ERROR = 3
-
-try:
-    from Corekaburra.correct_gffs import annotate_refound_genes
-except ModuleNotFoundError:
-    from correct_gffs import annotate_refound_genes
 
 try:
     from Corekaburra.exit_with_error import exit_with_error
@@ -25,7 +19,7 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     :return: returns the dict to be used further
     """
     if ';' in gene:
-        for gene_part in gene.split(';'):  # TODO - NOTE! HERE BOTH GENES IN A PAIR IS ADDED as separate key/value-pairs
+        for gene_part in gene.split(';'):
             main_dict[genome][gene_part] = pan_gene_name
     else:
         main_dict[genome][gene] = pan_gene_name
@@ -33,7 +27,7 @@ def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
     return main_dict
 
 
-def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict, corrected_dir, logger):
+def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
     """
     Function that check for that placement of fragmented gene parts, to determine if they are neighbouring or have some genomic feature between them
     :param fragment_info: List of genes that are found to be fragmented, one composite of fragments for each index
@@ -41,35 +35,6 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
     :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
     :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
     """
-    # Check if any refound genes are in fragments to be checked, if then reannotate the genes before checking:
-    refound_fregments = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
-    if refound_fregments:
-        for i, gene_gff in refound_fregments:
-            gene, gff = gene_gff
-            gff_name = None
-
-            try:
-                gff_name = [gff_name for gff_name in input_gffs
-                            if f"{gff}_corrected" in [os.path.basename(gff_name),
-                                                      os.path.basename(gff_name).rsplit('.', 1)[0],
-                                                      os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
-            except IndexError:
-                pass
-
-            if gff_name is None:
-                try:
-                    gff_name = [gff_name for gff_name in input_gffs
-                                if gff in [os.path.basename(gff_name),
-                                           os.path.basename(gff_name).rsplit('.', 1)[0],
-                                           os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
-                except IndexError:
-                    exit_with_error(EXIT_GFF_REANNOTATION_ERROR,
-                                    f'A problem occurred when trying to find a file for reannotation, when passing the '
-                                    f'gene_presence_absence_roary.csv! GFF: {gff}, Gene: {gene}')
-
-                gff_name = annotate_refound_genes(gff_name, gene_data_dict, tmp_folder_path, corrected_dir, logger)
-
-            fragment_info[i][1] = gff_name
 
     fragments_close = []
     for fragment in fragment_info:
@@ -135,10 +100,9 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_
             fragments_close.append(False)
 
     return fragments_close
-    # TODO - find out what the non-closed file problem is here! Can be seen when running unit-tests.
 
 
-def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, gene_data_dict, corrected_dir, logger):
+def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene, source_program, input_gffs, tmp_folder_path, logger):
     """
     Function that pass a Roary style gene presence/absence file.
     :param pres_abs_file: File path to the gene presence/absence file identified
@@ -218,8 +182,7 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 fragment_info = [[genes, gff] for genes, gff in zip(line[14:], gff_file_names[14:]) if ';' in genes]
 
                 # Check that each annotation is neighboring the other annotation.
-                fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, gene_data_dict,
-                                                        corrected_dir, logger) # TODO - If a core gene is found to be made up of fragments not places close enough (With something in between) should this then not be subtracted from the core gene count? - How would this be handled if there is a gff that is not given as input?
+                fragments_close = check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger)
                 # Check if gene was found to be a core gene
                 if all(fragments_close):
                     # Add the gene to the annotation dict
@@ -265,11 +228,6 @@ def read_gene_presence_absence(pres_abs_file, core_gene_presence, low_freq_gene,
                 f"{core_gene_number} core gene clusters were identified\n"
                 f"{low_freq_gene_number} low frequency gene clusters were identified\n"
                 f"{acc_gene_number} intermediate accessory gene clusters were identified\n")
-
-    # Remove gff databases
-    files_in_tmp = os.listdir(tmp_folder_path)
-    gff_dbs = [file for file in files_in_tmp if '_db' in file]
-    [os.remove(os.path.join(tmp_folder_path, db)) for db in gff_dbs]
 
     return core_gene_dict, low_freq_gene_dict, acc_gene_dict
 

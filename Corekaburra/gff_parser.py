@@ -1,38 +1,61 @@
 import os
+import gzip
 
-try:
-    from Corekaburra.correct_gffs import annotate_refound_genes
-except ModuleNotFoundError:
-    from correct_gffs import annotate_refound_genes
+
+def open_file_generator(input_file_path):
+    """
+    Function to read a gff file as either gzip or text
+    :param input_file_path: String path to file
+    :return: Generator with line by line
+    """
+    # Open input file as if it was gzipped
+    try:
+        with gzip.open(input_file_path, 'rt') as open_file:
+            # Test if gzipped by reading line
+            open_file.readline()
+
+            for line in open_file:
+                yield line
+
+    except (OSError, gzip.BadGzipFile):
+        # Open input as if normal
+        with open(input_file_path, 'r') as open_file:
+            for line in open_file:
+                yield line
 
 
 def parse_gff(input_file):
     """
-    Read a gff file and return it as a generator object that return all line containing CDS
+    Try to read a GFF file as gzipped then normal
+    pass it to the parser and return it as a generator object that return all line containing CDS.
+    Break whenever the fasta sequence is reached.
     :param input_file: File-path to a given gff file to be processed
-    :return: Generator object returning CDS from a gff file
+    :return: line from generator object returning CDS from a gff file
     """
-    with open(input_file, 'r') as gff_file:
-        for line in gff_file:
-            if "##FASTA" in line:
-                break
-            if "#" not in line and 'CDS' in line:
-                # Strip line for newline and split columns into list
-                line = line.strip()
-                line = line.split("\t")
+    file_generator = open_file_generator(input_file)
 
-                # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
-                if "old_locus_tag=" in line[8]:
-                    gene_id = line[8][line[8].find('old_locus_tag'):]
-                    if ';' in gene_id:
-                        gene_id = gene_id[:gene_id.find(';')]
-                else:
-                    gene_id = line[8][line[8].find('ID'):line[8].find(';')]
+    for line in file_generator:
+        if "##FASTA" in line:
+            # FASTA found - end loop
+            file_generator.close()
+            break
+        if "#" not in line and ('CDS' in line or 'candidate_gene' in line):
+            # Strip line for newline and split columns into list
+            line = line.strip()
+            line = line.split("\t")
 
-                # Remove equal sign from id and add as identifier for the returned gff line
-                gene_id = gene_id[gene_id.find('=') + 1:]
-                line[8] = gene_id
-                yield line
+            # See if refound gene or Prokka annotated and isolate ID in gene_presence_absence.csv accordingly
+            if "old_locus_tag=" in line[8]:
+                gene_id = line[8][line[8].find('old_locus_tag'):]
+                if ';' in gene_id:
+                    gene_id = gene_id[:gene_id.find(';')]
+            else:
+                gene_id = line[8][line[8].find('ID'):line[8].find(';')]
+
+            # Remove equal sign from id and add as identifier for the returned gff line
+            gene_id = gene_id[gene_id.find('=') + 1:]
+            line[8] = gene_id
+            yield line
 
 
 def get_contig_lengths(input_file):
@@ -47,29 +70,28 @@ def get_contig_lengths(input_file):
     contig_size_dir = {}
 
     # Open the given gff file, find the fasta section of the file and count the length of each contig.
-    with open(input_file, 'r', ) as gff_file:
-        for line in gff_file:
-            if fasta_reached and '>' not in line:
-                contig_size += len(line.rstrip())
-            if fasta_reached and '>' in line:
-                if contig_size > 0:
-                    # Record the previous contig
-                    if contig_name not in contig_size_dir:
-                        contig_size_dir[contig_name] = contig_size
-                    else:
-                        raise ValueError(f"contig name: {contig_name}, in file {input_file} is duplicated! Please fix this")
-
-                    # Set the contig name to the next contig
-                    contig_name = line.strip().split(' ')[0].replace('>', '')
-                    contig_size = 0
+    for line in open_file_generator(input_file):
+        if fasta_reached and '>' not in line:
+            contig_size += len(line.rstrip())
+        if fasta_reached and '>' in line:
+            if contig_size > 0:
+                # Record the previous contig
+                if contig_name not in contig_size_dir:
+                    contig_size_dir[contig_name] = contig_size
                 else:
-                    contig_name = line.strip().split(' ')[0].replace('>', '')
+                    raise ValueError(f"contig name: {contig_name}, in file {input_file} is duplicated! Please fix this")
 
-            if "##FASTA" in line:
-                fasta_reached = True
+                # Set the contig name to the next contig
+                contig_name = line.strip().split(' ')[0].replace('>', '')
+                contig_size = 0
+            else:
+                contig_name = line.strip().split(' ')[0].replace('>', '')
 
-        # Record last contig
-        contig_size_dir[contig_name] = contig_size
+        if "##FASTA" in line:
+            fasta_reached = True
+
+    # Record last contig
+    contig_size_dir[contig_name] = contig_size
 
     return contig_size_dir
 
@@ -263,6 +285,16 @@ def connect_first_n_last_gene_on_contig(core_genes, gff_name, previous_core_gene
 
 
 def record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, contig_name):
+    """
+    Function to record the presence and info of a contig without a core gene
+    :param coreless_contigs: List with info of other core less contigs
+    :param acc_genes_in_region: List of accessory genes on contig
+    :param low_freq_genes_in_region: List of low frequency genes on contig
+    :param gff_name: String name of input gff file.
+    :param contig_name: String name of the contg
+
+    :return: Dict of information round coreless contigs as list.
+    """
     acc_genes_in_region = sorted(list(set(acc_genes_in_region)))
     low_freq_genes_in_region = sorted(list(set(low_freq_genes_in_region)))
     if len(acc_genes_in_region) + len(low_freq_genes_in_region) > 0:
@@ -290,7 +322,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     :return master_info: A dict of multiple pieces of info for each core gene pair (Gff file, core gene 1, core gene 2, distnace between them, genes between them, list of accesspry genes, list of low-frequency genes)
     :return coreless_contigs: Dict of contigs found to not encode any core genes on them. The accessory and low-frequency genes are recorded.
     """
-
     # Initialize data structures to be returned
     core_gene_pairs = []
     core_gene_pair_distance = {}
@@ -303,7 +334,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     if complete_genomes is None:
         complete_genome = False
     else:
-        if os.path.basename(gff_path).replace('.gff', '').replace('_corrected', '') in complete_genomes:
+        if os.path.basename(gff_path).replace('.gz', '').replace('.gff', '') in complete_genomes:
             complete_genome = True
         else:
             complete_genome = False
@@ -378,10 +409,9 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 if line[8] in low_freq_genes[gff_name]:
                     low_freq_genes_in_region.append(low_freq_genes[gff_name][line[8]])
                 else:
-                    # acc_genes_in_region.append(acc_genes[gff_name][line[8]])
                     try:
                         acc_genes_in_region.append(acc_genes[gff_name][line[8]])
-                    except KeyError: # TODO - WHAT DOES THIS DO? - Likely search for fragment within composite, as fragments were previously storred in their composit strings.
+                    except KeyError:
                         gene_key = [key for key in acc_genes[gff_name].keys() if line[8] in key]
                         if len(gene_key) > 1:
                             acc_genes_in_region.append(acc_genes[gff_name][gene_key][0])
@@ -554,14 +584,14 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                                                    master_info)
         else:
             # Add a core-less contig if there has been accessory genes:
-            coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, line[0])
+            coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region,
+                                                      low_freq_genes_in_region, gff_name, line[0])
 
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, \
            low_freq_gene_content, master_info, coreless_contigs
 
 
-def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes, source_program,
-                           annotate, gene_data_dict, corrected_dir, tmp_folder_path, discard_corrected, logger):
+def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_dict, complete_genomes):
     """
     Single function segmenting the gff into core gene regions to be used for simple multi processing
     :param input_gff_file: File-path to the given gff file to be segmented
@@ -569,13 +599,6 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     :param low_freq_genes: Dictionary over low-frequency genes
     :param acc_gene_dict: Dictionary over accessory genes
     :param complete_genomes: Bool indicating if this genome should be considered as a complete genome
-    :param source_program: String indicating if program comes from Roary or Panaroo.
-    :param annotate: Bool to indicate if refound genes should be annotated
-    :param gene_data_dict: Dict of genes, annotations, names, and sequences found in the gene_data.csv file from Panaroo
-    :param corrected_dir: File path to directory where corrected Gff files are to be stored.
-    :param tmp_folder_path: Path to the temporary working folder.
-    :param discard_corrected: Bool indicating if corrected Gff files should be preserved as an output
-    :param logger: Progran logger
 
     :return input_gff_file: File path to the gff being searched
     :return core_genes: Dict of core genes passed to genomes and the pan-genome clusters.
@@ -585,13 +608,6 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
     :return complete_genomes: List of genomes given as complete by the user.
     """
 
-    # Correct input gff file
-    # Add in the refound genes into the gff files and print the corrected GFF files.
-    if source_program == "Panaroo" and annotate:
-        # check if not already corrected file and if any gene is to be inserted at all
-        if "_corrected" not in input_gff_file and any([x in input_gff_file for x in list(gene_data_dict)]):
-            input_gff_file = annotate_refound_genes(input_gff_file, gene_data_dict, tmp_folder_path, corrected_dir, logger)
-
     gff_generator = parse_gff(input_gff_file)
     return_data = segment_gff_content(gff_generator=gff_generator,
                                       gff_path=input_gff_file,
@@ -599,8 +615,5 @@ def segment_genome_content(input_gff_file, core_genes, low_freq_genes, acc_gene_
                                       low_freq_genes=low_freq_genes,
                                       acc_genes=acc_gene_dict,
                                       complete_genomes=complete_genomes)
-
-    if "_corrected" in input_gff_file and discard_corrected:
-        os.remove(input_gff_file)
 
     return return_data

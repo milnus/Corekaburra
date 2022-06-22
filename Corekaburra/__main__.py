@@ -15,8 +15,10 @@ from standard pan-genome pipelines: Roary and Panaroo.
 
 import os
 import logging
+import tempfile
 import time
 import concurrent.futures
+from networkx import write_gml
 
 try:
     from Corekaburra.commandline_interface import get_commandline_arguments
@@ -37,11 +39,6 @@ try:
     from Corekaburra.parse_gene_presence_absence import read_gene_presence_absence
 except ModuleNotFoundError:
     from parse_gene_presence_absence import read_gene_presence_absence
-
-try:
-    from Corekaburra.correct_gffs import prepair_for_reannotation
-except ModuleNotFoundError:
-    from correct_gffs import prepair_for_reannotation
 
 try:
     from Corekaburra.gff_parser import segment_genome_content
@@ -117,18 +114,9 @@ def init_logging(debug_log, quiet, out_path):
     # Log command-line argument and debug line for Corekaburra start
     file_logger.info(f"command line: {' '.join(sys.argv)}")
 
-    return file_logger
 
-
-def stream_logging(file_logger):
-    """
-    Function adding in stream logging following initial logging
-    :param file_logger: Logger object
-    :return: Logger object with added stream logging
-    """
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
-
     file_logger.addHandler(stream_handler)
 
     file_logger.info('\n----------------------Processing started----------------------\n')
@@ -155,14 +143,10 @@ def main():
         pass
 
     # Run initialisation of logger:
-    logger = init_logging(args.log, args.quiet, args.output_path) # TODO - if not dependency check is done then it should be possible to add the stream logger following the logging of the command line in the initial logging function.
-    logger = stream_logging(logger)
+    logger = init_logging(args.log, args.quiet, args.output_path)
 
     # Check that low-frequency cutoff and core cutoff are as expected
     check_cutoffs(args.low_cutoff, args.core_cutoff, logger)
-
-    # TODO - Make Corekaburra take gzipped inputs
-    # TODO - Add so that a single gff file can only be given as input once and not multiple times?
 
     # Check the presence of provided complete genomes among input GFFs
     if args.comp_genomes is not None:
@@ -173,44 +157,23 @@ def main():
     # Check if Panaroo or Roary input folder is given
     source_program, input_pres_abs_file_path = define_pangenome_program(args.input_pan, logger)
 
-    # Check if gene_data file is present if Panaroo input is given an gffs should be annotated
-    if args.annotate and source_program == 'Panaroo':
-        gene_data_path = check_gene_data(args.input_pan, logger)
-    else:
-        gene_data_path = None
-
+    # Check that all GFF files given can be found in the pan-genome
     check_gff_in_pan(args.input_gffs, input_pres_abs_file_path, logger)
 
     # Construct temporary folder:
-    # TODO - check that the temporary folder does not exist and that the user does not have a folder with same name already. (Maybe use a time stamp for the start to make it unique.)
-    tmp_folder_path = os.path.join(args.output_path, 'Corekaburra_tmp')
-    try:
-        os.mkdir(tmp_folder_path)
-    except FileExistsError:
-        for file in os.listdir(tmp_folder_path):
-            os.remove(file)
+    tmp_folder_path = tempfile.TemporaryDirectory()
 
     logger.info('Initial checks successful\n')
     inital_check_time_end = time.time()
 
     ## Read in gene presence absence file
     time_start_read_files = time.time()
-    # Prepair folder for reannotated genes and examine if any are already present
-    if source_program == "Panaroo" and args.annotate:
-        gene_data_dict, corrected_dir, args.input_gffs = prepair_for_reannotation(gene_data_path, args.output_path,
-                                                                                  args.input_gffs, logger)
-    else:
-        gene_data_dict = None
-        corrected_dir = None
 
-    # TODO - ATM the column with presence of gene in genomes is used to define what is core and not. Is it better to use the number of input gffs instead?
-    #   - There are upsides to the current. You can use the same genome to find segments for two different populations with in the dataset using the same reference of core-genes
-    #   - Making it depend on the input is not viable for comparing runs, even within the same pan-genome, when using different sets of gff files.
-    # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
+    # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
-                                                                         args.input_gffs, tmp_folder_path,
-                                                                         gene_data_dict, corrected_dir, logger)
+                                                                         args.input_gffs, tmp_folder_path.name,
+                                                                         logger)
 
 
     time_end_read_files = time.time()
@@ -228,16 +191,14 @@ def main():
 
     progress_counter = 0
     if len(args.input_gffs) > 10:
-        progress_update = len(args.input_gffs) / 10
+        progress_update = int(len(args.input_gffs) / 10)
     else:
         progress_update = 1
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu) as executor:
         logger.info(f"------Start core region identification of given gff files-----\n")
         logger.info(f'{len(args.input_gffs)} GFF files to process')
-
-        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes,
-                                   source_program, args.annotate, gene_data_dict, corrected_dir, tmp_folder_path, args.discard_gffs, logger)
+        results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes)
                    for gff in args.input_gffs]
 
         for output in concurrent.futures.as_completed(results):
@@ -261,7 +222,6 @@ def main():
     time_end_passing_gffs = time.time()
     time_start_segments_search = time.time()
 
-    time_start = time.time() # TODO - This seems like a lonely start timer?
     # Count number of unique accessory genes inserted into a core-core region across the genomes
     acc_region_count = {key: len(set(core_neighbour_low_freq[key])) for key in core_neighbour_low_freq}
     # Count number of unique low frequency genes inserted into a core-core region across the genomes
@@ -271,8 +231,8 @@ def main():
     # Combine the accessory and low frequency counts:
     combined_acc_gene_count = {key: low_frew_region_count[key] + acc_region_count[key] for key in low_frew_region_count}
 
-    double_edge_segements, no_acc_segments = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
-                                                                       len(args.input_gffs), core_dict, logger)
+    double_edge_segements, no_acc_segments, core_graph = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
+                                                                       len(args.input_gffs), core_dict, args.cpu, logger)
 
     time_end_segments_search = time.time()
 
@@ -296,15 +256,14 @@ def main():
 
         logger.debug("No Accessory segment output")
         no_acc_segment_writer(no_acc_segments, args.output_path, args.output_prefix)
-    # TODO - Possibly output core gene graph. with segment annotations in colour - possibly info on edges using weight for conenctions and other atributes for acc content.?
 
-    # TODO - Print summary number of genes and names for non-core contigs
-    # TODO - Should we print a low-freq, placement?
-    if len(non_core_contig_info)> 0:
+        logger.debug("Writing core gene graph")
+        graph_name = f'{args.output_prefix}_core_gene_graph.gml' if args.output_prefix is not None else 'core_gene_graph.gml'
+        write_gml(core_graph, path=os.path.join(args.output_path, graph_name))
+
+    if len(non_core_contig_info) > 0:
         logger.debug("Non-core contig output")
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
-
-    # time_calculator(time_start, time.time(), "writing output files")
 
     # Finish up running
     total_time = round(time.time() - total_time_start, 1)
@@ -319,13 +278,6 @@ def main():
     logger.debug(f"Reading pan-genome files time: {read_fies_time}s")
     logger.debug(f"Passing over Gff files time: {passing_gffs_time}s")
     logger.debug(f"Searching for segments time: {segment_search_time}s")
-
-
-    # Remove temporary database holding gff databases
-    if os.path.isdir(tmp_folder_path):
-        os.rmdir(tmp_folder_path)
-    if args.discard_gffs:
-        os.rmdir(os.path.join(args.output_path, 'Corrected_gff_files'))
 
 
 if __name__ == '__main__':
