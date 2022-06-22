@@ -40,11 +40,6 @@ try:
 except ModuleNotFoundError:
     from parse_gene_presence_absence import read_gene_presence_absence
 
-# try:
-#     from Corekaburra.correct_gffs import prepair_for_reannotation
-# except ModuleNotFoundError:
-#     from correct_gffs import prepair_for_reannotation
-
 try:
     from Corekaburra.gff_parser import segment_genome_content
 except ModuleNotFoundError:
@@ -208,7 +203,6 @@ def main():
 
         for output in concurrent.futures.as_completed(results):
             progress_counter += 1
-            print(progress_counter)
             if progress_counter % progress_update == 0 or progress_counter == 1:
                 logger.info(f"GFF file #{progress_counter} has been processed")
 

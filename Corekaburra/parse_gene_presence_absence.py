@@ -35,33 +35,6 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
     :param tmp_folder_path: A file-path to the temporary folder of the Corekaburra run
     :return: A List of booleans indicating if a fragments has nothing in between fragments (True) or not (False)
     """
-    # Check if any refound genes are in fragments to be checked, if then reannotate the genes before checking:
-    # refound_genes = [[i, gene_gff] for i, gene_gff in enumerate(fragment_info) if 'refound' in gene_gff[0]]
-    # if refound_genes:
-    #     for i, gene_gff in refound_genes:
-    #         gene, gff = gene_gff
-    #         gff_name = None
-    #
-    #         try:
-    #             gff_name = [gff_name for gff_name in input_gffs
-    #                         if f"{gff}_corrected" in [os.path.basename(gff_name),
-    #                                                   os.path.basename(gff_name).rsplit('.', 1)[0],
-    #                                                   os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
-    #         except IndexError:
-    #             pass
-    #
-    #         if gff_name is None:
-    #             try:
-    #                 gff_name = [gff_name for gff_name in input_gffs
-    #                             if gff in [os.path.basename(gff_name),
-    #                                        os.path.basename(gff_name).rsplit('.', 1)[0],
-    #                                        os.path.basename(gff_name).rsplit('.', 1)[0].rsplit('.', 1)[0]]][0]
-    #             except IndexError:
-    #                 exit_with_error(1,
-    #                                 f'A problem occurred when trying to find a file for reannotation, when passing the '
-    #                                 f'gene_presence_absence_roary.csv! GFF: {gff}, Gene: {gene}')
-    #
-    #         fragment_info[i][1] = gff_name
 
     fragments_close = []
     for fragment in fragment_info:

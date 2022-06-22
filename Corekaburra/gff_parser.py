@@ -1,11 +1,6 @@
 import os
 import gzip
 
-# try:
-#     from Corekaburra.correct_gffs import annotate_refound_genes
-# except ModuleNotFoundError:
-#     from correct_gffs import annotate_refound_genes
-
 
 def open_file_generator(input_file_path):
     """
@@ -414,10 +409,9 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                 if line[8] in low_freq_genes[gff_name]:
                     low_freq_genes_in_region.append(low_freq_genes[gff_name][line[8]])
                 else:
-                    # acc_genes_in_region.append(acc_genes[gff_name][line[8]])
                     try:
                         acc_genes_in_region.append(acc_genes[gff_name][line[8]])
-                    except KeyError: # TODO - WHAT DOES THIS DO? - Likely search for fragment within composite, as fragments were previously storred in their composit strings.
+                    except KeyError:
                         gene_key = [key for key in acc_genes[gff_name].keys() if line[8] in key]
                         if len(gene_key) > 1:
                             acc_genes_in_region.append(acc_genes[gff_name][gene_key][0])
@@ -590,7 +584,8 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                                                    master_info)
         else:
             # Add a core-less contig if there has been accessory genes:
-            coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region, low_freq_genes_in_region, gff_name, line[0])
+            coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region,
+                                                      low_freq_genes_in_region, gff_name, line[0])
 
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, \
            low_freq_gene_content, master_info, coreless_contigs

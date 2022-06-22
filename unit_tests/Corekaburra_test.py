@@ -7,13 +7,12 @@ Usage: python -m unittest -v Corekaburra_test
 # import
 import unittest
 import os
-from shutil import copyfile
 import logging
 from networkx import number_connected_components, connected_components
+
 # pylint: disable=no-name-in-module
 
 # import Corekaburra functions
-from Corekaburra import exit_with_error
 from Corekaburra import read_complete_genome_file
 from Corekaburra import check_inputs
 from Corekaburra import parse_gene_presence_absence
@@ -22,7 +21,6 @@ from Corekaburra import merge_dicts
 from Corekaburra import consesus_core_genome
 from Corekaburra import summary_table
 from Corekaburra import output_writer_functions
-from Corekaburra import correct_gffs
 
 # move to folder with mock files. First try Github structure, then try pulled repository structure
 try:
@@ -730,19 +728,6 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_core_gene_dict, core_gene_dict)
         self.assertEqual(expected_low_freq_gene_dict, low_freq_gene_dict)
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
-
-
-# class TestExtractGenomeFasta(unittest.TestCase):
-#     def test_extract_genome_fasta(self):
-#         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
-#         largest_locus_tag_expected = 'fer_006'
-#         header_lines_expected = ['##gff-version3\n', '#test-line\n']
-#
-#         genome_fasta_dict, largest_locus_tag, header_lines = correct_gffs.extract_genome_fasta('TestExtractGenomeFasta/Mock_gff.gff')
-#
-#         self.assertEqual(genome_fasta_dict_expected, genome_fasta_dict)
-#         self.assertEqual(largest_locus_tag_expected, largest_locus_tag)
-#         self.assertEqual(header_lines_expected, header_lines)
 
 
 class TestParsingGffFile(unittest.TestCase):

@@ -336,7 +336,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
         return_object = [executor.submit(identify_segments,
                                          core_graph.subgraph(component).copy(), num_gffs,
-                                         core_gene_dict, num_core_graph_components, logger)
+                                         core_gene_dict, logger)
                          for component in nx.connected_components(core_graph)]
      #       identify_segments(core_graph.subgraph(component).copy(), num_gffs, core_gene_dict, num_core_graph_components, logger)
         for output in concurrent.futures.as_completed(return_object):
