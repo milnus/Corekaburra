@@ -168,16 +168,16 @@ def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
             return
 
 
-def identify_segments(core_graph, num_gffs, core_gene_dict, num_core_graph_components, logger):
+def identify_segments(core_graph, num_gffs, core_gene_dict, logger):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
     :param core_graph: Graph over core genes with weights being the number of connections between the genes
     :param num_gffs: Number of gffs inputted
     :param core_gene_dict: Dict with keys being genomes, each genome is a dict with keys being genes and values the mapped pan-genome gene cluster.
+    :param logger: Logger for the program
 
     :return: Dict over stretches of core genes found in the core gene graph.
     """
-    # TODO - Describe missing parameters in docstring
 
     # Identify all nodes that contain more than two degrees and only one degree.
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
@@ -312,8 +312,9 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     :param core_neighbour_pairs: Dict of the number of times core pairs have been detected
     :param combined_acc_gene_count: Number of accessory and low-frequency genes detected between core gene pairs
     :param num_gffs: Number of inputted gff files
+    :param core_gene_dict: A dictionary of core genes across genomes and their identifier
+    :param max_cpus: Int for the maximum number of cpus allowed to be used during graph component search
     :param logger: Program logger
-    # TODO - Add parameters
 
     :return double_edge_segements:
     :return no_acc_segments:
@@ -361,5 +362,7 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
 
     return double_edge_segements, no_acc_segments, core_graph
 
+
 if __name__ == '__main__':
+    print('Nothing was computed. This is not a main program. Run __main__.py')
     pass

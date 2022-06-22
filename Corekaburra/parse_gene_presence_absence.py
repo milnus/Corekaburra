@@ -2,12 +2,6 @@ import os
 import csv
 from math import ceil, floor
 import gffutils
-EXIT_GFF_REANNOTATION_ERROR = 3
-
-try:
-    from Corekaburra.correct_gffs import annotate_refound_genes
-except ModuleNotFoundError:
-    from correct_gffs import annotate_refound_genes
 
 try:
     from Corekaburra.exit_with_error import exit_with_error
@@ -66,8 +60,6 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
                     exit_with_error(EXIT_GFF_REANNOTATION_ERROR,
                                     f'A problem occurred when trying to find a file for reannotation, when passing the '
                                     f'gene_presence_absence_roary.csv! GFF: {gff}, Gene: {gene}')
-
-                # gff_name = annotate_refound_genes(gff_name, tmp_folder_path, logger) # TODO - This was commented out
 
             fragment_info[i][1] = gff_name
 

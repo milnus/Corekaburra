@@ -732,17 +732,17 @@ class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
         self.assertEqual(expected_acc_gene_dict, acc_gene_dict)
 
 
-class TestExtractGenomeFasta(unittest.TestCase):
-    def test_extract_genome_fasta(self):
-        genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
-        largest_locus_tag_expected = 'fer_006'
-        header_lines_expected = ['##gff-version3\n', '#test-line\n']
-
-        genome_fasta_dict, largest_locus_tag, header_lines = correct_gffs.extract_genome_fasta('TestExtractGenomeFasta/Mock_gff.gff')
-
-        self.assertEqual(genome_fasta_dict_expected, genome_fasta_dict)
-        self.assertEqual(largest_locus_tag_expected, largest_locus_tag)
-        self.assertEqual(header_lines_expected, header_lines)
+# class TestExtractGenomeFasta(unittest.TestCase):
+#     def test_extract_genome_fasta(self):
+#         genome_fasta_dict_expected = {'contig_1': "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"}
+#         largest_locus_tag_expected = 'fer_006'
+#         header_lines_expected = ['##gff-version3\n', '#test-line\n']
+#
+#         genome_fasta_dict, largest_locus_tag, header_lines = correct_gffs.extract_genome_fasta('TestExtractGenomeFasta/Mock_gff.gff')
+#
+#         self.assertEqual(genome_fasta_dict_expected, genome_fasta_dict)
+#         self.assertEqual(largest_locus_tag_expected, largest_locus_tag)
+#         self.assertEqual(header_lines_expected, header_lines)
 
 
 class TestParsingGffFile(unittest.TestCase):
@@ -2965,9 +2965,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(None, return_1)
 
@@ -2995,9 +2994,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_10': {'tag_1': 'pan_cluster_1', 'tag_2': 'pan_cluster_4', 'tag_3': 'pan_cluster_2', 'tag_4': 'pan_cluster_5'},}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3021,9 +3019,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_1--pan_cluster_10': 10}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3049,9 +3046,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 'pan_cluster_6--pan_cluster_1': 9}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3076,10 +3072,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                        'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components,
-                                                                       self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3109,10 +3103,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                        'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components,
-                                                                       self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3137,9 +3129,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_5': {'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3168,9 +3159,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_8': {'tag_5': 'pan_cluster_E', 'tag_4': 'pan_cluster_D', 'tag_3': 'pan_cluster_C', 'tag_2': 'pan_cluster_B', 'tag_1': 'pan_cluster_A', }}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3194,9 +3184,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                                 }
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3223,9 +3212,8 @@ class TestSegmentationIdentification(unittest.TestCase):
                           'genome_3': {'gene_1': 'pan_cluster_A', 'gene_2': 'pan_cluster_B', 'gene_3': 'pan_cluster_E', 'gene_4': 'pan_cluster_G', 'gene_5': 'pan_cluster_D', 'gene_7': 'pan_cluster_H'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, num_components, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, self.logger)
 
         self.assertEqual(expected_segments, double_edge_segements)
 
@@ -3271,23 +3259,12 @@ class TestSegmentationIdentification(unittest.TestCase):
                                        'tag_16': 'pan_cluster_Q'}}
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
-        num_components = number_connected_components(core_graph)
-
         double_edge_segements = {}
         for component in connected_components(core_graph):
             component_graph = core_graph.subgraph(component).copy()
             double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
-                                                                                                   core_gene_dict,
-                                                                                                   num_components, self.logger)
+                                                                                                   core_gene_dict, self.logger)
 
-        # comparisons = [True for x in double_edge_segements
-        #                if
-        #                (x in expected_segments and
-        #                (expected_segments[x] == double_edge_segements[x] or expected_segments[x][::-1] == double_edge_segements[x]))
-        #                or
-        #                (f"{x.split('--')[1]}'--'{x.split('--')[0]}" in expected_segments and
-        #                (expected_segments[x] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"] or expected_segments[x][::-1] == double_edge_segements[f"{x.split('--')[1]}'--'{x.split('--')[0]}"]))
-        #                ]
         key_forward = [x for x in double_edge_segements if x in expected_segments]
         key_reverse = [f"{x.split('--')[1]}--{x.split('--')[0]}" for x in double_edge_segements if f"{x.split('--')[1]}--{x.split('--')[0]}" in expected_segments]
         expected_key_match = key_forward+key_reverse

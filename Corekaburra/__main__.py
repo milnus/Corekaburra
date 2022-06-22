@@ -40,10 +40,10 @@ try:
 except ModuleNotFoundError:
     from parse_gene_presence_absence import read_gene_presence_absence
 
-try:
-    from Corekaburra.correct_gffs import prepair_for_reannotation
-except ModuleNotFoundError:
-    from correct_gffs import prepair_for_reannotation
+# try:
+#     from Corekaburra.correct_gffs import prepair_for_reannotation
+# except ModuleNotFoundError:
+#     from correct_gffs import prepair_for_reannotation
 
 try:
     from Corekaburra.gff_parser import segment_genome_content
@@ -174,7 +174,6 @@ def main():
     ## Read in gene presence absence file
     time_start_read_files = time.time()
 
-    # TODO - Some day it would be awesome to be able to provide a clustering/population structure which could divide genes into the 13 definitions outlined by Horesh et al. [DOI: 10.1099/mgen.0.000670]
     # TODO - Add in so that the user can give a list of genes that they wish to use as 'core genes'
     core_dict, low_freq_dict, acc_gene_dict = read_gene_presence_absence(input_pres_abs_file_path, args.core_cutoff,
                                                                          args.low_cutoff, source_program,
@@ -197,7 +196,7 @@ def main():
 
     progress_counter = 0
     if len(args.input_gffs) > 10:
-        progress_update = len(args.input_gffs) / 10
+        progress_update = int(len(args.input_gffs) / 10)
     else:
         progress_update = 1
 
@@ -209,6 +208,7 @@ def main():
 
         for output in concurrent.futures.as_completed(results):
             progress_counter += 1
+            print(progress_counter)
             if progress_counter % progress_update == 0 or progress_counter == 1:
                 logger.info(f"GFF file #{progress_counter} has been processed")
 
@@ -267,9 +267,7 @@ def main():
         graph_name = f'{args.output_prefix}_core_gene_graph.gml' if args.output_prefix is not None else 'core_gene_graph.gml'
         write_gml(core_graph, path=os.path.join(args.output_path, graph_name))
 
-    # TODO - Make this work!
     if len(non_core_contig_info) > 0:
-        print("hello!")
         logger.debug("Non-core contig output")
         non_core_contig_writer(non_core_contig_info, args.output_path, args.output_prefix)
 

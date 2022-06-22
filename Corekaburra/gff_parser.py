@@ -1,10 +1,10 @@
 import os
 import gzip
 
-try:
-    from Corekaburra.correct_gffs import annotate_refound_genes
-except ModuleNotFoundError:
-    from correct_gffs import annotate_refound_genes
+# try:
+#     from Corekaburra.correct_gffs import annotate_refound_genes
+# except ModuleNotFoundError:
+#     from correct_gffs import annotate_refound_genes
 
 
 def open_file_generator(input_file_path):
