@@ -61,7 +61,7 @@ We have made an [example workflow](https://github.com/milnus/Corekaburra/wiki/Ex
 Input Gff files must be included in the pan-genome gene_presence_absence.csv-style file.  
 The Gffs are also required to contain a ```##FASTA``` line, dividing the file into annotations at the top and the genome in the bottom of the file.  
 All coding sequences (CDS) annotated in the GFF must also carry an ```ID``` and a ```locus_tag```.  
-Input Gff files can be in gzipped format, if desired
+Input Gff files can be in gzipped format, if desired.
 
 ## Pan-genome folder
 This is the output folder from a Roary or Panaroo run. If designing a gene_presence_absence.csv from a another pan-genome tool folder must at minimum contain a gene_presence_absence.csv file with each field quoted as the gene_presence_absence.csv from Roary.
