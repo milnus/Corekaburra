@@ -4,10 +4,10 @@
 Corekaburra looks at the gene synteny across genomes used to build a pan-genome. Using syntenic information Corekaburra identifies regions between core genes. Regions are described in terms of their content of accessory genes and number of nucleotides between core genes. Information from neighboring core genes is further used to identify stretches of core gene clusters that appear in all genomes given as input. Corekaburra is compatible with outputs from 'standard' pan-genome pipelines: [Roary](academic.oup.com/bioinformatics/article/31/22/3691/240757) and [Panaroo](genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02090-4), and can be extended to others if desired.
 
 # Why and When to use Corekaburra
-Corekaburra fits into the existing frameworks of bioinformatics pipelines for pan-genomes as a down stream analysis tool. It does not reinvent a new pan-genome pipeline, but leverages the existing ones. Because of this, Corekaburra is build to be a natural extension to the analysis of pan-genomes by summarising information and inferring relationships in the pan-genome otherwise not easily accessible via pan-genome graphs. Other tools provide similar outputs or information, but in their own stand-alone pan-genome analysis framework or pipeline. Examples of such frameworks/pipelines are [PPanGGolin](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007732) and [Panakeia](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-022-08303-3). By building on top of existing tools Corekaburra frees users from potentially cross referencing beteween pan-genomes, which in itself is a challenging task. Corekaburra's workflow also allows it to be extended to any pan-genome tool, with an output similar to the gene_presence_absence.csv produced by Roary, making Corekaburra versatile for future implementations of pan-genome pipeline.
+Corekaburra fits into the existing frameworks of bioinformatics pipelines for pan-genomes as a downstream analysis tool. It does not reinvent a new pan-genome pipeline, but leverages the existing ones. Because of this, Corekaburra is built to be a natural extension to the analysis of pan-genomes by summarising information and inferring relationships in the pan-genome otherwise not easily accessible via pan-genome graphs. Other tools provide similar outputs or information, but in their own stand-alone pan-genome analysis framework or pipeline. Examples of such frameworks/pipelines are [PPanGGolin](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007732) and [Panakeia](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-022-08303-3). By building on top of existing tools Corekaburra frees users from potentially cross referencing between pan-genomes, which in itself is a challenging task. Corekaburra's workflow also allows it to be extended to any pan-genome tool, with an output similar to the gene_presence_absence.csv produced by Roary, making Corekaburra versatile for future implementations of pan-genome pipelines.
 
 # Installation
-Corekaburra is writen in Python 3.9, and can be installed via pip and conda. A Docker container is also available.
+Corekaburra is written in Python 3.9, and can be installed via pip and conda. A Docker container is also available.
 
 ## Conda install
 ```conda install -c bioconda corekaburra```
@@ -54,7 +54,7 @@ Other arguments:
 ```
 
 # Example workflow
-We have made an [example workflow](https://github.com/milnus/Corekaburra/wiki/Example-workflow) using three *Streptococcus pyognees* genomes, Panaroo and Corekaburra.
+We have made an [example workflow](https://github.com/milnus/Corekaburra/wiki/Example-workflow) using three *Streptococcus pyogenes* genomes, Panaroo and Corekaburra.
 
 # Inputs
 ## Gff files
@@ -64,10 +64,10 @@ All coding sequences (CDS) annotated in the GFF must also carry an ```ID``` and 
 Input Gff files can be in gzipped format, if desired.
 
 ## Pan-genome folder
-This is the output folder from a Roary or Panaroo run. If designing a gene_presence_absence.csv from a another pan-genome tool folder must at minimum contain a gene_presence_absence.csv file with each field quoted as the gene_presence_absence.csv from Roary.
+This is the output folder from a Roary or Panaroo run. If designing a gene_presence_absence.csv from another pan-genome tool folder must at minimum contain a gene_presence_absence.csv file with each field quoted as the gene_presence_absence.csv from Roary.
 
 ## Complete genomes
-If some input Gffs are to processed as complete or closed genomes, a plain text file can be provided with the filename of these.  
+If some input Gffs are to be processed as complete or closed genomes, a plain text file can be provided with the filename of these.  
 example:
 ```
 complete_genome.gff
@@ -85,24 +85,24 @@ A second argument dividing accessory genes into two groups (Low frequency and In
 Corekaburra outputs multiple files ranging from summaries to more fine grained outputs. This is aimed at giving the user easy access to information, but still allowing for tailored or deep exploration. See [description of outputs in wiki](https://github.com/milnus/Corekaburra/wiki/Inputs-and-outputs#outputs) and [how to query outputs](https://github.com/milnus/Corekaburra/wiki/Down-stream-analyses#Querying-outputs) 
 
 ## Core regions
-A Core region is defined by two core genes flanking a stretch of the genome in at least one input genome. A core region can be described by a distance between the flanking core genes, positive if nucleotides can be found between then, and negative if the two genes overlap). A region can also be described by the number of encoded accessory genes. Using core gene clusters as a reference for a region of genomes it is possible to compare the same region or their presence across genomes. Additionally, with either or both the distance and number of encoded accessory genes in a region it is possible to identify regions of variability, due to horizontal genetic transfer, deletion or other genomic processes.
+A Core region is defined by two core genes flanking a stretch of the genome in at least one input genome. A core region can be described by a distance between the flanking core genes, positive if nucleotides can be found between them, and negative if the two genes overlap). A region can also be described by the number of encoded accessory genes. Using core gene clusters as a reference for a region of genomes it is possible to compare the same region or their presence across genomes. Additionally, with either or both the distance and number of encoded accessory genes in a region it is possible to identify regions of variability, due to horizontal genetic transfer, deletion or other genomic processes.
 
-```core_pair_summary.csv``` is a file that summarises the core regions identified across the input genomes (Gff files). Here information about occurrence and co-occurnece of each core gene pair, and individual core gene occurrences can be found. Distance and accessory gene summary statistics (minimum, maximum, mean, and median) for each core pair is summarised.  
-This file is a good entery point to the results in most analyses, and should give a good indication of which core regions that could be of interest.
+```core_pair_summary.csv``` is a file that summarises the core regions identified across the input genomes (Gff files). Here information about occurrence and co-occurence of each core gene pair, and individual core gene occurrences can be found. Distance and accessory gene summary statistics (minimum, maximum, mean, and median) for each core pair is summarised.  
+This file is a good entry point to the results in most analyses, and should give a good indication of which core regions that could be of interest.
 
 ```core_core_accessory_gene_content.tsv``` gives the placement of each accessory gene found in a core region across all genomes (Gff). Frequency of accessory genes (low- or intermediate frequency) is given.
 
 ```low_frequency_gene_placement.tsv``` summarises each core region across all genomes (Gff) with the distance between core gene clusters, and the number of accessory genes found in the region.
 
 ## Core segments
-The two following files are only given if any core gene is found to have more than two different core genes as neighbours across all input genomes (Gff), meaning there is structural hetrogeneiety across the genomes.
+The two following files are only given if any core gene is found to have more than two different core genes as neighbours across all input genomes (Gff), meaning there is structural heterogeneity across the genomes.
 
 The file ```core_segments.csv``` contain all segments of minimum two core genes identified in a pan-genome, where the start and end of a segments is defined by core gene clusters with more than two neighbours, meaning they could be a potential breakpoint of a genomic inversion in at least a single input genome (Gff), or be a misassembly.    
 
-```no_accessory_core_segments.csv``` divides the segments identified in ```core_segments.csv``` into potential smaller segments where core genes must form regions with no accessory genes between them across all genomes. These segments could indicate potential operon structures or other stable genomic features, that could be disturbed by insertion of accessory genes.
+```no_accessory_core_segments.csv``` divides the segments identified in ```core_segments.csv``` into potential smaller segments where core genes must form regions with no accessory genes between them across all genomes. These segments could indicate potential operon structures or other stable genomic features that could be disturbed by insertion of accessory genes.
 
 ## Core-less contigs
-```coreless_contig_accessory_gene_content.tsv``` gives all contigs identified in genomes (Gff) that does not contain a core gene cluster, but only accessory genes. Each contig is given by contig name, its Gff file, and number of low- and intermediate frequency genes found on the contig. 
+```coreless_contig_accessory_gene_content.tsv``` gives all contigs identified in genomes (Gff) that do not contain a core gene cluster, but only accessory genes. Each contig is given by contig name, its Gff file, and number of low- and intermediate frequency genes found on the contig. 
 
 # For more info
 For more into on Corekaburra, its workings, inputs, outputs and more see the (wiki)[https://github.com/milnus/Corekaburra/wiki]
