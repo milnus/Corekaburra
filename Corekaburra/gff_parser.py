@@ -434,7 +434,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
                                                                         first_core_gene_gff_line, acc_genes_in_region,
                                                                         first_core_accessory_content,
                                                                         low_freq_genes_in_region,
-                                                                        first_core_low_freq_genes, contig_sizes[line[0]],
+                                                                        first_core_low_freq_genes, contig_sizes[previous_contig],
                                                                         core_gene_pairs, core_gene_pair_distance,
                                                                         accessory_gene_content, low_freq_gene_content,
                                                                         master_info)
