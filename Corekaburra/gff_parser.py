@@ -372,7 +372,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
 
                 # Check if core gene is the first observed in file - if then set information else record information
                 if first_core_gene:
-                    print(f'{line = }')
                     # Set information on first core gene to be used when finishing search
                     first_core_gene_gff_line = line
                     first_core_accessory_content = acc_genes_in_region.copy()
