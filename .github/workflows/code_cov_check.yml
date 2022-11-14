@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: setup
         uses: actions/checkout@v.2.5.0
-        with:
-          fetch-detph: '2'
       - name: 'install coverage'
         - run: pip install coverage
         - run: coverage
