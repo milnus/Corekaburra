@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: 'install coverage'
-        run: pip install coverage
+        run: pip3 install coverage
+        run: pip3 install -r requirements-dev.txt
       - name: 'Code coverage check'
         run: coverage run -m unittest unit_tests/Corekaburra_test.py
       - name: 'Upload coverage report'
