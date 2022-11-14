@@ -24,7 +24,7 @@ setup(
     license='LICENSE',
     description=('A commandline bioinformatics tool to utilize syntenic information from genomes in the context of pan-genomes'),
     long_description=(LONG_DESCRIPTION),
-    install_requires=["biopython==1.79", "networkx", "gffutils", "numpy"],
+    install_requires=["biopython==1.79", "networkx>=2.6.3", "gffutils>=0.10.1", "numpy>=1.23.4"],
     keywords=['Genomics', 'pan-genome', 'bacteria', 'prokaryotes', 'bioinformatics'],
     classifiers=[
         'Programming Language :: Python :: 3.9',

@@ -10,13 +10,13 @@ Corekaburra fits into the existing frameworks of bioinformatics pipelines for pa
 Corekaburra is written in Python 3.9, and can be installed via pip and conda. A Docker container is also available.
 
 ## Conda install
-```conda install -c bioconda corekaburra```
+```conda install -c bioconda -c conda-forge corekaburra```
 
 ## pip
 ```pip install corekaburra```
 
 ## Docker
-See the (Wiki for more information)[https://github.com/milnus/Corekaburra/wiki/Docker.md]
+Pull from [DockerHub](https://hub.docker.com/repository/docker/magnusgj/corekaburra) or see the [Wiki for more information](https://github.com/milnus/Corekaburra/wiki/Docker.md)
 
 # Help
 ```

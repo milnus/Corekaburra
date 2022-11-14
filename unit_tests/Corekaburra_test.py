@@ -3460,7 +3460,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.summary_info_writer(input_dict, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_core_pair_summary.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_core_pair_summary.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_segment_writer(self):
@@ -3482,7 +3482,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_core_segments.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_core_segments.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_no_acc_segment_writer(self):
@@ -3505,7 +3505,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.no_acc_segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_no_accessory_core_segments.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_no_accessory_core_segments.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_coreless_contig_writer(self):

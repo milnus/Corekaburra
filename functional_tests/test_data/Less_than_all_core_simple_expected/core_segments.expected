@@ -1,20 +1,20 @@
-Segment_name,Segment_position,Core_gene
-B-C,1,B
-B-C,2,Q
-B-C,3,C
-B-I,1,B
-B-I,2,A
-B-I,3,I
-C-J,1,C
-C-J,2,D
-C-J,3,J
-F-G,1,F
-F-G,2,Z
-F-G,3,G
-F-K,1,F
-F-K,2,E
-F-K,3,K
-G-M,1,G
-G-M,2,H
-G-M,3,L
-G-M,4,M
+Segment_name	Segment_position	Core_gene
+B-C	1	B
+B-C	2	Q
+B-C	3	C
+B-I	1	B
+B-I	2	A
+B-I	3	I
+C-J	1	C
+C-J	2	D
+C-J	3	J
+F-G	1	F
+F-G	2	Z
+F-G	3	G
+F-K	1	F
+F-K	2	E
+F-K	3	K
+G-M	1	G
+G-M	2	H
+G-M	3	L
+G-M	4	M

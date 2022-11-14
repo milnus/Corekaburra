@@ -1,6 +1,7 @@
 # Dependencies, with versions explicitly declared for development and testing
 biopython==1.79
-gffutils
-networkx
+gffutils>=0.10.1
+networkx>=2.6.3
+numpy>=1.23.4
 # Packages that are not dependencies but used for building or testing
 pylint
