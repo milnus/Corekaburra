@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: checkout@v2
         with:
-          fetch-depth: '4'
+          fetch-depth: ‘2’
       - name: 'install coverage'
         - run: pip install coverage
         - run: coverage
