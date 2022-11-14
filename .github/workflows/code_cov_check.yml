@@ -1,0 +1,28 @@
+name: 'Code_coverage'
+on:
+  push:
+    branches:
+      - main
+jobs:
+  code_cov:
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON: '3.9'
+    steps:
+      - uses: checkout@v2
+          with:
+            fetch-depth: '4'
+      - name: 'install coverage'
+        - run: pip install coverage
+        - run: coverage
+      - name: 'Code coverage check'
+        - run: coverage -m unittest unit_test/Corekaburra_test.py
+      - name: 'Upload coverage report'
+      - uses: codecov/codecov-action@v3
+        with:
+          files: .coverage # optional
+          flags: unittests # optional
+          name: codecov-Corekaburra # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
