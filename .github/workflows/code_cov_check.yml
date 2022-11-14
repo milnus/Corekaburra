@@ -10,6 +10,7 @@ jobs:
       OS: ubuntu-latest
       PYTHON: '3.9'
     steps:
+      - name: setup
       - uses: actions/checkout@v2.5.0
         with:
           fetch-depth: 2
