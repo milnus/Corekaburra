@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OS: ubuntu-latest
-      PYTHON: '3.9'
+      PYTHON: '3.9.7'
     steps:
       - uses: actions/checkout@v3
       - name: 'install dependencies'
