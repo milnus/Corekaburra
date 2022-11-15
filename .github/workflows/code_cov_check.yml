@@ -15,10 +15,10 @@ jobs:
         run: pip3 install -r requirements-dev.txt
       - name: 'install coverage'
         run: pip3 install coverage
-      - name: 'navigate to unittest directory'
-        run: cd unit_tests/
+#      - name: 'navigate to unittest directory'
+#        run: cd unit_tests/
       - name: 'Code coverage check'
-        run: coverage run -m unittest Corekaburra_test.py
+        run: coverage run -m unittest unit_tests/Corekaburra_test.py
 #        run: coverage run -m unittest Corekaburra_test
       - name: 'Upload coverage report'
         uses: codecov/codecov-action@v3

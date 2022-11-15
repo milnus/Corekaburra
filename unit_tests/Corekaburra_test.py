@@ -26,7 +26,10 @@ from Corekaburra import output_writer_functions
 try:
     os.chdir('/Corekaburra/unit_tests/unit_test_data/')
 except FileNotFoundError:
-    os.chdir('unit_test_data/')
+    try:
+        os.chdir('unit_test_data/')
+    except FileNotFoundError:
+        os.chdir('unit_tests/unit_test_data/')
 
 
 class TestCutOffViolations(unittest.TestCase):
