@@ -1,4 +1,5 @@
 [![Test](https://github.com/milnus/Corekaburra/actions/workflows/Test.yml/badge.svg)](https://github.com/milnus/Corekaburra/actions/workflows/Test.yml)
+[![codecov](https://codecov.io/gh/milnus/Corekaburra/branch/main/graph/badge.svg?token=090xERhDET)](https://codecov.io/gh/milnus/Corekaburra)
 
 # Overview 
 Corekaburra looks at the gene synteny across genomes used to build a pan-genome. Using syntenic information Corekaburra identifies regions between core genes. Regions are described in terms of their content of accessory genes and number of nucleotides between core genes. Information from neighboring core genes is further used to identify stretches of core gene clusters that appear in all genomes given as input. Corekaburra is compatible with outputs from 'standard' pan-genome pipelines: [Roary](academic.oup.com/bioinformatics/article/31/22/3691/240757) and [Panaroo](genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02090-4), and can be extended to others if desired.
