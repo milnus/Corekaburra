@@ -3250,8 +3250,11 @@ class TestSegmentationIdentification(unittest.TestCase):
         double_edge_segements = {}
         for component in connected_components(core_graph):
             component_graph = core_graph.subgraph(component).copy()
-            double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
-                                                                                                   core_gene_dict, self.logger)
+            # double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
+            #                                                                                        core_gene_dict, self.logger)
+            double_edge_segements.update(consesus_core_genome.identify_segments(component_graph, 2,
+                                                                                core_gene_dict,
+                                                                                self.logger))
 
         key_forward = [x for x in double_edge_segements if x in expected_segments]
         key_reverse = [f"{x.split('--')[1]}--{x.split('--')[0]}" for x in double_edge_segements if f"{x.split('--')[1]}--{x.split('--')[0]}" in expected_segments]
