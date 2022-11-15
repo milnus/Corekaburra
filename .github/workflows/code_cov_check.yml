@@ -18,7 +18,7 @@ jobs:
       - name: 'navigate to unittest directory'
         run: cd unit_tests/
       - name: 'Code coverage check'
-        run: python -m coverage run -m unittest Corekaburra_test.py
+        run: coverage run -m unittest Corekaburra_test.py
 #        run: coverage run -m unittest Corekaburra_test
       - name: 'Upload coverage report'
         uses: codecov/codecov-action@v3
