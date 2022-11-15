@@ -3527,6 +3527,3 @@ class TestWritingOutputFunction(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-if __name__ == 'Corekaburra_test':
-    unittest.main()
