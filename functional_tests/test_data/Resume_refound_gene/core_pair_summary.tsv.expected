@@ -1,0 +1,10 @@
+Core_pair	n	occurrence_core_1	occurrence_core_2	co_occurrence	min_dist	max_dist	mean_dist	median_dist	min_acc	max_acc	mean_acc	median_acc
+A-B	2	4	4	4	9	9	9.0	9.0	0	0	0.0	0.0
+A-C	1	4	4	4	109	109	109.0	109.0	1	1	1.0	1.0
+A-E	1	4	4	4	9	9	9.0	9.0	0	0	0.0	0.0
+B-C	3	4	4	4	9	9	9.0	9.0	0	0	0.0	0.0
+B-E	1	4	4	4	9	9	9.0	9.0	0	0	0.0	0.0
+C-E	2	4	4	4	9	109	59.0	59.0	0	1	0.5	0.5
+C-Sequence_break	2	4	0	0	10	310	160.0	160.0	0	0	0.0	0.0
+E-Sequence_break	2	4	0	0	110	110	110.0	110.0	1	2	1.5	1.5
+Sequence_break-A	4	0	4	0	0	0	0.0	0.0	0	0	0.0	0.0

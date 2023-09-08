@@ -26,8 +26,14 @@ from Corekaburra import output_writer_functions
 try:
     os.chdir('/Corekaburra/unit_tests/unit_test_data/')
 except FileNotFoundError:
-    os.chdir('unit_test_data/')
+    try:
+        os.chdir('unit_test_data/')
+    except FileNotFoundError:
+        os.chdir('unit_tests/unit_test_data/')
 
+# Write test where first contig does not contain a core gene
+
+# Have tests to make sure the core paths multi processing works
 
 class TestCutOffViolations(unittest.TestCase):
     """ Test for the function that examines the cutoffs given for core and low-frequency genes"""
@@ -794,7 +800,7 @@ class TestParsingGffFile(unittest.TestCase):
             self.assertEqual(expected, generated)
 
 
-class TestGetContigLenth(unittest.TestCase):
+class TestGetContigLength(unittest.TestCase):
     """
     Test function that passes a gff file and counts the length of each contig in attached genome
     """
@@ -2951,7 +2957,7 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
+        return_1 = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger, 1)
 
         self.assertEqual(None, return_1)
 
@@ -2980,9 +2986,15 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
+
 
     def test_double_edge_segment_identification_four_segments(self):
         expected_segments = {'pan_cluster_1--pan_cluster_3': ['pan_cluster_1', 'pan_cluster_2', 'pan_cluster_3'],
@@ -3005,9 +3017,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_double_edge_segment_identification_segments_node_w_four_degrees(self):
         # expected_segments = {'pan_cluster_4--pan_cluster_6': ['pan_cluster_4', 'pan_cluster_5', 'pan_cluster_6']}
@@ -3032,9 +3049,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_segments_w_segment_between_multi_connect_genes(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_A'],
@@ -3058,9 +3080,13 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+              expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_segments_w_large_segment_between_multi_connect_genes(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_A'],
@@ -3089,9 +3115,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_B', 'pan_cluster_G', 'pan_cluster_F', 'pan_cluster_E', 'pan_cluster_A'],
@@ -3115,9 +3146,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 5, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_double_edge_segment_identification_segments_node_w_challenging_paths_2(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_F', 'pan_cluster_B'],
@@ -3145,9 +3181,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 8, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_double_edge_segment_identification_segments_node_w_less_than_all_present(self):
         expected_segments = {'pan_cluster_B--pan_cluster_D': ['pan_cluster_B', 'pan_cluster_C', 'pan_cluster_D'],
@@ -3170,9 +3211,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 10, {}, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_double_edge_segment_identification_segments_node_w_two_gene_segment(self):
         expected_segments = {'pan_cluster_A--pan_cluster_B': ['pan_cluster_A', 'pan_cluster_B'],
@@ -3198,9 +3244,14 @@ class TestSegmentationIdentification(unittest.TestCase):
 
         core_graph = consesus_core_genome.construct_core_graph(core_neighbour_pairs)
 
-        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, self.logger)
+        double_edge_segements = consesus_core_genome.identify_segments(core_graph, 3, core_gene_dict, self.logger, 1)
 
-        self.assertEqual(expected_segments, double_edge_segements)
+        # Compare identified segments to expected in both directions as they may be found 'backwards' to the expected
+        segment_comparison = [any([expected_segments[segment] == double_edge_segements[segment],
+                                   expected_segments[segment][::-1] == double_edge_segements[segment]]) for segment in
+                              expected_segments]
+
+        self.assertTrue(all(segment_comparison))
 
     def test_multiple_component_core_graph(self):
         expected_segments = {'pan_cluster_A--pan_cluster_I': ['pan_cluster_A', 'pan_cluster_I'],
@@ -3247,8 +3298,11 @@ class TestSegmentationIdentification(unittest.TestCase):
         double_edge_segements = {}
         for component in connected_components(core_graph):
             component_graph = core_graph.subgraph(component).copy()
-            double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
-                                                                                                   core_gene_dict, self.logger)
+            # double_edge_segements = double_edge_segements | consesus_core_genome.identify_segments(component_graph, 2,
+            #                                                                                        core_gene_dict, self.logger)
+            double_edge_segements.update(consesus_core_genome.identify_segments(component_graph, 2,
+                                                                                core_gene_dict,
+                                                                                self.logger, 1))
 
         key_forward = [x for x in double_edge_segements if x in expected_segments]
         key_reverse = [f"{x.split('--')[1]}--{x.split('--')[0]}" for x in double_edge_segements if f"{x.split('--')[1]}--{x.split('--')[0]}" in expected_segments]
@@ -3266,7 +3320,7 @@ class TestSegmentationIdentification(unittest.TestCase):
         self.assertTrue(all(comparisons))
 
 
-class TestNoAccessorySegmentIdentifcation(unittest.TestCase):
+class TestNoAccessorySegmentIdentification(unittest.TestCase):
     """
     Test the function that takes in segments of core genes and divide them into sub-segments based on the accessory content between core genes in segment.
     """
@@ -3460,7 +3514,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.summary_info_writer(input_dict, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_core_pair_summary.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_core_pair_summary.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_segment_writer(self):
@@ -3482,7 +3536,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_core_segments.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_core_segments.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_no_acc_segment_writer(self):
@@ -3505,7 +3559,7 @@ class TestWritingOutputFunction(unittest.TestCase):
         output_writer_functions.no_acc_segment_writer(input_segments, out_path, prefix)
 
         with open(expected_summary_table, 'r') as expected:
-            with open('TestWritingOutputFunction/test_no_accessory_core_segments.csv', 'r') as result:
+            with open('TestWritingOutputFunction/test_no_accessory_core_segments.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
 
     def test_coreless_contig_writer(self):

@@ -358,6 +358,10 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     low_freq_genes_in_region = []
     acc_genes_in_region = []
 
+    # Initialize First core gene variables
+    first_core_accessory_content = []
+    first_core_low_freq_genes = []
+
     # Go through each line of GFF file
     for line in gff_generator:
         # Set first contig to fund in file
@@ -586,7 +590,6 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
             # Add a core-less contig if there has been accessory genes:
             coreless_contigs = record_coreless_contig(coreless_contigs, acc_genes_in_region,
                                                       low_freq_genes_in_region, gff_name, line[0])
-
     return core_gene_pairs, core_gene_pair_distance, accessory_gene_content, \
            low_freq_gene_content, master_info, coreless_contigs
 

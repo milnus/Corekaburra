@@ -73,13 +73,13 @@ def summary_info_writer(master_summary_info, out_path, prefix):
     :return: Nothing
     """
     # Generate file name
-    out_file_name = 'core_pair_summary.csv' # Previously: core_pair_summary.csv - proposed name: core_region_summary.csv
+    out_file_name = 'core_pair_summary.tsv' # Previously: core_pair_summary.csv - proposed name: core_region_summary.csv
     if prefix is not None:
         out_file_name = prefix + '_' + out_file_name
 
     # Write general content
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.writer(out_file)
+        writer = csv.writer(out_file, delimiter="\t")
 
         # Create header
         header = ['Core_pair', 'n',
@@ -104,13 +104,13 @@ def segment_writer(segments, out_path, prefix):
     :return: Nothing
     """
     # Generate file name
-    out_file_name = 'core_segments.csv'
+    out_file_name = 'core_segments.tsv'
     if prefix is not None:
         out_file_name = prefix + '_' + out_file_name
 
     # Write general content
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.writer(out_file)
+        writer = csv.writer(out_file, delimiter="\t")
 
         # Create header
         header = ['Segment_name', 'Segment_position', 'Core_gene']
@@ -147,13 +147,13 @@ def no_acc_segment_writer(no_acc_segments, out_path, prefix):
     """
 
     # Generate file name
-    out_file_name = 'no_accessory_core_segments.csv'
+    out_file_name = 'no_accessory_core_segments.tsv'
     if prefix is not None:
         out_file_name = prefix + '_' + out_file_name
 
     # Write general content
     with open(os.path.join(out_path, out_file_name), 'w', newline='', encoding='utf-8') as out_file:
-        writer = csv.writer(out_file)
+        writer = csv.writer(out_file, delimiter="\t")
 
         # Create header
         header = ['Parent_segment_name', 'Sub_segment_name', 'Parent_segment_position', 'Sub_segment_position', 'Core_gene']
@@ -181,7 +181,7 @@ def no_acc_segment_writer(no_acc_segments, out_path, prefix):
                     writer.writerow(info)
 
 
-def non_core_contig_writer(non_core_contigs, out_path, prefix,):
+def non_core_contig_writer(non_core_contigs, out_path, prefix):
     """
     Function to write output for contigs with no core gene, but with accessory genes
     :param non_core_contigs: Dict of info for each contig with no core genes, values are list of lists with intermediate and low-frequency genes
