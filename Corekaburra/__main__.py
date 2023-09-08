@@ -195,7 +195,7 @@ def main():
     else:
         progress_update = 1
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu-1) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu) as executor:
         logger.info(f"------Start core region identification of given gff files-----\n")
         logger.info(f'{len(args.input_gffs)} GFF files to process')
         results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes)
@@ -232,7 +232,7 @@ def main():
     combined_acc_gene_count = {key: low_frew_region_count[key] + acc_region_count[key] for key in low_frew_region_count}
 
     double_edge_segements, no_acc_segments, core_graph = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
-                                                                       len(args.input_gffs), core_dict, args.cpu-1, logger)
+                                                                       len(args.input_gffs), core_dict, args.cpu, logger)
 
     time_end_segments_search = time.time()
 
