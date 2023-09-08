@@ -1,5 +1,9 @@
 import networkx as nx
 import concurrent.futures
+from itertools import combinations
+import time
+from random import shuffle
+from math import floor
 
 try:
     from Corekaburra.exit_with_error import exit_with_error
@@ -125,8 +129,12 @@ def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
     while not path_identified:
         counter += 1
 
+        if counter == 1000:
+            raise IndexError(
+                f"Counter reached limit in detecting a new path for pair, with name {target_node = } and {source_node = }")
+
         # Get all shortest path between source and target.
-        all_shortest_paths = nx.all_shortest_paths(core_graph_copy, source_node, target_node)
+        all_shortest_paths = nx.all_shortest_paths(core_graph_copy, source_node, target_node, weight='weight', method='dijkstra') # TODO - Test the addition of weight into the calculation of shortest paths
 
         # Go through each path to see if is satisfies the criteria
         try:
@@ -160,21 +168,70 @@ def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
                     else:
                         core_graph_copy.remove_edge(*path)
 
-                if counter == 1000:
-                    raise IndexError(
-                        f"Counter reached limit in detecting a new path for pair, with name {target_node = } and {source_node = }")
         except nx.NetworkXNoPath:
             # No simple paths could be found for the source and target thus the while loop is terminated.
             return
 
 
-def identify_segments(core_graph, num_gffs, core_gene_dict, logger):
+def find_segments_for_node(source_node, target_node, end_nodes, core_graph, num_gffs, core_gene_dict):
+    if target_node != source_node:
+        # Get path (segment) from source to target
+        segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
+
+        # Get length of path
+        segment_length = len(segment)
+
+        # Get length of segment with multi nodes removed
+        two_degree_segment_length = len(
+            [node for node in segment if node not in end_nodes])
+
+        # Check if no node between the source and target has more than two edges,
+        # if then move to record the segment/path
+        if segment_length - 2 == two_degree_segment_length:
+
+            # Construct name for path
+            source_target_name = sorted([source_node, target_node])
+            source_target_name = f'{source_target_name[0]}--{source_target_name[1]}'
+
+            # Check if two gene segment occur in every possible genome, if not then skip
+            if segment_length == 2:
+                gene_co_occurrences, _ = count_gene_co_occurrence(core_gene_dict, segment)
+                if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrences:
+                    return segment # Returns None
+                else:
+                    # Return segment at a list to be checked further
+                    return {source_target_name: segment}
+
+            # Return segment as a dict to not be checked further
+            return {source_target_name: segment}
+
+
+def path_search(core_graph_copy, source_node, target_node, connect_dict, multi_edge_nodes):
+    suspected_pair = sorted([source_node, target_node])
+    suspected_pair = f'{suspected_pair[0]}--{suspected_pair[1]}'
+
+    # Check that the current target node is not a neighbouring node
+    if target_node not in connect_dict[source_node]:
+        # Search for path
+        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
+
+    else:
+        # Remove the link between the two core genes that are neighbours
+        core_graph_copy.remove_edge(*suspected_pair.split('--'))
+        # Search for path
+        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
+
+    return return_path, suspected_pair
+
+
+def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
     """
     Function to identify stretches of core genes between core genes neighbouring multiple different genes
     :param core_graph: Graph over core genes with weights being the number of connections between the genes
     :param num_gffs: Number of gffs inputted
     :param core_gene_dict: Dict with keys being genomes, each genome is a dict with keys being genes and values the mapped pan-genome gene cluster.
     :param logger: Logger for the program
+    :param max_cpus: The maximum number of cpus to use for parallel processing
 
     :return: Dict over stretches of core genes found in the core gene graph.
     """
@@ -182,6 +239,9 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger):
     # Identify all nodes that contain more than two degrees and only one degree.
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
     single_edge_nodes = [node for node, connections in core_graph.degree if connections == 1]
+
+    logger.debug(f'Identified: {len(multi_edge_nodes)} multi edge nodes')
+    logger.debug(f'Identified: {len(single_edge_nodes)} single edge nodes')
 
     # Check if any node have multiple edges, if not then return.
     if len(multi_edge_nodes+single_edge_nodes) == 0:
@@ -203,44 +263,38 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger):
     double_edge_segements = {}
     multi_edge_connect_adjust = []
 
-    # Go through all source and taget nodes,
+    # Go through all source and target nodes,
     # see if a path can be found where all nodes between them have only two degrees
-    for source_node in multi_edge_nodes+single_edge_nodes:
-        for target_node in multi_edge_nodes+single_edge_nodes:
-            if target_node != source_node:
-                # Get path (segment) from source to target
-                segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
+    start_time = time.time()
+    multi_edge_node_pairs = list(combinations(multi_edge_nodes + single_edge_nodes, 2))
 
-                # Get length of path
-                segment_length = len(segment)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
+        return_object = [executor.submit(find_segments_for_node, source_node, target_node,
+                                         multi_edge_nodes + single_edge_nodes,
+                                         core_graph, num_gffs, core_gene_dict)
+                         for source_node, target_node in multi_edge_node_pairs]
 
-                # Get length of segment with multi nodes removed
-                two_degree_segment_length = len([node for node in segment if node not in multi_edge_nodes+single_edge_nodes])
+        # Handle output from parallel process
+        for output in concurrent.futures.as_completed(return_object):
+            return_segments = output.result()
+            if return_segments is not None:
+                if type(return_segments) is list:
+                    # Check if segment has been added in opposite direction, if not then add it to be further examined
+                    if all([x != return_segments[::-1] for x in multi_edge_connect_adjust]):
+                        multi_edge_connect_adjust.append(return_segments)
 
-                # Check if no node between the source and target has more than two edges,
-                # if then move to record the segment/path
-                if segment_length - 2 == two_degree_segment_length:
-                    # Check if two gene segment occur in every possible genome, if not then skip
-                    if segment_length == 2:
-                        gene_co_occurrences, _ = count_gene_co_occurrence(core_gene_dict, segment)
-                        if num_gffs - core_graph[segment[0]][segment[1]]['weight'] < gene_co_occurrences:
-                            continue
-                        else:
-                            # Check if segment has been added in opposite direction, if not they add it to be further examined
-                            if all([x != segment[::-1] for x in multi_edge_connect_adjust]): multi_edge_connect_adjust.append(segment)
-
-                    # Construct name for path
-                    source_target_name = sorted([source_node, target_node])
-                    source_target_name = f'{source_target_name[0]}--{source_target_name[1]}'
-
+                if type(return_segments) is dict:
                     # Check that path has not been recorded in the opposite direction, if not then record it
-                    if source_target_name not in double_edge_segements:
-                        double_edge_segements[source_target_name] = segment
+                    return_segment_name = list(return_segments.keys())[0]
+                    if return_segment_name not in double_edge_segements:
+                        double_edge_segements = double_edge_segements | return_segments
                     else:
-                        if double_edge_segements[source_target_name] != segment[::-1]:
+                        if double_edge_segements[return_segment_name] != return_segments[return_segment_name][::-1]:
                             exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
-                                            f"Path from one node to another ({source_target_name}) was found, but did not match previously found path!", logger)
+                                            f"Path from one node to another ({return_segment_name}) was found, but did not match previously found path!",
+                                            logger)
 
+                # double_edge_segements = double_edge_segements | return_segments
 
     # Calculate the expected number of paths
     total_edges_from_non_two_edge_core_genes = sum([connections for _, connections in core_graph.degree if connections > 2 or connections < 2])
@@ -269,37 +323,47 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger):
 
         # Compare the number of connections expected to the number identified, to find nodes that are miss connections
         nodes_missing_connections = []
+        num_missing_connections = {}
         for node in expected_edge_num_dict:
             if identified_edge_num_dict[node] != expected_edge_num_dict[node]:
                 nodes_missing_connections.append(node)
+                num_missing_connections[node] = expected_edge_num_dict[node] - identified_edge_num_dict[node]
 
-        # Go through nodes that are missing at least one path and try to identify missing paths
-        for source_node in nodes_missing_connections:
-            for target_node in nodes_missing_connections:
+        # Sort missing nodes so nodes with least missing connections are first.
+        nodes_missing_connections = sorted(nodes_missing_connections, key=num_missing_connections.get, reverse=False)
+        missing_connection_pairs = list(combinations(nodes_missing_connections, 2))
 
-                # Check that the source and target are not the same node
-                if target_node != source_node:
-                    # Copy the graph to manipulate it
-                    core_graph_copy = core_graph.copy()
+        # # scramble the connection pairs
+        # shuffle(missing_connection_pairs)
+        # Divide the connection pairs into chunks
+        chunk_size = floor(max_cpus*5)
+        missing_connection_pairs = [missing_connection_pairs[i:i + chunk_size] for i in range(0, len(missing_connection_pairs), chunk_size)]
 
-                    # Construct a pair name
-                    suspected_pair = sorted([source_node, target_node])
-                    suspected_pair = f'{suspected_pair[0]}--{suspected_pair[1]}'
+        # Initiate list to hold nodes where all edges have been acounted for
+        exclude_missing_node = []
+        for chunk in missing_connection_pairs:
+            # Remove nodes already accounted for
+            chunk = [node_pair for node_pair in chunk if node_pair[0] not in exclude_missing_node and node_pair[1] not in exclude_missing_node]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor: #TODO - insert max_cpus again
+                return_object = [executor.submit(path_search,
+                                                 core_graph.copy(), source_node, target_node,
+                                                 connect_dict, multi_edge_nodes)
+                                 for source_node, target_node in chunk]
 
-                    # Check that the current target node is not a neighbouring node
-                    if target_node not in connect_dict[source_node]:
-                        # Search for path
-                        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
-
-                    else:
-                        # Remove the link between the two core genes that are neighbours
-                        core_graph_copy.remove_edge(*suspected_pair.split('--'))
-                        # Search for path
-                        return_path = search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
+                # Handle output from parallel process
+                for output in concurrent.futures.as_completed(return_object):
+                    return_path, suspected_pair = output.result()
 
                     # Check if proper path is returned and insert it
                     if return_path is not None:
                         double_edge_segements[suspected_pair] = return_path
+
+                        # Update expected edge number dict
+                        connection_nodes = suspected_pair.split('--')
+                        for node in connection_nodes:
+                            identified_edge_num_dict[node] += 1
+                            if identified_edge_num_dict[node] == expected_edge_num_dict[node]:
+                                exclude_missing_node.append(node)
 
     return double_edge_segements
 
@@ -333,16 +397,12 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     #for component in nx.connected_components(core_graph):
 
     logger.debug(f'Searching components of core gene graph')
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
-        return_object = [executor.submit(identify_segments,
-                                         core_graph.subgraph(component).copy(), num_gffs,
-                                         core_gene_dict, logger)
-                         for component in nx.connected_components(core_graph)]
-     #       identify_segments(core_graph.subgraph(component).copy(), num_gffs, core_gene_dict, num_core_graph_components, logger)
-        for output in concurrent.futures.as_completed(return_object):
-            return_segments = output.result()
-            if return_segments is not None:
-                double_edge_segements = double_edge_segements | return_segments
+    for component in nx.connected_components(core_graph):
+        return_segments = identify_segments(core_graph.subgraph(component).copy(), num_gffs, core_gene_dict,
+                          logger, max_cpus)
+
+        if return_segments is not None:
+            double_edge_segements = double_edge_segements | return_segments
 
 
     # if double_edge_segements is not None:
