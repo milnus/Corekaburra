@@ -72,6 +72,13 @@ def get_commandline_arguments(args, version):
                           default=0.05,
                           dest='low_cutoff')
 
+    run_mods.add_argument('-s',
+                          '--segments',
+                          help='Flag to turn on the segment search. This is useful in few situation and is a relatively lengthy process. [default: no segment search]',
+                          default=False,
+                          action='store_true',
+                          dest='find_genome_segments')
+
     output_control.add_argument('-o',
                                 '--output',
                                 help='Path to where output files will be placed [default: current folder]',
