@@ -122,6 +122,16 @@ def identify_no_accessory_segments(double_edge_segements, combined_acc_gene_coun
 
 
 def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes):
+    """
+    function to find path between source and target nodes both having >2 edges.
+    Path between source and target can not contain nodes with >2 edges.
+    Function is recursive and will stop at a depth of 1000.
+    :param core_graph_copy: Copy of core gene graph
+    :param source_node: Source node of the search
+    :param target_node: Target node for search
+    :param multi_edge_nodes: Nodes of core_graph_copy with >2 edges.
+    :return: None if max recursion depth is reached, otherwise list of nodes forming path between source and target nodes.
+    """
     # Counter to stop loop
     counter = 0
     # Identifier to see if path has been found, to stop loop
@@ -174,6 +184,16 @@ def search_for_path(core_graph_copy, source_node, target_node, multi_edge_nodes)
 
 
 def find_segments_for_node(source_node, target_node, end_nodes, core_graph, num_gffs, core_gene_dict):
+    """
+    Function to find "simple" paths between source and target nodes. These paths consist of no nodes with >2 edges, and does not require any nodes to be deleted from the core_graph.
+    :param source_node: Source node in the core_graph from which the search starts.
+    :param target_node: Target node in the core_graph, which is the end of the path.
+    :param end_nodes: List of nodes with >2 edges
+    :param core_graph: Graph of core genes
+    :param num_gffs: Number of gffs given as input for Corekaburra
+    :param core_gene_dict: Dictionary of core genes and their information
+    :return: A dictionary with keys being the name of the source and target nodes, and the value being a list of nodes forming a path from the source to the target node.
+    """
     if target_node != source_node:
         # Get path (segment) from source to target
         segment = nx.shortest_path(core_graph, source_node, target_node, weight='weight', method='dijkstra')
@@ -207,6 +227,16 @@ def find_segments_for_node(source_node, target_node, end_nodes, core_graph, num_
 
 
 def path_search(core_graph_copy, source_node, target_node, connect_dict, multi_edge_nodes):
+    """
+    Function to search for a single path between a source and a target node
+    :param core_graph_copy: Copy of the core gene graph
+    :param source_node: Starting point for search of path
+    :param target_node: End point for searching of path
+    :param connect_dict: Dictionary with connections of core genes
+    :param multi_edge_nodes: List of nodes with >2 edges in core_graph_copy
+    :return: return_path: List of nodes forming the path from source to target
+    :return: suspected_pair: Names of the source and target separated by --
+    """
     suspected_pair = sorted([source_node, target_node])
     suspected_pair = f'{suspected_pair[0]}--{suspected_pair[1]}'
 
@@ -240,8 +270,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
     multi_edge_nodes = [node for node, connections in core_graph.degree if connections > 2]
     single_edge_nodes = [node for node, connections in core_graph.degree if connections == 1]
 
-    logger.debug(f'Identified: {len(multi_edge_nodes)} multi edge nodes')
-    logger.debug(f'Identified: {len(single_edge_nodes)} single edge nodes')
+    logger.info(f'Identified: {len(multi_edge_nodes)} multi edge nodes')
+    logger.info(f'Identified: {len(single_edge_nodes)} single edge nodes')
 
     # Check if any node have multiple edges, if not then return.
     if len(multi_edge_nodes+single_edge_nodes) == 0:
@@ -250,6 +280,7 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
     # Dict to hold connections between >2 edge nodes
     connect_dict = {}
 
+    logger.debug(f'Identifying neighbours for multi edge nodes')
     # for all nodes with >2 degrees themself, identify neighbouring nodes with >2 degrees
     for node in multi_edge_nodes+single_edge_nodes:
         connect_dict[node] = [neighbor for neighbor in core_graph.neighbors(node)
@@ -267,6 +298,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
     # see if a path can be found where all nodes between them have only two degrees
     start_time = time.time()
     multi_edge_node_pairs = list(combinations(multi_edge_nodes + single_edge_nodes, 2))
+    counter = 1
+    logger.debug(f'Start first search')
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
         return_object = [executor.submit(find_segments_for_node, source_node, target_node,
@@ -276,6 +309,8 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
 
         # Handle output from parallel process
         for output in concurrent.futures.as_completed(return_object):
+            logger.debug(f'First counter: {counter}')
+            counter += 1
             return_segments = output.result()
             if return_segments is not None:
                 if type(return_segments) is list:
@@ -341,7 +376,10 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
 
         # Initiate list to hold nodes where all edges have been acounted for
         exclude_missing_node = []
+        counter = 1
         for chunk in missing_connection_pairs:
+            logger.debug(f'Second counter: {counter}')
+            counter += 1
             # Remove nodes already accounted for
             chunk = [node_pair for node_pair in chunk if node_pair[0] not in exclude_missing_node and node_pair[1] not in exclude_missing_node]
             with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor: #TODO - insert max_cpus again
@@ -369,7 +407,6 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
 
 
 def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num_gffs, core_gene_dict, max_cpus, logger):
-
     """
     Function to be called from main that collects the functions for determining core segments in pan-genome
 
@@ -384,13 +421,13 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
     :return no_acc_segments:
     """
 
-    logger.debug(f"--------------Searching for segments in pan genome--------------")
+    logger.info(f"--------------Searching for segments in pan genome--------------")
 
     # Construct a graph from core gene neighbours
     core_graph = construct_core_graph(core_neighbour_pairs)
     num_core_graph_components = nx.number_connected_components(core_graph)
 
-    logger.debug(f'Identified: {num_core_graph_components} components in core genome graph')
+    logger.info(f'Identified: {num_core_graph_components} components in core genome graph')
 
     double_edge_segements = {}
     # Identify all segments in components of core graph
@@ -407,8 +444,8 @@ def determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count, num
 
     # if double_edge_segements is not None:
     if double_edge_segements:
-        logger.debug(f'A total of {len(double_edge_segements)} core genes were identified to have multiple neighbours.')
-        logger.debug(f'Genes with multiple neighbours: {double_edge_segements}')
+        logger.info(f'A total of {len(double_edge_segements)} core genes were identified to have multiple neighbours.')
+        logger.info(f'Genes with multiple neighbours: {double_edge_segements}')
 
         logger.debug('Search for Segments with no accessory genes starts now')
 
