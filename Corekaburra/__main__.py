@@ -222,6 +222,8 @@ def main():
     time_end_passing_gffs = time.time()
 
     double_edge_segements = []
+    no_acc_segments = []
+    core_graph = []
 
     time_start_segments_search = time.time()
 

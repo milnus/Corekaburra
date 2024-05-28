@@ -1,3 +1,5 @@
+# pylint: disable=E0606
+
 def merge_dicts_counts(parent_dict, merge_object):
     """
     Function that can merge two dicts by keys and adding 1 to the value each time key is observed

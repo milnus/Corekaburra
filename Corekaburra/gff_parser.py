@@ -1,6 +1,7 @@
 import os
 import gzip
 
+# pylint: disable=E0606
 
 def open_file_generator(input_file_path):
     """
