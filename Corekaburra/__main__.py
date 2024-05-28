@@ -1,4 +1,4 @@
-'''
+"""
 Module      : Main
 Description : The main entry point for the Corekaburra.
 Copyright   : (c) Magnus Ganer Jespersen, 11 Oct 2021 
@@ -11,7 +11,7 @@ identifies regions between core gene clusters. Regions are described in terms of
 and distance between core genes. Information from neighboring core genes is further used to identify stretches of core
 gene clusters throughout the pan-genome that appear in all genomes given as input. Corekaburra is compatible with outputs
 from standard pan-genome pipelines: Roary and Panaroo.
-'''
+"""
 
 import os
 import logging

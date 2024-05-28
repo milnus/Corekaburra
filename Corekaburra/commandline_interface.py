@@ -73,10 +73,10 @@ def get_commandline_arguments(args, version):
                           dest='low_cutoff')
 
     run_mods.add_argument('-s',
-                          '--no_segments',
+                          '--segments',
                           help='Flag to turn on the segment search. This is useful in few situation and is a relatively lengthy process. [default: no segment search]',
-                          default=True,
-                          action='store_false',
+                          default=False,
+                          action='store_true',
                           dest='find_genome_segments')
 
     output_control.add_argument('-o',

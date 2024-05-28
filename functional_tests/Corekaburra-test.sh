@@ -183,32 +183,32 @@ call_new_test "Test exit status for a bad command line invocation"
 test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1" 2
 
 call_new_test "Test exit status for a bad cutoffs provided - core lower than low-frequency"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 0.1 -lc 0.2 > /dev/null 2>&1" 2
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 0.1 -lc 0.2 -s > /dev/null 2>&1" 2
 
 call_new_test "Test exit status for a bad cutoffs provided - core above range"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1.1 -lc 0.2 > /dev/null 2>&1" 2
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1.1 -lc 0.2 -s > /dev/null 2>&1" 2
 
 call_new_test "Test exit status for a bad cutoffs provided - low-frequency below range"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1 -lc -0.2 > /dev/null 2>&1" 2
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -cc 1 -lc -0.2 -s > /dev/null 2>&1" 2
 
 call_new_test "Test exit status for a complete genome not given as input gff file"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file > /dev/null 2>&1" 1
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -cg complete_genomes_file -s > /dev/null 2>&1" 1
 
 call_new_test "Test exit upon unsuccessful identification of source program"
-test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder > /dev/null 2>&1" 1
+test_exit_status "$test_program -ig complete_genome_double_chrom.gff -ip Crash_pan_folder -s > /dev/null 2>&1" 1
 
 call_new_test "Test exit upon gff not found in pan is provided as input"
-test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Crash_gff_folder > /dev/null 2>&1" 1
+test_exit_status "$test_program -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Crash_gff_folder -s > /dev/null 2>&1" 1
 
 call_new_test "Test Roary input"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Simple_run_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test Panaroo input"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Panaroo_run -o test_out_folder -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Simple_run_expected/core_pair_summary.tsv.expected
@@ -216,7 +216,7 @@ rm -r test_out_folder
 
 
 call_new_test "test gzipped input gffs"
-Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff.gz -ip Roray_run -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff.gz -ip Roray_run -o test_out_folder -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Simple_run_expected/core_pair_summary.tsv.expected
@@ -224,7 +224,7 @@ rm -r test_out_folder
 
 
 call_new_test "test mixed gzipped and non-gzipped input gffs"
-Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff.gz complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Simple_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Simple_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Simple_run_expected/core_pair_summary.tsv.expected
@@ -232,7 +232,7 @@ rm -r test_out_folder
 
 
 call_new_test "Test with GFF where reannotated in panaroo is called 'candidate_gene' instead of CDS"
-Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff -ip candidate_gene_pan_input -o test_out_folder > /dev/null 2>&1
+Corekaburra -ig candidate_gene_1.gff candidate_gene_2.gff -ip candidate_gene_pan_input -o test_out_folder -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv candidate_gene_pan_input_expected/core_core_accessory_gene_content.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv candidate_gene_pan_input_expected/low_frequency_gene_placement.expected
 test_output_file test_out_folder/core_pair_summary.tsv candidate_gene_pan_input_expected/core_pair_summary.expected
@@ -240,28 +240,28 @@ rm -r test_out_folder
 
 
 call_new_test "Test complete genome with single contig and single complete genome among input"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff -ip Roray_run -o test_out_folder -cg Complete_single_chromosome.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Single_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Single_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Single_comple_chromosome_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test complete genome with multiple contigs (Simulate plasmids or two chromosomes)"
-Corekaburra -ig complete_genome_double_chrom.gff complete_genome_double_chrom_2.gff -ip complete_double_chromoosme_run -o test_out_folder -cg Complete_double_chromosomes.txt > /dev/null 2>&1
+Corekaburra -ig complete_genome_double_chrom.gff complete_genome_double_chrom_2.gff -ip complete_double_chromoosme_run -o test_out_folder -cg Complete_double_chromosomes.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv double_comple_chromosome_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv double_comple_chromosome_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv double_comple_chromosome_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with accessory genes"
-Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
+Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Accessory_chrom_run -o test_out_folder -cg complete_larger_genome_list.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Accessory_chrom_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Accessory_chrom_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Accessory_chrom_run_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with segments and sub-segments"
-Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Rearrangement_run -o test_out_folder -cg complete_larger_genome_list.txt > /dev/null 2>&1
+Corekaburra -ig genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Rearrangement_run -o test_out_folder -cg complete_larger_genome_list.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Rearrangement_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Rearrangement_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Rearrangement_run_expected/core_pair_summary.tsv.expected
@@ -270,7 +270,7 @@ test_output_file test_out_folder/no_accessory_core_segments.tsv Rearrangement_ru
 rm -r test_out_folder
 
 call_new_test "Test that segmnets can be identified with a core-cutoff that is less than all genomes"
-Corekaburra -ip Less_than_all_core_simple/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
+Corekaburra -ip Less_than_all_core_simple/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_simple_expected/core_core_accessory_gene_content.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_core_simple_expected/low_frequency_gene_placement.expected
 test_output_file test_out_folder/core_pair_summary.tsv Less_than_all_core_simple_expected/core_pair_summary.expected
@@ -280,7 +280,7 @@ rm -r test_out_folder
 
 
 call_new_test "Test that segments are produced for instances where a core gene may be left out"
-Corekaburra -ip Less_than_all_core_complex/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9  > /dev/null 2>&1
+Corekaburra -ip Less_than_all_core_complex/ -ig complete_genome_double_chrom_extra_large.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_extra_large.gff -o test_out_folder/ -cc 0.9 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_core_complex_expected/core_core_accessory_gene_content.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_core_complex_expected/low_frequency_gene_placement.expected
 test_output_file test_out_folder/core_pair_summary.tsv Less_than_all_core_complex_expected/core_pair_summary.expected
@@ -290,7 +290,7 @@ rm -r test_out_folder
 
 
 call_new_test "Test using two complete chromosomes (complete genome) when >1 contig test"
-Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cc 0.9 -cg complete_larger_double_chr_genome_list.txt  > /dev/null 2>&1
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cc 0.9 -cg complete_larger_double_chr_genome_list.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multiple_component_graph_complete_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Multiple_component_graph_complete_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Multiple_component_graph_complete_expected/core_pair_summary.tsv.expected
@@ -299,7 +299,7 @@ test_output_file test_out_folder/no_accessory_core_segments.tsv Multiple_compone
 rm -r test_out_folder
 
 call_new_test "Test when core graph forms multiple components - not forming a single 'chromosome' - non circular input gffs"
-Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/  > /dev/null 2>&1
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multi_component_graph_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Multi_component_graph_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Multi_component_graph_expected/core_pair_summary.tsv.expected
@@ -308,7 +308,7 @@ test_output_file test_out_folder/no_accessory_core_segments.tsv Multi_component_
 rm -r test_out_folder
 
 call_new_test "Test when core graph forms multiple components - not forming a single 'chromosome' - circular input gffs"
-Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cg complete_larger_double_chr_genome_list.txt > /dev/null 2>&1
+Corekaburra -ip Multiple_component_graph/ -ig complete_genome_double_chrom_larger.gff complete_genome_double_chrom_2_larger.gff complete_genome_double_chrom_3_larger.gff -o test_out_folder/ -cg complete_larger_double_chr_genome_list.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Multiple_component_graph_complete_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Multiple_component_graph_complete_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Multiple_component_graph_complete_expected/core_pair_summary.tsv.expected
@@ -317,28 +317,28 @@ test_output_file test_out_folder/no_accessory_core_segments.tsv Multiple_compone
 rm -r test_out_folder
 
 call_new_test "Test with decreased core-gene cutoff"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -cc 0.9 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv core_90_cutoff_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv core_90_cutoff_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv core_90_cutoff_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with increase low cutoff"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0.4 > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0.4 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Increase_low_cutoff_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Increase_low_cutoff_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Increase_low_cutoff_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with zero low cutoff"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0 > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_single_chrom_2.gff genome_single_chrom_larger.gff -ip Change_cutoffs -o test_out_folder -lc 0 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv low_freq_cutoff_0_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv low_freq_cutoff_0_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv low_freq_cutoff_0_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with less than all gffs from pan-genome provided"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Less_than_all_gffs -o test_out_folder -cc 0.9 > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff -ip Less_than_all_gffs -o test_out_folder -cc 0.9 -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Less_than_all_gffs_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Less_than_all_gffs_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Less_than_all_gffs_run_expected/core_pair_summary.tsv.expected
@@ -347,42 +347,42 @@ test_output_file test_out_folder/no_accessory_core_segments.tsv Less_than_all_gf
 rm -r test_out_folder
 
 call_new_test "Test with a single core gene on a contig that is not complete"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_contig_draft_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv single_core_contig_draft_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with a single core gene on a contig that is complete"
-Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ -cg complete_genomes_file > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff complete_genome_double_chrom.gff -ip Single_core_contig/ -o test_out_folder/ -cg complete_genomes_file -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv single_core_contig_complete_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv single_core_contig_complete_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv single_core_contig_complete_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test for core genes being fragmented"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger_2.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/  > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger_2.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_run/ -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_core_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Fragmented_core_run_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test a fragmented core gene not accepted as core"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_break_run/ -o test_out_folder/ > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_core_gene_break_run/ -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_core_gene_break_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_core_gene_break_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Fragmented_core_gene_break_run_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test for accessory genes being fragmented"
-Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_accessory_gene_run/ -o test_out_folder/ > /dev/null 2>&1
+Corekaburra -ig complete_genome_single_chrom.gff genome_single_chrom_larger.gff genome_single_chrom_larger_rearrange.gff complete_genome_single_chrom_2.gff -ip Fragmented_accessory_gene_run/ -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Fragmented_accessory_gene_run_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Fragmented_accessory_gene_run_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Fragmented_accessory_gene_run_expected/core_pair_summary.tsv.expected
 rm -r test_out_folder
 
 call_new_test "Test with a core-less contig draft"
-Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ > /dev/null 2>&1
+Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv coreless_contig_draft_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv coreless_contig_draft_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv coreless_contig_draft_expected/core_pair_summary.tsv.expected
@@ -390,7 +390,7 @@ test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv core
 rm -r test_out_folder
 
 call_new_test "Test with a core-less contig complete"
-Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ -cg Complete_double_chromosomes.txt > /dev/null 2>&1
+Corekaburra -ig complete_genome_double_chrom_2.gff complete_genome_double_chrom.gff -ip Coreless_contig_run/ -o test_out_folder/ -cg Complete_double_chromosomes.txt -s > /dev/null 2>&1
 test_output_file test_out_folder/core_core_accessory_gene_content.tsv Coreless_contig_complete_expected/core_core_accessory_gene_content.tsv.expected
 test_output_file test_out_folder/low_frequency_gene_placement.tsv Coreless_contig_complete_expected/low_frequency_gene_placement.tsv.expected
 test_output_file test_out_folder/core_pair_summary.tsv Coreless_contig_complete_expected/core_pair_summary.tsv.expected
