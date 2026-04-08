@@ -396,6 +396,7 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Coreless_conti
 test_output_file test_out_folder/core_pair_summary.tsv Coreless_contig_complete_expected/core_pair_summary.tsv.expected
 test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv Coreless_contig_complete_expected/coreless_contig_accessory_gene_content.tsv.expected
 rm -r test_out_folder
+rm test_data/Corekaburra.log 2> /dev/null
 
 
 # 3. End of testing - check if any errors occurrred
