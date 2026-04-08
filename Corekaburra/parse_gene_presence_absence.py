@@ -47,10 +47,10 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
         # Get the gff and its path
         if '.gff' not in genome:
             try:
-                gff_file = [file for file in input_gffs if f'{genome}.gff' in file][0]
+                gff_file = next(file for file in input_gffs if os.path.basename(file) == f'{genome}.gff')
                 db_name = os.path.join(tmp_folder_path, f'{genome}_db')
-            except IndexError:
-                raise NotImplementedError(f'No gff match was found when searching fragments for genome: {genome}')
+            except StopIteration:
+                raise NotImplementedError(f'No exact gff match was found for genome: {genome}')
         else:
             gff_file = genome
             db_name = f"{os.path.basename(genome)}_db"

@@ -351,6 +351,26 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         self.assertEqual(expected_return, return_bool)
 
+    def test_fragmented_gene_ambiguous_basename(self):
+        """ GFF file matching must use exact basename, not substring.
+        When input_gffs contains paths where one basename is a suffix of another
+        (e.g., 'Extra_Silas_the_Salmonella.gff' and 'Silas_the_Salmonella.gff'),
+        the correct file must be selected for genome 'Silas_the_Salmonella'. """
+        fragments_info = [['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella']]
+        # Place the ambiguous longer-named file BEFORE the correct file so that
+        # a substring-based search with [0] would incorrectly pick it.
+        input_gffs = ['TestParsingGenePresenceAbsenceFile/Extra_Silas_the_Salmonella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff']
+        tmp_folder_path = 'test_tmp_folder'
+
+        expected_return = [True]
+
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
+                                                                        self.logger)
+
+        self.assertEqual(expected_return, return_bool)
+
 
 class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
     """
