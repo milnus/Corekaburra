@@ -1,2 +1,4 @@
 *.pyc
 CLAUDE.md
+Corekaburra.egg*/
+build/
