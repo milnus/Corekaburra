@@ -7,12 +7,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: 'Build Docker image'
-        run: docker build -t corekaburra .
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: 'Install dependencies'
+        run: pip install -r requirements-dev.txt
+      - name: 'Install Corekaburra'
+        run: pip install .
       - name: 'Run unit tests'
-        run: docker run --entrypoint /Corekaburra/.travis/unit-test.sh corekaburra
+        run: bash .travis/unit-test.sh
       - name: 'Run functional tests'
-        run: docker run --entrypoint /Corekaburra/functional_tests/Corekaburra-test.sh corekaburra -p Corekaburra -d /Corekaburra/functional_tests/test_data -v
+        run: bash functional_tests/Corekaburra-test.sh -p Corekaburra -d functional_tests/test_data -v
       - name: 'Run GFF annotation functional tests'
-        run: docker run --entrypoint /Corekaburra/annotation_n_gff_functional_tests/run_tests.sh corekaburra -v
+        run: bash annotation_n_gff_functional_tests/run_tests.sh -v
