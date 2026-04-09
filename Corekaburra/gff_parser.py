@@ -2,6 +2,21 @@ import os
 import gzip
 
 
+def _gff_basename_to_genome_name(filename):
+    """Strip .gz, .gff/.gff3, and known Panaroo-added suffixes from a GFF filename."""
+    if filename.endswith('.gz'):
+        filename = filename[:-3]
+    for ext in ('.gff3', '.gff'):
+        if filename.endswith(ext):
+            filename = filename[:-len(ext)]
+            break
+    for suffix in ('_panaroo', '_corrected'):
+        if filename.endswith(suffix):
+            filename = filename[:-len(suffix)]
+            break
+    return filename
+
+
 def open_file_generator(input_file_path):
     """
     Function to read a gff file as either gzip or text
@@ -334,7 +349,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     if complete_genomes is None:
         complete_genome = False
     else:
-        if os.path.basename(gff_path).replace('.gz', '').replace('.gff', '') in complete_genomes:
+        if _gff_basename_to_genome_name(os.path.basename(gff_path)) in complete_genomes:
             complete_genome = True
         else:
             complete_genome = False
@@ -343,10 +358,7 @@ def segment_gff_content(gff_generator, core_genes, low_freq_genes, gff_path, acc
     contig_sizes = get_contig_lengths(gff_path)
 
     # Split input path of gff to get genome name
-    gff_name = gff_path.split('/')[-1]
-    gff_name = gff_name.replace('.gz', '').rsplit('.', 1)[0]
-    if 'corrected' in gff_name:
-        gff_name = gff_name.split('_corrected')[0]
+    gff_name = _gff_basename_to_genome_name(gff_path.split('/')[-1])
 
     # Set that first core gene has not been found
     first_core_gene = True

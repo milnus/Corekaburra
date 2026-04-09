@@ -5,8 +5,10 @@ import gffutils
 
 try:
     from Corekaburra.exit_with_error import exit_with_error
+    from Corekaburra.gff_parser import _gff_basename_to_genome_name
 except ModuleNotFoundError:
     from exit_with_error import exit_with_error
+    from gff_parser import _gff_basename_to_genome_name
 
 
 def add_gene_to_dict(main_dict, gene, pan_gene_name, genome):
@@ -47,7 +49,10 @@ def check_fragmented_gene(fragment_info, input_gffs, tmp_folder_path, logger):
         # Get the gff and its path
         if '.gff' not in genome:
             try:
-                gff_file = next(file for file in input_gffs if os.path.basename(file) == f'{genome}.gff')
+                gff_file = next(
+                    file for file in input_gffs
+                    if _gff_basename_to_genome_name(os.path.basename(file)) == genome
+                )
                 db_name = os.path.join(tmp_folder_path, f'{genome}_db')
             except StopIteration:
                 raise NotImplementedError(f'No exact gff match was found for genome: {genome}')

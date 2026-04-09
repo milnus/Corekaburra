@@ -3599,5 +3599,108 @@ class TestWritingOutputFunction(unittest.TestCase):
                 self.assertEqual(expected.readlines(), result.readlines())
 
 
+class TestGffFileNameRecognition(unittest.TestCase):
+    """
+    Tests that check_gff_in_pan correctly matches GFF filenames to pan-genome genome
+    names for different annotators (Prokka raw, Prokka panaroo-corrected, Bakta raw)
+    and file extensions (.gff, .gff3, .gff.gz, .gff3.gz).
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+        cls.pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        # Pan-genome columns: Silas_the_Salmonella, Christina_the_Streptococcus, Ajwa_the_Shigella
+
+    def test_bakta_gff3_files_match_pan_genome(self):
+        """Bakta produces .gff3 files; basename without extension must match pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella.gff3',
+            'Christina_the_Streptococcus.gff3',
+            'Ajwa_the_Shigella.gff3',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_bakta_gff3_gzipped_files_match_pan_genome(self):
+        """Bakta .gff3.gz files; basename without extensions must match pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella.gff3.gz',
+            'Christina_the_Streptococcus.gff3.gz',
+            'Ajwa_the_Shigella.gff3.gz',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_panaroo_corrected_gff_files_match_pan_genome(self):
+        """Panaroo corrected GFFs are named <genome>_panaroo.gff; the _panaroo suffix
+        must be stripped so the name matches the original pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella_panaroo.gff',
+            'Christina_the_Streptococcus_panaroo.gff',
+            'Ajwa_the_Shigella_panaroo.gff',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_panaroo_corrected_gff_gzipped_files_match_pan_genome(self):
+        """Panaroo corrected .gff.gz files with _panaroo suffix must also match."""
+        gff_files = [
+            'Silas_the_Salmonella_panaroo.gff.gz',
+            'Christina_the_Streptococcus_panaroo.gff.gz',
+            'Ajwa_the_Shigella_panaroo.gff.gz',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+
+class TestGffNameExtractionFromPath(unittest.TestCase):
+    """
+    Tests that segment_gff_content correctly derives the genome name from the GFF
+    file path for raw Prokka (.gff), raw Bakta (.gff3), and panaroo-corrected
+    (_panaroo.gff) inputs.
+    """
+    def _run_segment(self, gff_path, genome_key):
+        """Helper: run segment_gff_content with minimal single-contig data."""
+        gff_generator = [
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+        ]
+        core_genes = {genome_key: {'Core_ID_1': 'pan_gene_1', 'Core_ID_2': 'pan_gene_2'}}
+        low_freq_genes = {genome_key: {}}
+        acc_genes = {genome_key: {}}
+        complete_genomes = None
+
+        # Should not raise a KeyError — genome key must match derived gff_name
+        core_gene_pairs, *_ = gff_parser.segment_gff_content(
+            gff_generator, core_genes, low_freq_genes, gff_path, acc_genes, complete_genomes
+        )
+        return core_gene_pairs
+
+    def test_prokka_raw_gff_name_extraction(self):
+        """Raw Prokka .gff: gff_name derived as basename without extension."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome.gff',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+    def test_bakta_raw_gff3_name_extraction(self):
+        """Raw Bakta .gff3: gff_name derived as basename without .gff3 extension."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome.gff3',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+    def test_panaroo_corrected_gff_name_extraction(self):
+        """Panaroo corrected _panaroo.gff: _panaroo suffix must be stripped from gff_name."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome_panaroo.gff',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+
 if __name__ == '__main__':
     unittest.main()

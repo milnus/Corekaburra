@@ -17,3 +17,5 @@ jobs:
         run: docker run --entrypoint /Corekaburra/.travis/unit-test.sh corekaburra
       - name: 'Run functional tests'
         run: docker run --entrypoint /Corekaburra/functional_tests/Corekaburra-test.sh corekaburra -p Corekaburra -d /Corekaburra/functional_tests/test_data -v
+      - name: 'Run GFF annotation functional tests'
+        run: docker run --entrypoint /Corekaburra/annotation_n_gff_functional_tests/run_tests.sh corekaburra -v
