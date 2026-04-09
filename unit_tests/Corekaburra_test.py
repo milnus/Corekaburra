@@ -868,6 +868,24 @@ class TestGetContigLength(unittest.TestCase):
         self.assertEqual(expected_dict, return_dict)
 
 
+class TestGetContigLengthsNoFastaSection(unittest.TestCase):
+    """
+    Regression test: get_contig_lengths must not crash with UnboundLocalError when the
+    input GFF has no ##FASTA section (contig_name would previously be unbound).
+    """
+    def test_no_fasta_section_returns_empty_dict(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.gff', delete=False) as tmp:
+            tmp.write("##gff-version 3\n")
+            tmp.write("contig_1\t.\tCDS\t1\t100\t.\t+\t.\tID=gene1\n")
+            tmp_path = tmp.name
+        try:
+            result = gff_parser.get_contig_lengths(tmp_path)
+            self.assertEqual({}, result)
+        finally:
+            os.unlink(tmp_path)
+
+
 class TestRecordCoreCoreRegion(unittest.TestCase):
     """
     Test function that is used to record information of a region identified between two core genes.
@@ -1452,6 +1470,64 @@ class TestRecordCorelessContig(unittest.TestCase):
                                                          low_freq_genes_in_region, gff_name, contig_name)
 
         self.assertEqual(expected_return, return_dict)
+
+
+class TestClassifyNonCoreGene(unittest.TestCase):
+    """
+    Tests for the _classify_non_core_gene helper that routes non-core GFF lines into
+    the accessory or low-frequency accumulator lists.
+    """
+
+    def _make_line(self, gene_id):
+        return ['contig_1', '.', 'CDS', '100', '200', '.', '.', '.', gene_id]
+
+    def test_low_frequency_gene_appended_to_low_freq_list(self):
+        line = self._make_line('lf_gene_1')
+        acc_genes = {'g': {}}
+        low_freq_genes = {'g': {'lf_gene_1': 'pan_lf_1'}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual(['pan_lf_1'], lf_out)
+
+    def test_accessory_gene_appended_to_accessory_list(self):
+        line = self._make_line('acc_gene_1')
+        acc_genes = {'g': {'acc_gene_1': 'pan_acc_1'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual(['pan_acc_1'], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_single_key_match_is_appended(self):
+        """Gene ID absent from dict but exactly one dict key contains it as substring."""
+        line = self._make_line('tag-1')
+        acc_genes = {'g': {'tag-1_refound': 'pan_acc_refound'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual(['pan_acc_refound'], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_multiple_key_matches_not_appended(self):
+        """Ambiguous substring match: nothing should be added."""
+        line = self._make_line('tag')
+        acc_genes = {'g': {'tag-1': 'pan_acc_1', 'tag-2': 'pan_acc_2'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_no_key_match_not_appended(self):
+        """Gene absent from all dicts: silently skipped, no crash."""
+        line = self._make_line('unknown_gene')
+        acc_genes = {'g': {}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual([], lf_out)
 
 
 class TestSegmentingMockGffs(unittest.TestCase):
@@ -3700,6 +3776,36 @@ class TestGffNameExtractionFromPath(unittest.TestCase):
             'test_single_chromosome'
         )
         self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+
+class TestSegmentGffNoCoreGenes(unittest.TestCase):
+    """
+    Regression test: segment_gff_content must not raise UnboundLocalError when a genome
+    contains no core genes (first_core_gene_gff_line was previously used before assignment).
+    """
+
+    def test_no_core_genes_returns_empty_pairs_and_records_coreless_contig(self):
+        gff_generator = [
+            ['gff_name_contig_1', '.', 'CDS', '100', '200', '.', '.', '.', 'acc_gene_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '400', '.', '.', '.', 'acc_gene_2'],
+        ]
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        core_genes = {'test_single_chromosome': {}}
+        low_freq_genes = {'test_single_chromosome': {}}
+        acc_genes = {'test_single_chromosome': {'acc_gene_1': 'pan_acc_1',
+                                                'acc_gene_2': 'pan_acc_2'}}
+        complete_genomes = None
+
+        (core_gene_pairs, core_gene_pair_distance, accessory_gene_content,
+         low_freq_gene_content, master_info, coreless_contigs) = gff_parser.segment_gff_content(
+            gff_generator, core_genes, low_freq_genes, gff_path, acc_genes, complete_genomes)
+
+        self.assertEqual([], core_gene_pairs)
+        self.assertEqual({}, core_gene_pair_distance)
+        self.assertEqual({}, master_info)
+        self.assertIn('test_single_chromosome--gff_name_contig_1', coreless_contigs)
+        acc_in_contig = coreless_contigs['test_single_chromosome--gff_name_contig_1'][0]
+        self.assertEqual(['pan_acc_1', 'pan_acc_2'], acc_in_contig)
 
 
 if __name__ == '__main__':
