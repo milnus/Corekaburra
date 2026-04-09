@@ -1,5 +1,5 @@
 # Dependencies, with versions explicitly declared for development and testing
-biopython==1.79
+biopython==1.87
 gffutils>=0.10.1
 networkx>=2.6.3
 numpy>=1.23.4
