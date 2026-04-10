@@ -268,33 +268,41 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
     start_time = time.time()
     multi_edge_node_pairs = list(combinations(multi_edge_nodes + single_edge_nodes, 2))
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
-        return_object = [executor.submit(find_segments_for_node, source_node, target_node,
-                                         multi_edge_nodes + single_edge_nodes,
-                                         core_graph, num_gffs, core_gene_dict)
-                         for source_node, target_node in multi_edge_node_pairs]
+    def _process_segment_result(return_segments):
+        nonlocal double_edge_segements
+        if return_segments is not None:
+            if type(return_segments) is list:
+                # Check if segment has been added in opposite direction, if not then add it to be further examined
+                if all([x != return_segments[::-1] for x in multi_edge_connect_adjust]):
+                    multi_edge_connect_adjust.append(return_segments)
 
-        # Handle output from parallel process
-        for output in concurrent.futures.as_completed(return_object):
-            return_segments = output.result()
-            if return_segments is not None:
-                if type(return_segments) is list:
-                    # Check if segment has been added in opposite direction, if not then add it to be further examined
-                    if all([x != return_segments[::-1] for x in multi_edge_connect_adjust]):
-                        multi_edge_connect_adjust.append(return_segments)
+            if type(return_segments) is dict:
+                # Check that path has not been recorded in the opposite direction, if not then record it
+                return_segment_name = list(return_segments.keys())[0]
+                if return_segment_name not in double_edge_segements:
+                    double_edge_segements = double_edge_segements | return_segments
+                else:
+                    if double_edge_segements[return_segment_name] != return_segments[return_segment_name][::-1]:
+                        exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
+                                        f"Path from one node to another ({return_segment_name}) was found, but did not match previously found path!",
+                                        logger)
 
-                if type(return_segments) is dict:
-                    # Check that path has not been recorded in the opposite direction, if not then record it
-                    return_segment_name = list(return_segments.keys())[0]
-                    if return_segment_name not in double_edge_segements:
-                        double_edge_segements = double_edge_segements | return_segments
-                    else:
-                        if double_edge_segements[return_segment_name] != return_segments[return_segment_name][::-1]:
-                            exit_with_error(EXIT_SEGMENT_IDENTIFICATION_ERROR,
-                                            f"Path from one node to another ({return_segment_name}) was found, but did not match previously found path!",
-                                            logger)
+    if max_cpus == 1:
+        for source_node, target_node in multi_edge_node_pairs:
+            return_segments = find_segments_for_node(source_node, target_node,
+                                                     multi_edge_nodes + single_edge_nodes,
+                                                     core_graph, num_gffs, core_gene_dict)
+            _process_segment_result(return_segments)
+    else:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
+            return_object = [executor.submit(find_segments_for_node, source_node, target_node,
+                                             multi_edge_nodes + single_edge_nodes,
+                                             core_graph, num_gffs, core_gene_dict)
+                             for source_node, target_node in multi_edge_node_pairs]
 
-                # double_edge_segements = double_edge_segements | return_segments
+            # Handle output from parallel process
+            for output in concurrent.futures.as_completed(return_object):
+                _process_segment_result(output.result())
 
     # Calculate the expected number of paths
     total_edges_from_non_two_edge_core_genes = sum([connections for _, connections in core_graph.degree if connections > 2 or connections < 2])
@@ -344,26 +352,35 @@ def identify_segments(core_graph, num_gffs, core_gene_dict, logger, max_cpus):
         for chunk in missing_connection_pairs:
             # Remove nodes already accounted for
             chunk = [node_pair for node_pair in chunk if node_pair[0] not in exclude_missing_node and node_pair[1] not in exclude_missing_node]
-            with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor: #TODO - insert max_cpus again
-                return_object = [executor.submit(path_search,
-                                                 core_graph.copy(), source_node, target_node,
-                                                 connect_dict, multi_edge_nodes)
-                                 for source_node, target_node in chunk]
 
-                # Handle output from parallel process
-                for output in concurrent.futures.as_completed(return_object):
-                    return_path, suspected_pair = output.result()
+            def _process_path_result(return_path, suspected_pair):
+                if return_path is not None:
+                    double_edge_segements[suspected_pair] = return_path
 
-                    # Check if proper path is returned and insert it
-                    if return_path is not None:
-                        double_edge_segements[suspected_pair] = return_path
+                    # Update expected edge number dict
+                    connection_nodes = suspected_pair.split('--')
+                    for node in connection_nodes:
+                        identified_edge_num_dict[node] += 1
+                        if identified_edge_num_dict[node] == expected_edge_num_dict[node]:
+                            exclude_missing_node.append(node)
 
-                        # Update expected edge number dict
-                        connection_nodes = suspected_pair.split('--')
-                        for node in connection_nodes:
-                            identified_edge_num_dict[node] += 1
-                            if identified_edge_num_dict[node] == expected_edge_num_dict[node]:
-                                exclude_missing_node.append(node)
+            if max_cpus == 1:
+                for source_node, target_node in chunk:
+                    return_path, suspected_pair = path_search(
+                        core_graph.copy(), source_node, target_node,
+                        connect_dict, multi_edge_nodes)
+                    _process_path_result(return_path, suspected_pair)
+            else:
+                with concurrent.futures.ProcessPoolExecutor(max_workers=max_cpus) as executor:
+                    return_object = [executor.submit(path_search,
+                                                     core_graph.copy(), source_node, target_node,
+                                                     connect_dict, multi_edge_nodes)
+                                     for source_node, target_node in chunk]
+
+                    # Handle output from parallel process
+                    for output in concurrent.futures.as_completed(return_object):
+                        return_path, suspected_pair = output.result()
+                        _process_path_result(return_path, suspected_pair)
 
     return double_edge_segements
 

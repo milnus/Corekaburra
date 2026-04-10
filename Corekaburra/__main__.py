@@ -19,6 +19,8 @@ import tempfile
 import time
 import concurrent.futures
 from networkx import write_gml
+import sys
+from importlib.metadata import version, PackageNotFoundError
 
 try:
     from Corekaburra.commandline_interface import get_commandline_arguments
@@ -65,8 +67,6 @@ try:
 except ModuleNotFoundError:
     from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer, non_core_contig_writer
 
-import sys
-import pkg_resources
 
 EXIT_INPUT_FILE_ERROR = 1
 EXIT_COMMAND_LINE_ERROR = 2
@@ -77,8 +77,8 @@ PROGRAM_NAME = "Corekaburra"
 
 
 try:
-    PROGRAM_VERSION = pkg_resources.require(PROGRAM_NAME)[0].version
-except pkg_resources.DistributionNotFound:
+    PROGRAM_VERSION = version(PROGRAM_NAME)
+except PackageNotFoundError:
     PROGRAM_VERSION = "undefined_version"
 
 
@@ -195,7 +195,7 @@ def main():
     else:
         progress_update = 1
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=args.cpu-1) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max(1, args.cpu-1)) as executor:
         logger.info(f"------Start core region identification of given gff files-----\n")
         logger.info(f'{len(args.input_gffs)} GFF files to process')
         results = [executor.submit(segment_genome_content, gff, core_dict, low_freq_dict, acc_gene_dict, comp_genomes)
@@ -232,7 +232,7 @@ def main():
     combined_acc_gene_count = {key: low_frew_region_count[key] + acc_region_count[key] for key in low_frew_region_count}
 
     double_edge_segements, no_acc_segments, core_graph = determine_genome_segments(core_neighbour_pairs, combined_acc_gene_count,
-                                                                       len(args.input_gffs), core_dict, args.cpu-1, logger)
+                                                                       len(args.input_gffs), core_dict, max(1, args.cpu-1), logger)
 
     time_end_segments_search = time.time()
 

@@ -7,10 +7,7 @@ def merge_dicts_counts(parent_dict, merge_object):
     :return: Resulting dict following merge
     """
 
-    if isinstance(merge_object, dict):
-        keys = merge_object.keys()
-    elif isinstance(merge_object, list):
-        keys = merge_object
+    keys = merge_object.keys() if isinstance(merge_object, dict) else merge_object
 
     for key in keys:
         if key in parent_dict:
@@ -30,19 +27,11 @@ def merge_dicts_lists(parent_dict, merge_dict):
     :return: Dict having the two inputs merged
     """
 
-    for key in merge_dict.keys():
-        # Check if key is present, if then append the value to the key
+    for key, value in merge_dict.items():
+        value_as_list = value if isinstance(value, list) else [value]
         if key in parent_dict:
-            if not isinstance(merge_dict[key], list):
-                parent_dict[key] += [merge_dict[key]]
-            else:
-                parent_dict[key] += merge_dict[key]
-
-        # If key is not present construct the key
+            parent_dict[key] += value_as_list
         else:
-            if not isinstance(merge_dict[key], list):
-                parent_dict[key] = [merge_dict[key]]
-            else:
-                parent_dict[key] = merge_dict[key]
+            parent_dict[key] = value_as_list
 
     return parent_dict

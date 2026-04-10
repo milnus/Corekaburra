@@ -351,6 +351,26 @@ class TestCheckingFragmentedGenes(unittest.TestCase):
 
         self.assertEqual(expected_return, return_bool)
 
+    def test_fragmented_gene_ambiguous_basename(self):
+        """ GFF file matching must use exact basename, not substring.
+        When input_gffs contains paths where one basename is a suffix of another
+        (e.g., 'Extra_Silas_the_Salmonella.gff' and 'Silas_the_Salmonella.gff'),
+        the correct file must be selected for genome 'Silas_the_Salmonella'. """
+        fragments_info = [['Silas_the_Salmonella_tag-1-2.1;Silas_the_Salmonella_tag-1-2.2', 'Silas_the_Salmonella']]
+        # Place the ambiguous longer-named file BEFORE the correct file so that
+        # a substring-based search with [0] would incorrectly pick it.
+        input_gffs = ['TestParsingGenePresenceAbsenceFile/Extra_Silas_the_Salmonella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Silas_the_Salmonella.gff',
+                      'TestParsingGenePresenceAbsenceFile/Christina_the_Streptococcus.gff']
+        tmp_folder_path = 'test_tmp_folder'
+
+        expected_return = [True]
+
+        return_bool = parse_gene_presence_absence.check_fragmented_gene(fragments_info, input_gffs, tmp_folder_path,
+                                                                        self.logger)
+
+        self.assertEqual(expected_return, return_bool)
+
 
 class TestParsingGenePresenceAbsenceFile(unittest.TestCase):
     """
@@ -846,6 +866,24 @@ class TestGetContigLength(unittest.TestCase):
         return_dict = gff_parser.get_contig_lengths(input_gff_path)
 
         self.assertEqual(expected_dict, return_dict)
+
+
+class TestGetContigLengthsNoFastaSection(unittest.TestCase):
+    """
+    Regression test: get_contig_lengths must not crash with UnboundLocalError when the
+    input GFF has no ##FASTA section (contig_name would previously be unbound).
+    """
+    def test_no_fasta_section_returns_empty_dict(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.gff', delete=False) as tmp:
+            tmp.write("##gff-version 3\n")
+            tmp.write("contig_1\t.\tCDS\t1\t100\t.\t+\t.\tID=gene1\n")
+            tmp_path = tmp.name
+        try:
+            result = gff_parser.get_contig_lengths(tmp_path)
+            self.assertEqual({}, result)
+        finally:
+            os.unlink(tmp_path)
 
 
 class TestRecordCoreCoreRegion(unittest.TestCase):
@@ -1432,6 +1470,64 @@ class TestRecordCorelessContig(unittest.TestCase):
                                                          low_freq_genes_in_region, gff_name, contig_name)
 
         self.assertEqual(expected_return, return_dict)
+
+
+class TestClassifyNonCoreGene(unittest.TestCase):
+    """
+    Tests for the _classify_non_core_gene helper that routes non-core GFF lines into
+    the accessory or low-frequency accumulator lists.
+    """
+
+    def _make_line(self, gene_id):
+        return ['contig_1', '.', 'CDS', '100', '200', '.', '.', '.', gene_id]
+
+    def test_low_frequency_gene_appended_to_low_freq_list(self):
+        line = self._make_line('lf_gene_1')
+        acc_genes = {'g': {}}
+        low_freq_genes = {'g': {'lf_gene_1': 'pan_lf_1'}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual(['pan_lf_1'], lf_out)
+
+    def test_accessory_gene_appended_to_accessory_list(self):
+        line = self._make_line('acc_gene_1')
+        acc_genes = {'g': {'acc_gene_1': 'pan_acc_1'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual(['pan_acc_1'], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_single_key_match_is_appended(self):
+        """Gene ID absent from dict but exactly one dict key contains it as substring."""
+        line = self._make_line('tag-1')
+        acc_genes = {'g': {'tag-1_refound': 'pan_acc_refound'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual(['pan_acc_refound'], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_multiple_key_matches_not_appended(self):
+        """Ambiguous substring match: nothing should be added."""
+        line = self._make_line('tag')
+        acc_genes = {'g': {'tag-1': 'pan_acc_1', 'tag-2': 'pan_acc_2'}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual([], lf_out)
+
+    def test_fallback_no_key_match_not_appended(self):
+        """Gene absent from all dicts: silently skipped, no crash."""
+        line = self._make_line('unknown_gene')
+        acc_genes = {'g': {}}
+        low_freq_genes = {'g': {}}
+        acc_out, lf_out = gff_parser._classify_non_core_gene(
+            line, 'g', acc_genes, low_freq_genes, [], [])
+        self.assertEqual([], acc_out)
+        self.assertEqual([], lf_out)
 
 
 class TestSegmentingMockGffs(unittest.TestCase):
@@ -3577,6 +3673,139 @@ class TestWritingOutputFunction(unittest.TestCase):
         with open(expected_summary_table, 'r') as expected:
             with open('TestWritingOutputFunction/test_coreless_contig_accessory_gene_content.tsv', 'r') as result:
                 self.assertEqual(expected.readlines(), result.readlines())
+
+
+class TestGffFileNameRecognition(unittest.TestCase):
+    """
+    Tests that check_gff_in_pan correctly matches GFF filenames to pan-genome genome
+    names for different annotators (Prokka raw, Prokka panaroo-corrected, Bakta raw)
+    and file extensions (.gff, .gff3, .gff.gz, .gff3.gz).
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.logger = logging.getLogger('test_logger.log')
+        cls.logger.setLevel(logging.INFO)
+        cls.pres_abs = 'TestPresenceOfGffsInPresAbsFile/gene_presence_absence_roary.csv'
+        # Pan-genome columns: Silas_the_Salmonella, Christina_the_Streptococcus, Ajwa_the_Shigella
+
+    def test_bakta_gff3_files_match_pan_genome(self):
+        """Bakta produces .gff3 files; basename without extension must match pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella.gff3',
+            'Christina_the_Streptococcus.gff3',
+            'Ajwa_the_Shigella.gff3',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_bakta_gff3_gzipped_files_match_pan_genome(self):
+        """Bakta .gff3.gz files; basename without extensions must match pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella.gff3.gz',
+            'Christina_the_Streptococcus.gff3.gz',
+            'Ajwa_the_Shigella.gff3.gz',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_panaroo_corrected_gff_files_match_pan_genome(self):
+        """Panaroo corrected GFFs are named <genome>_panaroo.gff; the _panaroo suffix
+        must be stripped so the name matches the original pan-genome column."""
+        gff_files = [
+            'Silas_the_Salmonella_panaroo.gff',
+            'Christina_the_Streptococcus_panaroo.gff',
+            'Ajwa_the_Shigella_panaroo.gff',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+    def test_panaroo_corrected_gff_gzipped_files_match_pan_genome(self):
+        """Panaroo corrected .gff.gz files with _panaroo suffix must also match."""
+        gff_files = [
+            'Silas_the_Salmonella_panaroo.gff.gz',
+            'Christina_the_Streptococcus_panaroo.gff.gz',
+            'Ajwa_the_Shigella_panaroo.gff.gz',
+        ]
+        result = check_inputs.check_gff_in_pan(gff_files, self.pres_abs, self.logger)
+        self.assertTrue(result)
+
+
+class TestGffNameExtractionFromPath(unittest.TestCase):
+    """
+    Tests that segment_gff_content correctly derives the genome name from the GFF
+    file path for raw Prokka (.gff), raw Bakta (.gff3), and panaroo-corrected
+    (_panaroo.gff) inputs.
+    """
+    def _run_segment(self, gff_path, genome_key):
+        """Helper: run segment_gff_content with minimal single-contig data."""
+        gff_generator = [
+            ['gff_name_contig_1', '.', 'CDS', '179', '250', '.', '.', '.', 'Core_ID_1'],
+            ['gff_name_contig_1', '.', 'CDS', '610', '680', '.', '.', '.', 'Core_ID_2'],
+        ]
+        core_genes = {genome_key: {'Core_ID_1': 'pan_gene_1', 'Core_ID_2': 'pan_gene_2'}}
+        low_freq_genes = {genome_key: {}}
+        acc_genes = {genome_key: {}}
+        complete_genomes = None
+
+        # Should not raise a KeyError — genome key must match derived gff_name
+        core_gene_pairs, *_ = gff_parser.segment_gff_content(
+            gff_generator, core_genes, low_freq_genes, gff_path, acc_genes, complete_genomes
+        )
+        return core_gene_pairs
+
+    def test_prokka_raw_gff_name_extraction(self):
+        """Raw Prokka .gff: gff_name derived as basename without extension."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome.gff',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+    def test_bakta_raw_gff3_name_extraction(self):
+        """Raw Bakta .gff3: gff_name derived as basename without .gff3 extension."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome.gff3',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+    def test_panaroo_corrected_gff_name_extraction(self):
+        """Panaroo corrected _panaroo.gff: _panaroo suffix must be stripped from gff_name."""
+        pairs = self._run_segment(
+            'TestSegmentingMockGffs/test_single_chromosome_panaroo.gff',
+            'test_single_chromosome'
+        )
+        self.assertIn('pan_gene_1--pan_gene_2', pairs)
+
+
+class TestSegmentGffNoCoreGenes(unittest.TestCase):
+    """
+    Regression test: segment_gff_content must not raise UnboundLocalError when a genome
+    contains no core genes (first_core_gene_gff_line was previously used before assignment).
+    """
+
+    def test_no_core_genes_returns_empty_pairs_and_records_coreless_contig(self):
+        gff_generator = [
+            ['gff_name_contig_1', '.', 'CDS', '100', '200', '.', '.', '.', 'acc_gene_1'],
+            ['gff_name_contig_1', '.', 'CDS', '300', '400', '.', '.', '.', 'acc_gene_2'],
+        ]
+        gff_path = 'TestSegmentingMockGffs/test_single_chromosome.gff'
+        core_genes = {'test_single_chromosome': {}}
+        low_freq_genes = {'test_single_chromosome': {}}
+        acc_genes = {'test_single_chromosome': {'acc_gene_1': 'pan_acc_1',
+                                                'acc_gene_2': 'pan_acc_2'}}
+        complete_genomes = None
+
+        (core_gene_pairs, core_gene_pair_distance, accessory_gene_content,
+         low_freq_gene_content, master_info, coreless_contigs) = gff_parser.segment_gff_content(
+            gff_generator, core_genes, low_freq_genes, gff_path, acc_genes, complete_genomes)
+
+        self.assertEqual([], core_gene_pairs)
+        self.assertEqual({}, core_gene_pair_distance)
+        self.assertEqual({}, master_info)
+        self.assertIn('test_single_chromosome--gff_name_contig_1', coreless_contigs)
+        acc_in_contig = coreless_contigs['test_single_chromosome--gff_name_contig_1'][0]
+        self.assertEqual(['pan_acc_1', 'pan_acc_2'], acc_in_contig)
 
 
 if __name__ == '__main__':

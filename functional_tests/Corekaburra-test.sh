@@ -161,6 +161,39 @@ function test_exit_status {
     fi 
 }
 
+# Run a command and check that all expected strings appear in the output
+# ARG1: command we want to test as a string
+# ARG2: expected exit status
+# ARG3+: strings that must appear in the output
+function test_stdout_contains {
+    let num_tests+=1
+    local cmd=$1
+    local expected_exit_status=$2
+    shift 2
+    local expected_strings=("$@")
+    output=$(eval $cmd 2>&1)
+    exit_status=$?
+    verbose_message "Testing stdout contains strings: $cmd"
+    local failed=0
+    for s in "${expected_strings[@]}"; do
+        if [[ "$output" != *"$s"* ]]; then
+            let num_errors+=1
+            echo "Test output failed (missing expected string): $cmd"
+            echo "Expected to find: $s"
+            echo "Actual output:"
+            echo "$output"
+            failed=1
+            break
+        fi
+    done
+    if [ "$failed" -eq 0 ] && [ "$exit_status" -ne "$expected_exit_status" ]; then
+        let num_errors+=1
+        echo "Test exit status failed: $cmd"
+        echo "Actual exit status: $exit_status"
+        echo "Expected exit status: $expected_exit_status"
+    fi
+}
+
 function call_new_test {
   echo ''
   echo $1
@@ -174,10 +207,12 @@ cd $test_data_dir
 # 2. Run tests
 
 call_new_test "Test output for no arguments"
-test_stdout_exit "$test_program" no_input.expected 2
+test_stdout_contains "$test_program" 2 \
+    "usage: Corekaburra" "--input_gffs" "--input_pangenome" "--core_cutoff" "--low_cutoff" "--output"
 
 call_new_test "Test output for -help argument given"
-test_stdout_exit "$test_program -help" no_input.expected 0
+test_stdout_contains "$test_program -help" 0 \
+    "usage: Corekaburra" "--input_gffs" "--input_pangenome" "--core_cutoff" "--low_cutoff" "--output"
 
 call_new_test "Test exit status for a bad command line invocation"
 test_exit_status "$test_program --this_is_not_a_valid_argument > /dev/null 2>&1" 2
@@ -396,6 +431,7 @@ test_output_file test_out_folder/low_frequency_gene_placement.tsv Coreless_conti
 test_output_file test_out_folder/core_pair_summary.tsv Coreless_contig_complete_expected/core_pair_summary.tsv.expected
 test_output_file test_out_folder/coreless_contig_accessory_gene_content.tsv Coreless_contig_complete_expected/coreless_contig_accessory_gene_content.tsv.expected
 rm -r test_out_folder
+rm test_data/Corekaburra.log 2> /dev/null
 
 
 # 3. End of testing - check if any errors occurrred
