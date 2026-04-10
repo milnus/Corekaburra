@@ -24,9 +24,8 @@ jobs:
         run: coverage xml -o coverage.xml
       - name: 'Upload coverage report'
         uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml # optional
 #          flags: unittests # optional
 #          name: codecov-Corekaburra # optional
