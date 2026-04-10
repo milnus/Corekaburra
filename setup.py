@@ -12,7 +12,7 @@ from standard pan-genome pipelines: Roary and Panaroo.'''
 
 setup(
     name='Corekaburra',
-    version='0.1.0',
+    version='0.1.1',
     author='Magnus Ganer Jespersen',
     author_email='magnus.ganer.j@gmail.com',
     packages=['Corekaburra'],
