@@ -12,7 +12,7 @@ from standard pan-genome pipelines: Roary and Panaroo.'''
 
 setup(
     name='Corekaburra',
-    version='0.0.5',
+    version='0.1.0',
     author='Magnus Ganer Jespersen',
     author_email='magnus.ganer.j@gmail.com',
     packages=['Corekaburra'],
@@ -24,10 +24,13 @@ setup(
     license='LICENSE',
     description=('A commandline bioinformatics tool to utilize syntenic information from genomes in the context of pan-genomes'),
     long_description=(LONG_DESCRIPTION),
-    install_requires=["biopython==1.87", "networkx>=2.6.3", "gffutils>=0.10.1", "numpy>=1.23.4"],
+    install_requires=["biopython==1.87",
+                      "networkx>=2.6.3",
+                      "gffutils>=0.13",
+                      "numpy>=1.23.4"],
     keywords=['Genomics', 'pan-genome', 'bacteria', 'prokaryotes', 'bioinformatics'],
     classifiers=[
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.13',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',

@@ -19,6 +19,8 @@ import tempfile
 import time
 import concurrent.futures
 from networkx import write_gml
+import sys
+from importlib.metadata import version, PackageNotFoundError
 
 try:
     from Corekaburra.commandline_interface import get_commandline_arguments
@@ -65,8 +67,6 @@ try:
 except ModuleNotFoundError:
     from output_writer_functions import master_info_writer, summary_info_writer, segment_writer, no_acc_segment_writer, non_core_contig_writer
 
-import sys
-from importlib.metadata import version, PackageNotFoundError
 
 EXIT_INPUT_FILE_ERROR = 1
 EXIT_COMMAND_LINE_ERROR = 2
